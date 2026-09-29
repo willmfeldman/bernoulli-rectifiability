@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this Lean formalization, please cite it using this metadata."
 title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries, in Lean"
-version: "0.1.0"
+version: "0.2.0"
 license: "Apache-2.0"
 repository-code: "https://github.com/willmfeldman/bernoulli-rectifiability"
 authors:
@@ -13,8 +13,11 @@ abstract: >-
   boundaries" (Comm. Pure Appl. Math., 2025): for variational solutions of the Bernoulli free
   boundary problem, the topological free boundary is countably rectifiable with locally finite
   Hausdorff measure, the Laplacian of the solution is identified as an explicit measure on the
-  free boundary, and limits of classical solutions are variational solutions. It includes a
-  standalone formalization of Sperner's inequality for homogeneous harmonic functions.
+  free boundary, and limits of classical solutions are variational solutions. For the functional
+  with a Lipschitz coefficient Q, it also proves the identification of χ, the relative closedness
+  and density characterization of the set of highest density, the viscosity property off that
+  set, and the existence and homogeneity of blow-up limits. It includes a standalone
+  formalization of Sperner's inequality for homogeneous harmonic functions.
 keywords:
   - Lean
   - Mathlib
@@ -30,7 +33,7 @@ preferred-citation:
   authors:
     - family-names: Feldman
       given-names: "William M."
-  version: "0.1.0"
+  version: "0.2.0"
   repository-code: "https://github.com/willmfeldman/bernoulli-rectifiability"
 references:
   - type: article

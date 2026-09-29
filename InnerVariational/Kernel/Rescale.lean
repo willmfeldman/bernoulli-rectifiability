@@ -7,6 +7,7 @@ module
 
 public import InnerVariational.Defs.Quantities
 public import InnerVariational.Defs.VariationalSolution
+public import InnerVariational.Kernel.VariationalQ
 import Mathlib.Data.Real.StarOrdered
 import Mathlib.MeasureTheory.Measure.Haar.NormedSpace
 public import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
@@ -19,26 +20,31 @@ Kriventsov–Weiss (Section 3.2, equation (3.6); full reference below): if `(u, 
 solution on `B_r(x)`, then the one-homogeneous rescaling `u_{x,r}(y) = u(x + r y) / r`,
 `χ_{x,r}(y) = χ(x + r y)` is a variational solution on `B_1` with the same constant. The paper also
 uses rotations ("perform an isometry", in the proof of Theorem 6.3). We prove one statement for
-every similarity `A y = x + r Q y` with `r > 0` and `Q` a linear isometry, and derive the special
+every similarity `A y = x + r T y` with `r > 0` and `T` a linear isometry, and derive the special
 cases.
 
 ## Main results
 
-* `IsVariationalSolution.comp_similarity`: `(u(A ·) / r, χ(A ·))` is a variational solution on
-  `A⁻¹(Ω)` with the same constant.
-* `IsVariationalSolution.rescale`: the one-homogeneous rescaling, on `(Ω − x) / r`.
-* `IsVariationalSolution.rescale_ball`: the paper's statement, from `B_r(x)` to `B_1`.
-* `IsVariationalSolution.comp_linearIsometryEquiv`, `IsVariationalSolution.comp_add_left`:
-  rotations and translations.
+* `IsVariationalSolutionQ.comp_similarity`: `(u(A ·) / r, χ(A ·))` is a variational solution on
+  `A⁻¹(Ω)` for the coefficient `Q ∘ A`, with the same constant; `QBounds.comp_similarity`:
+  `Q ∘ A` is `r L`-Lipschitz with the same bounds.
+* `IsVariationalSolutionQ.rescale`, `QBounds.rescale`: the one-homogeneous rescaling, on
+  `(Ω − x) / r`.
+* `IsVariationalSolutionQ.rescale_ball`, `QBounds.rescale_ball`: the paper's statement, from
+  `B_r(x)` to `B_1`.
+* `IsVariationalSolutionQ.comp_linearIsometryEquiv`, `IsVariationalSolutionQ.comp_add_left`,
+  `QBounds.comp_add_left`: rotations and translations.
+* The `IsVariationalSolution` versions (the coefficient `Q ≡ 1`) are specializations.
 
 ## Proof
 
-Given a test field `ξ` on `A⁻¹(Ω)`, the field `ξ̃ = L ∘ ξ ∘ A⁻¹` (with `L = r Q`) is a test field
-on `Ω`. Pointwise, `∇(u ∘ A / r) = Q⁻¹ (∇u ∘ A)`, `Dξ̃ ∘ A = L Dξ L⁻¹`, and
-`div ξ̃ ∘ A = div ξ`. So the integrand of the inner variation of `(u ∘ A / r, χ ∘ A)` along `ξ`
-is the integrand of the inner variation of `(u, χ)` along `ξ̃`, evaluated at `A y`. These
-identities hold at every point, including the points where `ξ` is not differentiable, because
-`fderiv` commutes with composition by continuous linear equivalences. The change of variables
+Given a test field `ξ` on `A⁻¹(Ω)`, the field `ξ̃ = L ∘ ξ ∘ A⁻¹` (with `L = r T`) is a test
+field on `Ω`. Pointwise, `∇(u ∘ A / r) = T⁻¹ (∇u ∘ A)`, `Dξ̃ ∘ A = L Dξ L⁻¹`,
+`div ξ̃ ∘ A = div ξ` and `∇(Q² ∘ A) · ξ = (∇(Q²) · ξ̃) ∘ A`. So the integrand of the inner
+variation of `(u ∘ A / r, χ ∘ A)` along `ξ` is the integrand of the inner variation of `(u, χ)`
+along `ξ̃`, evaluated at `A y`. These identities hold at every point, including the points where
+`ξ` is not differentiable, because `fderiv` commutes with composition by continuous linear
+equivalences. The change of variables
 `∫ F(A y) dy = r^{-n} ∫ F` finishes the proof.
 
 ## References
@@ -120,20 +126,32 @@ end Kernel
 
 namespace IsVariationalSolution
 
+theorem preimage_add_smul_ball (x : Rn n) {r : ℝ} (hr : 0 < r) :
+    (fun y => x + r • y) ⁻¹' ball x r = ball (0 : Rn n) 1 := by
+  ext y
+  simp only [mem_preimage, mem_ball, dist_eq_norm, add_sub_cancel_left, sub_zero, norm_smul,
+    Real.norm_of_nonneg hr.le]
+  exact ⟨fun h => by nlinarith [norm_nonneg y], fun h => by nlinarith [norm_nonneg y]⟩
+
+end IsVariationalSolution
+
+namespace IsVariationalSolutionQ
+
 open Kernel
 
-variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ}
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {Q u χ : Rn n → ℝ}
 
 /-- **Similarity invariance** (generalizing Section 3.2 of the paper). If `(u, χ)` is a
-variational solution on `Ω`, and `A y = x + r Q y` with `r > 0` and `Q` a linear isometry, then
-`(u ∘ A / r, χ ∘ A)` is a variational solution on `A⁻¹(Ω)` with the same constant. -/
-theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : ℝ} (hr : 0 < r)
-    (Q : Rn n ≃ₗᵢ[ℝ] Rn n) :
-    IsVariationalSolution ((fun y => x + r • Q y) ⁻¹' Ω) C (fun y => u (x + r • Q y) / r)
-      (fun y => χ (x + r • Q y)) := by
-  set L := simLinear r hr.ne' Q with hLdef
-  set A : Rn n → Rn n := fun y => x + r • Q y with hAdef
-  have hAc : Continuous A := continuous_const.add (continuous_const.smul Q.continuous)
+variational solution on `Ω` for the coefficient `Q`, and `A y = x + r T y` with `r > 0` and `T` a
+linear isometry, then `(u ∘ A / r, χ ∘ A)` is a variational solution on `A⁻¹(Ω)` for the
+coefficient `Q ∘ A`, with the same gradient constant. -/
+theorem comp_similarity (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r : ℝ} (hr : 0 < r)
+    (T : Rn n ≃ₗᵢ[ℝ] Rn n) :
+    IsVariationalSolutionQ ((fun y => x + r • T y) ⁻¹' Ω) C (fun y => Q (x + r • T y))
+      (fun y => u (x + r • T y) / r) (fun y => χ (x + r • T y)) := by
+  set L := simLinear r hr.ne' T with hLdef
+  set A : Rn n → Rn n := fun y => x + r • T y with hAdef
+  have hAc : Continuous A := continuous_const.add (continuous_const.smul T.continuous)
   have hAL : ∀ y, A y = x + L y := fun y => rfl
   -- the inverse of `A`
   set B : Rn n ≃ₜ Rn n := (Homeomorph.subRight x).trans L.symm.toHomeomorph with hBdef
@@ -150,16 +168,16 @@ theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : �
       measurable_chi := ?_
       chi_mem := fun y hy => h.chi_mem _ hy
       posIndicator_le_chi := ?_
-      innerVariation_eq_zero := ?_ }
+      innerVariationQ_eq_zero := ?_ }
   · -- `C²` on the positivity set
-    have hAd : ContDiff ℝ 2 A := contDiff_const.add (Q.contDiff.const_smul r)
+    have hAd : ContDiff ℝ 2 A := contDiff_const.add (T.contDiff.const_smul r)
     refine (h.contDiffOn.comp hAd.contDiffOn fun y hy => ⟨hy.1, (hpos y).1 hy.2⟩).div_const r
   · -- Lipschitz bound
     intro y ρ hρ
     have hball : ball (A y) (r * ρ) ⊆ Ω := by
       intro z hz
       have hBz : B z ∈ ball y ρ := by
-        rw [mem_ball, ← mul_lt_mul_iff_right₀ hr, ← dist_similarity hr Q x]
+        rw [mem_ball, ← mul_lt_mul_iff_right₀ hr, ← dist_similarity hr T x]
         change dist (A (B z)) (A y) < r * ρ
         rw [hAB]; exact hz
       have := hρ hBz
@@ -167,15 +185,15 @@ theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : �
     have hL := h.lipschitzOnWith (A y) (r * ρ) hball
     refine LipschitzOnWith.of_dist_le_mul fun a ha b hb => ?_
     have hmem : ∀ c ∈ ball y ρ, A c ∈ ball (A y) (r * ρ) := fun c hc => by
-      rw [mem_ball, hAdef, dist_similarity hr Q]
+      rw [mem_ball, hAdef, dist_similarity hr T]
       exact mul_lt_mul_of_pos_left (mem_ball.1 hc) hr
     have := hL.dist_le_mul (A a) (hmem a ha) (A b) (hmem b hb)
-    rw [hAdef, dist_similarity hr Q] at this
+    rw [hAdef, dist_similarity hr T] at this
     rw [Real.dist_eq, ← sub_div, abs_div, abs_of_pos hr, div_le_iff₀ hr]
     rw [Real.dist_eq] at this
     linarith
   · -- measurability of `χ ∘ A`
-    have : ((fun y => x + r • Q y) ⁻¹' Ω).indicator (fun y => χ (x + r • Q y)) =
+    have : ((fun y => x + r • T y) ⁻¹' Ω).indicator (fun y => χ (x + r • T y)) =
         Ω.indicator χ ∘ A := by
       ext y
       exact indicator_comp_right (s := Ω) (g := χ) A (x := y)
@@ -184,8 +202,8 @@ theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : �
   · -- `χ_{u>0} ≤ χ` a.e.
     have h0 := (ae_restrict_iff' h.isOpen.measurableSet).1 h.posIndicator_le_chi
     refine (ae_restrict_iff' (h.isOpen.preimage hAc).measurableSet).2 ?_
-    filter_upwards [ae_comp_similarity h0 x hr Q] with y hy hyΩ
-    have e : posIndicator (fun y => u (x + r • Q y) / r) y = posIndicator u (A y) := by
+    filter_upwards [ae_comp_similarity h0 x hr T] with y hy hyΩ
+    have e : posIndicator (fun y => u (x + r • T y) / r) y = posIndicator u (A y) := by
       simp only [posIndicator_apply, indicator, mem_setOf_eq]
       exact if_congr (hpos y) rfl rfl
     rw [e]
@@ -202,7 +220,7 @@ theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : �
     have hξ'L : LipschitzWith K ξ' := by
       refine LipschitzWith.of_dist_le_mul fun a b => ?_
       have hdL : ∀ v w, dist (L v) (L w) = r * dist v w := fun v w => by
-        simpa using dist_similarity hr Q 0 v w
+        simpa using dist_similarity hr T 0 v w
       have hdB : dist (B a) (B b) = r⁻¹ * dist a b := by
         have := hdL (B a) (B b)
         rw [show L (B a) = a - x by rw [hB, L.apply_symm_apply],
@@ -220,7 +238,7 @@ theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : �
       intro z hz
       have := hξΩ hz
       rwa [mem_preimage, hAB] at this
-    have hIV := h.innerVariation_eq_zero ξ' hξ'
+    have hIV := h.innerVariationQ_eq_zero ξ' hξ'
     -- pointwise identities
     have hDξ' : ∀ y, fderiv ℝ ξ' (A y) =
         (L : Rn n →L[ℝ] Rn n).comp ((fderiv ℝ ξ y).comp (L.symm : Rn n →L[ℝ] Rn n)) := by
@@ -238,31 +256,125 @@ theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : �
         ext v
         simp [LinearEquiv.conj_apply]
       rw [this, LinearMap.trace_conj']
-    have hgrad : ∀ y, gradient (fun z => u (x + r • Q z) / r) y = Q.symm (gradient u (A y)) :=
-      gradient_comp_similarity u x hr Q
+    have hgrad : ∀ y, gradient (fun z => u (x + r • T z) / r) y = T.symm (gradient u (A y)) :=
+      gradient_comp_similarity u x hr T
     have hquad : ∀ y, ⟪gradient u (A y), fderiv ℝ ξ' (A y) (gradient u (A y))⟫ =
-        ⟪Q.symm (gradient u (A y)), fderiv ℝ ξ y (Q.symm (gradient u (A y)))⟫ := by
+        ⟪T.symm (gradient u (A y)), fderiv ℝ ξ y (T.symm (gradient u (A y)))⟫ := by
       intro y
       rw [hDξ']
       simp only [ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,
         Function.comp_apply, simLinear_symm_apply, map_smul, hLdef, simLinear_apply,
         smul_smul, inv_mul_cancel₀ hr.ne', one_smul]
       rw [LinearIsometryEquiv.inner_map_eq_flip, LinearIsometryEquiv.symm_symm]
-    have hpt : ∀ y, ((‖gradient (fun z => u (x + r • Q z) / r) y‖ ^ 2 + χ (x + r • Q y)) *
-        divergence ξ y - 2 * ⟪gradient (fun z => u (x + r • Q z) / r) y,
-          fderiv ℝ ξ y (gradient (fun z => u (x + r • Q z) / r) y)⟫) =
-        (fun z => (‖gradient u z‖ ^ 2 + χ z) * divergence ξ' z -
-          2 * ⟪gradient u z, fderiv ℝ ξ' z (gradient u z)⟫) (x + r • Q y) := by
+    have hQd : ∀ y, fderiv ℝ (fun z => Q (x + r • T z) ^ 2) y (ξ y) =
+        fderiv ℝ (fun z => Q z ^ 2) (A y) (ξ' (A y)) := by
       intro y
-      change _ = (‖gradient u (A y)‖ ^ 2 + χ (A y)) * divergence ξ' (A y) -
-        2 * ⟪gradient u (A y), fderiv ℝ ξ' (A y) (gradient u (A y))⟫
-      rw [hgrad, hdiv, hquad, LinearIsometryEquiv.norm_map]
-    rw [innerVariation]
+      have e1 : (fun z => Q (x + r • T z) ^ 2) = (fun w => (fun z => Q z ^ 2) (x + w)) ∘ L := rfl
+      rw [e1, L.comp_right_fderiv, fderiv_comp_add_left (f := fun z : Rn n => Q z ^ 2)]
+      simp only [ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,
+        Function.comp_apply, hξ'def, hBA]
+      rfl
+    have hpt : ∀ y, ((‖gradient (fun z => u (x + r • T z) / r) y‖ ^ 2 +
+        Q (x + r • T y) ^ 2 * χ (x + r • T y)) * divergence ξ y -
+        2 * ⟪gradient (fun z => u (x + r • T z) / r) y,
+          fderiv ℝ ξ y (gradient (fun z => u (x + r • T z) / r) y)⟫ +
+        fderiv ℝ (fun z => Q (x + r • T z) ^ 2) y (ξ y) * χ (x + r • T y)) =
+        (fun z => (‖gradient u z‖ ^ 2 + Q z ^ 2 * χ z) * divergence ξ' z -
+          2 * ⟪gradient u z, fderiv ℝ ξ' z (gradient u z)⟫ +
+          fderiv ℝ (fun w => Q w ^ 2) z (ξ' z) * χ z) (x + r • T y) := by
+      intro y
+      change _ = (‖gradient u (A y)‖ ^ 2 + Q (A y) ^ 2 * χ (A y)) * divergence ξ' (A y) -
+        2 * ⟪gradient u (A y), fderiv ℝ ξ' (A y) (gradient u (A y))⟫ +
+        fderiv ℝ (fun w => Q w ^ 2) (A y) (ξ' (A y)) * χ (A y)
+      rw [hgrad, hdiv, hquad, hQd, LinearIsometryEquiv.norm_map]
+    rw [innerVariationQ]
     refine (integral_congr_ae (.of_forall hpt)).trans ((integral_comp_similarity
-      (fun z => (‖gradient u z‖ ^ 2 + χ z) * divergence ξ' z -
-        2 * ⟪gradient u z, fderiv ℝ ξ' z (gradient u z)⟫) x hr Q).trans ?_)
-    change (r ^ n)⁻¹ * innerVariation u χ ξ' = 0
+      (fun z => (‖gradient u z‖ ^ 2 + Q z ^ 2 * χ z) * divergence ξ' z -
+        2 * ⟪gradient u z, fderiv ℝ ξ' z (gradient u z)⟫ +
+        fderiv ℝ (fun w => Q w ^ 2) z (ξ' z) * χ z) x hr T).trans ?_)
+    change (r ^ n)⁻¹ * innerVariationQ Q u χ ξ' = 0
     rw [hIV, mul_zero]
+
+/-- **One-homogeneous rescaling** (equation (3.6)) with a Lipschitz coefficient. If `(u, χ)` is a
+variational solution on `Ω` for the coefficient `Q`, then `(u_{x,r}, χ_{x,r})` is one on
+`(Ω − x) / r` for the coefficient `Q(x + r ·)`, with the same gradient constant. -/
+theorem rescale (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r : ℝ} (hr : 0 < r) :
+    IsVariationalSolutionQ ((fun y => x + r • y) ⁻¹' Ω) C (fun y => Q (x + r • y))
+      (oneHomRescale u x r) (chiRescale χ x r) :=
+  h.comp_similarity x hr (LinearIsometryEquiv.refl ℝ (Rn n))
+
+/-- **One-homogeneous rescaling** with a Lipschitz coefficient, from `B_r(x)` to `B_1`. -/
+theorem rescale_ball {x : Rn n} {r : ℝ} (hr : 0 < r)
+    (h : IsVariationalSolutionQ (ball x r) C Q u χ) :
+    IsVariationalSolutionQ (ball 0 1) C (fun y => Q (x + r • y)) (oneHomRescale u x r)
+      (chiRescale χ x r) := by
+  simpa only [IsVariationalSolution.preimage_add_smul_ball x hr] using h.rescale x hr
+
+/-- **Rotation invariance** with a Lipschitz coefficient. -/
+theorem comp_linearIsometryEquiv (h : IsVariationalSolutionQ Ω C Q u χ)
+    (T : Rn n ≃ₗᵢ[ℝ] Rn n) : IsVariationalSolutionQ (T ⁻¹' Ω) C (Q ∘ T) (u ∘ T) (χ ∘ T) := by
+  simpa using h.comp_similarity 0 one_pos T
+
+/-- **Translation invariance** with a Lipschitz coefficient. -/
+theorem comp_add_left (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) :
+    IsVariationalSolutionQ ((x + ·) ⁻¹' Ω) C (fun y => Q (x + y)) (fun y => u (x + y))
+      (fun y => χ (x + y)) := by
+  simpa using h.comp_similarity x one_pos (LinearIsometryEquiv.refl ℝ (Rn n))
+
+end IsVariationalSolutionQ
+
+namespace QBounds
+
+variable {Ω : Set (Rn n)} {Q : Rn n → ℝ} {L : ℝ≥0} {c C' : ℝ}
+
+/-- The bounds on the coefficient under a similarity `A y = x + r T y`: `Q ∘ A` is
+`r L`-Lipschitz on `A⁻¹(Ω)`, with the same bounds `c ≤ Q ∘ A ≤ C'`. -/
+theorem comp_similarity (hQ : QBounds Ω Q L c C') (x : Rn n) {r : ℝ} (hr : 0 < r)
+    (T : Rn n ≃ₗᵢ[ℝ] Rn n) :
+    QBounds ((fun y => x + r • T y) ⁻¹' Ω) (fun y => Q (x + r • T y)) (Real.toNNReal r * L)
+      c C' where
+  lipschitzOnWith := by
+    refine LipschitzOnWith.of_dist_le_mul fun a ha b hb => ?_
+    have := hQ.lipschitzOnWith.dist_le_mul _ ha _ hb
+    rw [Kernel.dist_similarity hr T] at this
+    rw [NNReal.coe_mul, Real.coe_toNNReal _ hr.le]
+    linarith
+  pos := hQ.pos
+  le y hy := hQ.le _ hy
+  le' y hy := hQ.le' _ hy
+
+/-- The bounds on the coefficient under the one-homogeneous rescaling: `Q(x + r ·)` is
+`r L`-Lipschitz on `(Ω − x) / r`, with the same bounds. -/
+theorem rescale (hQ : QBounds Ω Q L c C') (x : Rn n) {r : ℝ} (hr : 0 < r) :
+    QBounds ((fun y => x + r • y) ⁻¹' Ω) (fun y => Q (x + r • y)) (Real.toNNReal r * L) c C' :=
+  hQ.comp_similarity x hr (LinearIsometryEquiv.refl ℝ (Rn n))
+
+/-- The bounds on the coefficient under the rescaling from `B_r(x)` to `B_1`. -/
+theorem rescale_ball {x : Rn n} {r : ℝ} (hr : 0 < r) (hQ : QBounds (ball x r) Q L c C') :
+    QBounds (ball 0 1) (fun y => Q (x + r • y)) (Real.toNNReal r * L) c C' := by
+  simpa only [IsVariationalSolution.preimage_add_smul_ball x hr] using hQ.rescale x hr
+
+/-- The bounds on the coefficient under a translation. -/
+theorem comp_add_left (hQ : QBounds Ω Q L c C') (x : Rn n) :
+    QBounds ((x + ·) ⁻¹' Ω) (fun y => Q (x + y)) L c C' := by
+  simpa using hQ.comp_similarity x one_pos (LinearIsometryEquiv.refl ℝ (Rn n))
+
+end QBounds
+
+namespace IsVariationalSolution
+
+open Kernel
+
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ}
+
+/-- **Similarity invariance** (generalizing Section 3.2 of the paper). If `(u, χ)` is a
+variational solution on `Ω`, and `A y = x + r Q y` with `r > 0` and `Q` a linear isometry, then
+`(u ∘ A / r, χ ∘ A)` is a variational solution on `A⁻¹(Ω)` with the same constant. -/
+theorem comp_similarity (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : ℝ} (hr : 0 < r)
+    (Q : Rn n ≃ₗᵢ[ℝ] Rn n) :
+    IsVariationalSolution ((fun y => x + r • Q y) ⁻¹' Ω) C (fun y => u (x + r • Q y) / r)
+      (fun y => χ (x + r • Q y)) :=
+  isVariationalSolutionQ_one_iff.1 (h.toQ.comp_similarity x hr Q)
 
 /-- **One-homogeneous rescaling** (equation (3.6)). If `(u, χ)` is a variational solution on `Ω`,
 then `(u_{x,r}, χ_{x,r})` is one on `(Ω − x) / r`, with the same constant. -/
@@ -270,13 +382,6 @@ theorem rescale (h : IsVariationalSolution Ω C u χ) (x : Rn n) {r : ℝ} (hr :
     IsVariationalSolution ((fun y => x + r • y) ⁻¹' Ω) C (oneHomRescale u x r)
       (chiRescale χ x r) :=
   h.comp_similarity x hr (LinearIsometryEquiv.refl ℝ (Rn n))
-
-theorem preimage_add_smul_ball (x : Rn n) {r : ℝ} (hr : 0 < r) :
-    (fun y => x + r • y) ⁻¹' ball x r = ball (0 : Rn n) 1 := by
-  ext y
-  simp only [mem_preimage, mem_ball, dist_eq_norm, add_sub_cancel_left, sub_zero, norm_smul,
-    Real.norm_of_nonneg hr.le]
-  exact ⟨fun h => by nlinarith [norm_nonneg y], fun h => by nlinarith [norm_nonneg y]⟩
 
 /-- **One-homogeneous rescaling**, as stated in the paper (Section 3.2): a variational solution
 on `B_r(x)` rescales to one on `B_1`. -/

@@ -6,6 +6,7 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Blowup.Profile
+public import InnerVariational.Blowup.Approx1DQ
 import Mathlib.Data.Real.StarOrdered
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Blowup.Renormalization
@@ -100,6 +101,24 @@ namespace InnerVariational
 
 variable {n : ℕ}
 
+/-- For `Q ≡ 1` (`L = 0`, `c = C' = 1`, so `κ = 0`), the hypotheses of the Lipschitz-coefficient
+form of Theorem 5.3 follow from those of the constant-coefficient form: `Z_0(u_k; 1/2) ≥ 0`, and
+`Ñ_0(u_k; s) = N_0(u_k; s)` for `0 < s ≤ 2`. -/
+private theorem one_hypotheses [NeZero n] {Ω : Set (Rn n)} {C_V : ℕ → ℝ≥0} {u χ : ℕ → Rn n → ℝ}
+    (hsol : ∀ k, IsVariationalSolution Ω (C_V k) (u k) (χ k))
+    (hΩ : closedBall (0 : Rn n) 2 ⊆ Ω)
+    (hM : ∀ k, unitBallVolume n ≤ monotonicityM (u k) (χ k) 0 (1 / 2)) :
+    (∀ k, 0 ≤ modMonotonicityM (weissKappa 0 1 1) (fun _ => 1) (u k) (χ k) 0 (1 / 2)) ∧
+    ∀ k s, 0 < s → s ≤ 2 →
+      modFrequencyN (weissKappa 0 1 1) (fun _ => 1) (u k) (χ k) 0 s =
+        frequencyN (u k) (χ k) 0 s := by
+  have hb : ∀ s : ℝ, s ≤ 2 → ball (0 : Rn n) s ⊆ Ω := fun s hs =>
+    ball_subset_closedBall.trans ((closedBall_subset_closedBall hs).trans hΩ)
+  refine ⟨fun k => ?_, fun k s hs hs2 => ?_⟩
+  · rw [weissKappa_zero, (hsol k).modMonotonicityM_one (by norm_num) (hb _ (by norm_num))]
+    linarith [hM k]
+  · rw [weissKappa_zero, (hsol k).modFrequencyN_one hs (hb s hs2)]
+
 /-- **The renormalized sequence `v_k = u_k / √H_0(u_k; 1)` and its properties** (the setting of
 Section 5 and the proof of Lemma 5.1). Under the hypotheses of `approx1D_limit_frequency_eq_one`,
 with
@@ -145,222 +164,14 @@ theorem renormalized_properties [NeZero n] {Ω : Set (Rn n)}
       ∫ y, ‖gradient (v k) y‖ ^ 2 * η y = -∫ y, v k y * ⟪gradient (v k) y, gradient η y⟫) ∧
     (Ninf = 1 → Tendsto (fun k => ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), v k y ^ 2)
       atTop (𝓝 (∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1)))) := by
-  obtain rfl : v = fun k y => (√(heightH (u k) 0 1))⁻¹ * u k y := funext fun k => funext (hv k)
-  clear hv
-  set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
-  have hAB : A ⊆ ball (0 : Rn n) 1 := diff_subset
-  have hB1 : ball (0 : Rn n) 1 ⊆ Ω :=
-    ball_subset_closedBall.trans (closedBall_one_subset_of_two hΩ)
-  have hcB1 : closedBall (0 : Rn n) 1 ⊆ Ω := closedBall_one_subset_of_two hΩ
-  set H : ℕ → ℝ := fun k => heightH (u k) 0 1 with hHdef
-  have hH : ∀ k, 0 < H k := fun k => (hsol k).heightH_one_pos hΩ (hcl k)
-  have hfreq := fun k => (hsol k).frequencyN_half_le_one_le_two hΩ (hcl k) (hM k)
-  have hNinf : 1 ≤ Ninf := ge_of_tendsto' hlim fun k => (hfreq k).1
-  have hNp : 1 < Nplus + 1 := by linarith [(hfreq 0).1, (hfreq 0).2.1, (hfreq 0).2.2, hN 0]
-  -- `N_0(u_k; 1) → N_∞`.
-  have hlim1 : Tendsto (fun k => frequencyN (u k) (χ k) 0 1) atTop (𝓝 Ninf) := by
-    have h2 : Tendsto (fun k => frequencyN (u k) (χ k) 0 (1 / 2) +
-        (frequencyN (u k) (χ k) 0 2 - frequencyN (u k) (χ k) 0 (1 / 2))) atTop (𝓝 Ninf) := by
-      simpa using hlim.add hδ
-    refine tendsto_of_tendsto_of_tendsto_of_le_of_le hlim h2 (fun k => (hfreq k).2.1)
-      fun k => ?_
-    have := (hfreq k).2.2
-    simp only
-    linarith
-  -- `V_0(u_k; 1)` is bounded and tends to `0` (Lemma 4.5).
-  set K := Abstract.RadialData.doublingConst (Nplus + 1) with hK
-  have hKpos : 0 < K := Abstract.RadialData.doublingConst_pos _
-  have hV : ∀ k δ, frequencyN (u k) (χ k) 0 2 - frequencyN (u k) (χ k) 0 1 < δ →
-      volumeV (u k) (χ k) 0 1 ≤ 2 ^ n * K * √δ := fun k δ hδ' =>
-    (hsol k).volumeV_one_le hΩ (hcl k) (hM k) (by linarith [hN k]) hδ'
-  have hVnn : ∀ k, 0 ≤ volumeV (u k) (χ k) 0 1 := fun k => (hsol k).volumeV_nonneg one_pos hB1
-  have hVbd : ∀ k, volumeV (u k) (χ k) 0 1 ≤ 2 ^ n * K * √Nplus := fun k =>
-    hV k Nplus (by linarith [(hfreq k).1, (hfreq k).2.1, (hfreq k).2.2, hN k])
-  have hV0 : Tendsto (fun k => volumeV (u k) (χ k) 0 1) atTop (𝓝 0) := by
-    have hd : Tendsto (fun k : ℕ => frequencyN (u k) (χ k) 0 2 - frequencyN (u k) (χ k) 0 (1 / 2) +
-        1 / ((k : ℝ) + 1)) atTop (𝓝 0) := by
-      simpa using hδ.add tendsto_one_div_add_atTop_nhds_zero_nat
-    have hs : Tendsto (fun k : ℕ => 2 ^ n * K * √(frequencyN (u k) (χ k) 0 2 -
-        frequencyN (u k) (χ k) 0 (1 / 2) + 1 / ((k : ℝ) + 1))) atTop (𝓝 0) := by
-      simpa using ((Real.continuous_sqrt.tendsto 0).comp hd).const_mul (2 ^ n * K)
-    refine squeeze_zero hVnn (fun k => hV k _ ?_) hs
-    have := (hfreq k).2.1
-    have : (0 : ℝ) < 1 / ((k : ℝ) + 1) := by positivity
-    linarith
-  -- The renormalized sequence.
-  set c : ℕ → ℝ := fun k => (√(H k))⁻¹ with hc
-  have hc2 : ∀ k, c k ^ 2 = 1 / H k := fun k => by
-    simp only [hc, inv_pow, Real.sq_sqrt (hH k).le, one_div]
-  have hc0 : ∀ k, 0 ≤ c k := fun k => inv_nonneg.2 (Real.sqrt_nonneg _)
-  set v : ℕ → Rn n → ℝ := fun k y => c k * u k y with hv
-  have hgrad : ∀ k y, gradient (v k) y = c k • gradient (u k) y := fun k y =>
-    gradient_const_mul (c k) (u k) y
-  -- Lipschitz bound.
-  have hLip : ∀ k, ∃ L, LipschitzOnWith L (v k) (closedBall 0 1) := fun k =>
-    ⟨_, ((lipschitzWith_smul (c k)).comp_lipschitzOnWith ((hsol k).lipschitzOnWith 0 2
-      (ball_subset_closedBall.trans hΩ))).mono (closedBall_subset_ball (by norm_num))⟩
-  -- `W^{1,2}(B_1)` bound.
-  have hbd : ∀ k, ∫ y in ball (0 : Rn n) 1, (v k y ^ 2 + ‖gradient (v k) y‖ ^ 2) ≤
-      1 + (Nplus + 2 ^ n * K * √Nplus) := by
-    intro k
-    have hpt : ∀ y, v k y ^ 2 + ‖gradient (v k) y‖ ^ 2 =
-        (u k y ^ 2 + ‖gradient (u k) y‖ ^ 2) / H k := fun y => by
-      rw [hgrad, norm_smul, Real.norm_eq_abs, abs_of_nonneg (hc0 k)]
-      simp only [hv]
-      rw [mul_pow, mul_pow, hc2]
-      ring
-    simp_rw [hpt]
-    rw [integral_div, integral_add ((hsol k).integrableOn_sq_of_closedBall hcB1)
-      ((hsol k).integrableOn_norm_gradient_sq hB1),
-      (hsol k).integral_ball_one_norm_gradient_sq_eq hΩ (hH k), div_le_iff₀ (hH k)]
-    have h1 := (hsol k).integral_ball_one_sq_le hΩ
-    have h2 : frequencyN (u k) (χ k) 0 1 + volumeV (u k) (χ k) 0 1 ≤
-        Nplus + 2 ^ n * K * √Nplus := add_le_add ((hfreq k).2.2.trans (hN k)) (hVbd k)
-    have h3 := mul_le_mul_of_nonneg_right h2 (hH k).le
-    simp only [hHdef] at h3 ⊢
-    nlinarith
-  -- Nonnegativity.
-  have hnn : ∀ k, ∀ y ∈ ball (0 : Rn n) 1, 0 ≤ v k y := fun k y hy =>
-    mul_nonneg (hc0 k) ((hsol k).nonneg y (hB1 hy))
-  -- Euler defect.
-  have hE : Tendsto (fun k => ∫ y in A, (⟪gradient (v k) y, y⟫ - Ninf * v k y) ^ 2) atTop
-      (𝓝 0) := by
-    have hR : Tendsto (fun k => (frequencyN (u k) (χ k) 0 1 - frequencyN (u k) (χ k) 0 (1 / 2)) +
-        2 * max ((frequencyN (u k) (χ k) 0 1 - Ninf) ^ 2)
-          ((frequencyN (u k) (χ k) 0 (1 / 2) - Ninf) ^ 2)) atTop (𝓝 0) := by
-      have h1 := hlim1.sub hlim
-      have h2 := ((hlim1.sub_const Ninf).pow 2).max ((hlim.sub_const Ninf).pow 2)
-      simpa using h1.add (h2.const_mul 2)
-    refine squeeze_zero (fun k => setIntegral_nonneg (isOpen_ball.sdiff isClosed_closedBall
-      |>.measurableSet) fun y _ => sq_nonneg _) (fun k => ?_) hR
-    have hpt : ∀ y, (⟪gradient (v k) y, y⟫ - Ninf * v k y) ^ 2 =
-        (⟪gradient (u k) y, y⟫ - Ninf * u k y) ^ 2 / H k := fun y => by
-      rw [hgrad, inner_smul_left]
-      simp only [hv, conj_trivial]
-      rw [show c k * ⟪gradient (u k) y, y⟫ - Ninf * (c k * u k y) =
-        c k * (⟪gradient (u k) y, y⟫ - Ninf * u k y) by ring, mul_pow, hc2]
-      ring
-    simp_rw [hpt]
-    rw [integral_div, div_le_iff₀ (hH k), mul_comm]
-    exact (hsol k).integral_annulus_euler_le hΩ (hcl k) (hM k) Ninf
-  -- Tangential energy.
-  have htan' : Tendsto (fun k => ∫ y in A,
-      ‖gradient (v k) y - ⟪gradient (v k) y, ν k⟫ • ν k‖ ^ 2) atTop (𝓝 0) := by
-    refine htan.congr fun k => ?_
-    have hpt : ∀ y, ‖gradient (v k) y - ⟪gradient (v k) y, ν k⟫ • ν k‖ ^ 2 =
-        ‖gradient (u k) y - ⟪gradient (u k) y, ν k⟫ • ν k‖ ^ 2 / H k := fun y => by
-      rw [hgrad, inner_smul_left, conj_trivial, ← smul_smul, ← smul_sub, norm_smul, mul_pow,
-        Real.norm_eq_abs, sq_abs, hc2]
-      ring
-    simp_rw [hpt]
-    rw [integral_div]
-  -- Mass on `A`.
-  have hmass : ∀ k, 1 / 4 * ((3 / 4) ^ (n + 1) / K) ≤ ∫ y in A, v k y ^ 2 := by
-    intro k
-    have hpt : ∀ y, v k y ^ 2 = u k y ^ 2 / H k := fun y => by
-      simp only [hv]
-      rw [mul_pow, hc2]
-      ring
-    simp_rw [hpt]
-    rw [integral_div, le_div_iff₀ (hH k)]
-    have := (hsol k).mul_heightH_le_integral_annulus_sq hΩ (hcl k) (hM k) hNp
-      ((hfreq k).2.2.trans ((hN k).trans (by linarith)))
-    calc 1 / 4 * ((3 / 4) ^ (n + 1) / K) * H k =
-        1 / 4 * ((3 / 4) ^ (n + 1) * heightH (u k) 0 1 / K) := by simp only [hHdef]; ring
-      _ ≤ _ := this
-  -- Domain-variation defect.
-  have hdv : ∀ φ : Rn n → ℝ, ContDiff ℝ (⊤ : ℕ∞) φ → HasCompactSupport φ →
-      tsupport φ ⊆ A → ∀ e : Rn n,
-      Tendsto (fun k => ∫ y, Kernel.gradVariation (v k) (fun z => φ z • e) y) atTop (𝓝 0) := by
-    intro φ hφ hφc hφA e
-    have hξ : IsSmoothTestField (ball (0 : Rn n) 1) (fun z => φ z • e) :=
-      ⟨hφ.smul contDiff_const, hφc.smul_right, (tsupport_smul_subset_left _ _).trans
-        (hφA.trans hAB)⟩
-    obtain ⟨D, hD⟩ := hξ.isLipTestField.1
-    have hpt : ∀ k y, Kernel.gradVariation (v k) (fun z => φ z • e) y =
-        Kernel.gradVariation (u k) (fun z => φ z • e) y / H k := fun k y => by
-      simp only [Kernel.gradVariation, hgrad, norm_smul, map_smul, inner_smul_left,
-        inner_smul_right, conj_trivial, Real.norm_eq_abs, abs_of_nonneg (hc0 k)]
-      rw [div_eq_mul_one_div _ (H k), ← hc2 k]
-      ring
-    have hbound : ∀ k, ‖∫ y, Kernel.gradVariation (v k) (fun z => φ z • e) y‖ ≤
-        n * D * volumeV (u k) (χ k) 0 1 := fun k => by
-      simp_rw [hpt k]
-      rw [integral_div, Real.norm_eq_abs, abs_div, abs_of_pos (hH k), div_le_iff₀ (hH k)]
-      have := (hsol k).abs_integral_gradVariation_le_volumeV hΩ (hH k) hξ.isLipTestField hD
-      simp only [hHdef]
-      linarith
-    have hl : Tendsto (fun k => (n : ℝ) * D * volumeV (u k) (χ k) 0 1) atTop (𝓝 0) := by
-      simpa using hV0.const_mul ((n : ℝ) * D)
-    exact tendsto_zero_iff_norm_tendsto_zero.2 (squeeze_zero (fun k => norm_nonneg _) hbound hl)
-  -- The energy identity (`v_k` is harmonic where positive).
-  have henergy : ∀ η : Rn n → ℝ, ContDiff ℝ (⊤ : ℕ∞) η → HasCompactSupport η → tsupport η ⊆ A →
-      ∀ k, ∫ y, ‖gradient (v k) y‖ ^ 2 * η y = -∫ y, v k y * ⟪gradient (v k) y, gradient η y⟫ := by
-    intro η hη hηc hηA k
-    have h := (hsol k).isLipHarmonicPos.integral_norm_gradient_sq_mul
-      (hη.lipschitzWith_of_hasCompactSupport hηc (by simp)) hηc (hηA.trans (hAB.trans hB1))
-    have e1 : ∀ y, ‖gradient (v k) y‖ ^ 2 * η y =
-        c k ^ 2 * (‖gradient (u k) y‖ ^ 2 * η y) := fun y => by
-      rw [hgrad, norm_smul, Real.norm_eq_abs, mul_pow, sq_abs]
-      ring
-    have e2 : ∀ y, v k y * ⟪gradient (v k) y, gradient η y⟫ =
-        c k ^ 2 * (u k y * ⟪gradient (u k) y, gradient η y⟫) := fun y => by
-      rw [hgrad, inner_smul_left, conj_trivial]
-      simp only [hv]
-      ring
-    simp_rw [e1, e2, integral_const_mul, h]
-    ring
-  -- The radial mass identity in the limit `N_∞ = 1`.
-  have hmassLim : Ninf = 1 → Tendsto (fun k => ∫ y in A, v k y ^ 2) atTop
-      (𝓝 (∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1))) := by
-    rintro rfl
-    set Np : ℕ → ℝ := fun k => frequencyN (u k) (χ k) 0 1 + 1 / ((k : ℝ) + 1) with hNpdef
-    have hk0 : ∀ k : ℕ, (0 : ℝ) < 1 / ((k : ℝ) + 1) := fun k => by positivity
-    have hNp1 : ∀ k, 1 < Np k := fun k => by
-      have := (hfreq k).1.trans (hfreq k).2.1
-      simp only [hNpdef]
-      linarith [hk0 k]
-    have hNpN : ∀ k, frequencyN (u k) (χ k) 0 1 ≤ Np k := fun k => by
-      simp only [hNpdef]
-      linarith [hk0 k]
-    have hNpt : Tendsto Np atTop (𝓝 1) := by
-      have := hlim1.add tendsto_one_div_add_atTop_nhds_zero_nat
-      rw [add_zero] at this
-      exact this
-    have hDc : Continuous Abstract.RadialData.doublingConst := by
-      unfold Abstract.RadialData.doublingConst
-      fun_prop
-    have hDt : Tendsto (fun k => Abstract.RadialData.doublingConst (Np k)) atTop (𝓝 1) := by
-      have := (hDc.tendsto 1).comp hNpt
-      simpa [Abstract.RadialData.doublingConst] using this
-    have hpt : ∀ k, ∫ y in A, v k y ^ 2 =
-        (∫ y in A, u k y ^ 2) / heightH (u k) 0 1 := fun k => by
-      rw [← integral_div]
-      refine integral_congr_ae (Eventually.of_forall fun y => ?_)
-      simp only [hv]
-      rw [mul_pow, hc2]
-      simp only [hHdef]
-      ring
-    refine tendsto_of_tendsto_of_tendsto_of_le_of_le
-      (g := fun k => (∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1)) /
-        Abstract.RadialData.doublingConst (Np k))
-      (h := fun _ => ∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1)) ?_ tendsto_const_nhds (fun k => ?_)
-      (fun k => ?_)
-    · simpa using (tendsto_const_nhds (x := ∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1))).div hDt
-        one_ne_zero
-    · have hb := ((hsol k).integral_annulus_sq_mem_Icc hΩ (hcl k) (hM k) (hNp1 k) (hNpN k)).1
-      have hH' : 0 < heightH (u k) 0 1 := hH k
-      rw [hpt, le_div_iff₀ hH']
-      calc (∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1)) / Abstract.RadialData.doublingConst (Np k) *
-            heightH (u k) 0 1
-          = heightH (u k) 0 1 * (∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1)) /
-            Abstract.RadialData.doublingConst (Np k) := by ring
-        _ ≤ _ := hb
-    · have hb := ((hsol k).integral_annulus_sq_mem_Icc hΩ (hcl k) (hM k) (hNp1 k) (hNpN k)).2
-      have hH' : 0 < heightH (u k) 0 1 := hH k
-      rw [hpt, div_le_iff₀ hH', mul_comm]
-      exact hb
-  exact ⟨hLip, ⟨_, hbd⟩, hnn, hE, htan', ⟨_, by positivity, hmass⟩, hdv, henergy, hmassLim⟩
+  obtain ⟨hZ, hE⟩ := one_hypotheses hsol hΩ hM
+  have e2 := fun k => hE k 2 two_pos le_rfl
+  have e12 := fun k => hE k (1 / 2) (by norm_num) (by norm_num)
+  exact renormalizedQ_properties (Q := fun _ _ => 1) (L := fun _ => 0) (c := fun _ => 1)
+    (C' := fun _ => 1)
+    (fun _ => QBounds.one Ω) (fun k => (hsol k).toQ) hΩ (fun _ => by simp [weissKappa_zero]) hcl
+    hZ (fun k => (e2 k).trans_le (hN k)) (by simpa only [e2, e12] using hδ) htan
+    (by simpa only [e12] using hlim) v hv
 
 /-- **Theorem 5.3 along a sequence with `N_0(u_k; 1/2) → N_∞`: `N_∞ = 1`.** This is the core of
 `approx1D_limit_frequency_eq_one`. The renormalized sequence `v_k = u_k / √H_0(u_k; 1)` satisfies
@@ -459,37 +270,14 @@ theorem approx1D_limit_tendsto_profile [NeZero n] (hn : 2 ≤ n) {Ω : Set (Rn n
         ‖gradient (u k) y -
           (√(heightH (u k) 0 1) * alphaN n) • gradient (absProfile (ν k) 0) y‖ ^ 2) /
           heightH (u k) 0 1) atTop (𝓝 0) := by
-  have h1 := approx1D_limit_frequency_eq_one hn hν hsol hΩ hcl hM hN hδ htan
-  refine ⟨h1, ?_⟩
-  obtain ⟨hLip, ⟨C, hbd⟩, hnn, hE, htan', -, hdv, henergy, hmassLim⟩ :=
-    renormalized_properties hsol hΩ hcl hM hN hδ htan h1
-      (fun k y => (√(heightH (u k) 0 1))⁻¹ * u k y) fun _ _ => rfl
-  obtain ⟨hR1, hR2⟩ := tendsto_profile_of_renormalized hn _ hν hLip hbd hnn
-    (by simpa only [one_mul] using hE) htan' (hmassLim rfl) hdv henergy
-  have hH : ∀ k, 0 < heightH (u k) 0 1 := fun k => (hsol k).heightH_one_pos hΩ (hcl k)
-  refine ⟨hR1.congr fun k => ?_, hR2.congr fun k => ?_⟩
-  · have hs0 : √(heightH (u k) 0 1) ≠ 0 := (Real.sqrt_pos.2 (hH k)).ne'
-    have hs2 : √(heightH (u k) 0 1) ^ 2 = heightH (u k) 0 1 := Real.sq_sqrt (hH k).le
-    rw [← integral_div]
-    refine integral_congr_ae (Eventually.of_forall fun y => ?_)
-    dsimp only
-    have e : (√(heightH (u k) 0 1))⁻¹ * u k y - alphaN n * absProfile (ν k) 0 y =
-        (√(heightH (u k) 0 1))⁻¹ *
-          (u k y - √(heightH (u k) 0 1) * alphaN n * absProfile (ν k) 0 y) := by
-      rw [mul_sub, ← mul_assoc, ← mul_assoc, inv_mul_cancel₀ hs0, one_mul]
-    rw [e, mul_pow, inv_pow, hs2, inv_mul_eq_div]
-  · have hs0 : √(heightH (u k) 0 1) ≠ 0 := (Real.sqrt_pos.2 (hH k)).ne'
-    have hs2 : √(heightH (u k) 0 1) ^ 2 = heightH (u k) 0 1 := Real.sq_sqrt (hH k).le
-    rw [← integral_div]
-    refine integral_congr_ae (Eventually.of_forall fun y => ?_)
-    dsimp only
-    rw [gradient_const_mul]
-    have e : (√(heightH (u k) 0 1))⁻¹ • gradient (u k) y -
-        alphaN n • gradient (absProfile (ν k) 0) y =
-        (√(heightH (u k) 0 1))⁻¹ • (gradient (u k) y -
-          (√(heightH (u k) 0 1) * alphaN n) • gradient (absProfile (ν k) 0) y) := by
-      rw [smul_sub, smul_smul, ← mul_assoc, inv_mul_cancel₀ hs0, one_mul]
-    rw [e, norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, inv_pow, hs2, inv_mul_eq_div]
+  obtain ⟨hZ, hE⟩ := one_hypotheses hsol hΩ hM
+  have e2 := fun k => hE k 2 two_pos le_rfl
+  have e12 := fun k => hE k (1 / 2) (by norm_num) (by norm_num)
+  exact ⟨approx1D_limit_frequency_eq_one hn hν hsol hΩ hcl hM hN hδ htan,
+    (approx1DQ_limit_tendsto_profile (Q := fun _ _ => 1) (L := fun _ => 0) (c := fun _ => 1)
+      (C' := fun _ => 1) hn hν
+      (fun _ => QBounds.one Ω) (fun k => (hsol k).toQ) hΩ (fun _ => by simp [weissKappa_zero]) hcl
+      hZ (fun k => (e2 k).trans_le (hN k)) (by simpa only [e2, e12] using hδ) htan).2⟩
 
 /-! ### The paper's coordinate form -/
 

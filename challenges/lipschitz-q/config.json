@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": [
+    "challenge_sigmaHQ_density",
+    "challenge_sigmaHQ_closed",
+    "challenge_viscosityQ",
+    "challenge_blowup_limitQ",
+    "challenge_blowup_homogeneousQ",
+    "challenge_chi_eq_indicatorQ"
+  ],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+  "enable_nanoda": false
+}

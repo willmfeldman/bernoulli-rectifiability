@@ -7,6 +7,7 @@ module
 
 public import InnerVariational.Kernel.Harmonic
 public import InnerVariational.Defs.VariationalSolution
+public import InnerVariational.Kernel.VariationalQ
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Analysis.Distribution.AEEqOfIntegralContDiff
 import Mathlib.Analysis.Calculus.FDeriv.Symmetric
@@ -21,16 +22,22 @@ Kriventsov–Weiss, Proposition 3.2 (full reference below): a variational soluti
 
 ## Main results
 
-* `IsVariationalSolution.harmonicOn_pos`: `u` is harmonic at every `x ∈ Ω` with `u x > 0`.
-* `IsVariationalSolution.isLipHarmonicPos`: `(u, Ω)` satisfies `IsLipHarmonicPos`.
-* `IsVariationalSolution.weaklySubharmonic`, `IsVariationalSolution.weaklySubharmonic_sq`:
+* `IsVariationalSolutionQ.harmonicOn_pos`: `u` is harmonic at every `x ∈ Ω` with `u x > 0`.
+* `IsVariationalSolutionQ.isLipHarmonicPos`: `(u, Ω)` satisfies `IsLipHarmonicPos`.
+* `IsVariationalSolutionQ.weaklySubharmonic`, `IsVariationalSolutionQ.weaklySubharmonic_sq`:
   `u` and `u²` are weakly subharmonic on `Ω`.
+
+The results are proved for a Lipschitz coefficient `Q` with `0 < c ≤ Q ≤ C` (`QBounds`); the
+statements for `IsVariationalSolution` (the coefficient `Q ≡ 1`) are their specializations.
 
 ## Proof
 
 We follow the paper. For `φ ∈ C^∞_c(Ω ∩ {u > 0})` and a fixed vector `e`, test the inner variation
-with `ξ = φ e`. Since `χ = 1` a.e. on `{u > 0}` and `∫ ∂_e φ = 0`, integrating by parts (for
-Lipschitz functions, `Registry.integral_mul_fderiv_eq_neg`) gives `∫ φ ∂_e u Δu = 0`
+with `ξ = φ e`. Since `χ = 1` a.e. on `{u > 0}`, the quadratic part
+`∫ (|∇u|² div ξ − 2 ∇u · Dξ ∇u)` of the inner variation vanishes
+(`IsVariationalSolutionQ.integral_gradVariation_eq_zero_of_pos`: the remaining terms form
+`∫ div (Q² ξ) = 0`). Integrating by parts (for Lipschitz functions,
+`Registry.integral_mul_fderiv_eq_neg`) gives `∫ φ ∂_e u Δu = 0`
 (`integral_mul_fderiv_mul_laplacian_eq_zero`). The paper writes this as `∫ ξ·∇u Δu = 0`. Hence
 `∂_e u Δu = 0` on `{u > 0}` by the fundamental lemma of the calculus of variations and continuity.
 On the open set `{Δu ≠ 0} ∩ {u > 0}` this forces `∇u = 0`, hence `D²u = 0` and `Δu = 0`, so that set
@@ -88,27 +95,14 @@ theorem continuousOn_gradient {V : Set (Rn n)} (hV : IsOpen V) {u : Rn n → ℝ
 
 end Kernel
 
-namespace IsVariationalSolution
+namespace IsVariationalSolutionQ
 
-variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ}
-
-theorem isOpen_pos (h : IsVariationalSolution Ω C u χ) : IsOpen (Ω ∩ {x | 0 < u x}) :=
-  h.continuousOn.isOpen_inter_preimage h.isOpen isOpen_Ioi
-
-/-- `χ = 1` a.e. on `Ω ∩ {u > 0}`. -/
-theorem ae_chi_eq_one (h : IsVariationalSolution Ω C u χ) :
-    ∀ᵐ y, y ∈ Ω → 0 < u y → χ y = 1 := by
-  filter_upwards [(ae_restrict_iff' h.isOpen.measurableSet).1 h.posIndicator_le_chi]
-    with y hy hyΩ hpos
-  have h1 := hy hyΩ
-  rw [posIndicator_of_pos hpos] at h1
-  rcases h.chi_mem y hyΩ with h0 | h1'
-  · rw [h0] at h1; norm_num at h1
-  · exact h1'
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {Q u χ : Rn n → ℝ} {L : ℝ≥0} {c C' : ℝ}
 
 /-- The identity `∫ φ ∂_e u Δu = 0` for `φ ∈ C^∞_c(Ω ∩ {u > 0})`. It comes from the inner
 variation in the direction `ξ = φ e` (proof of Proposition 3.2). -/
-theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ)
+theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C')
     {φ : Rn n → ℝ} (hφ : IsTestFunction (Ω ∩ {x | 0 < u x}) φ) (e : Rn n) :
     ∫ y, φ y * (fderiv ℝ u y e * Δ u y) = 0 := by
   set V := Ω ∩ {x | 0 < u x}
@@ -125,10 +119,9 @@ theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω 
   have hdφc : Continuous (fderiv ℝ φ) := hφs.continuous_fderiv (by simp)
   -- the test field `ξ = φ e`
   set ξ : Rn n → Rn n := fun y => φ y • e with hξ
-  have hξt : IsLipTestField Ω ξ :=
+  have hξV : IsLipTestField V ξ :=
     IsSmoothTestField.isLipTestField ⟨hφs.smul contDiff_const, hφc.smul_right,
-      (tsupport_smul_subset_left φ fun _ => e).trans (hφV.trans inter_subset_left)⟩
-  have hIV := h.innerVariation_eq_zero ξ hξt
+      (tsupport_smul_subset_left φ fun _ => e).trans hφV⟩
   have hDξ : ∀ y, fderiv ℝ ξ y = (fderiv ℝ φ y).smulRight e := fun y => fderiv_smul_const (hφd y) e
   have hdiv : ∀ y, divergence ξ y = fderiv ℝ φ y e := by
     intro y
@@ -152,31 +145,12 @@ theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω 
   have hint : ∀ f : Rn n → ℝ, ContinuousOn f V → (∀ y ∉ K, f y = 0) → Integrable f :=
     fun f hf h0 => Kernel.integrable_of_continuousOn_of_isCompact hV hK hφV hf h0
   have hgradu : ContinuousOn (gradient u) V := Kernel.continuousOn_gradient hV hu1
-  -- step 1: rewrite the inner variation
-  have hae : ∀ᵐ y, ((‖gradient u y‖ ^ 2 + χ y) * divergence ξ y -
-      2 * ⟪gradient u y, fderiv ℝ ξ y (gradient u y)⟫) =
-      (q y * fderiv ℝ φ y e - 2 * (fderiv ℝ φ y (gradient u y) * pe y)) + fderiv ℝ φ y e := by
-    filter_upwards [h.ae_chi_eq_one] with y hy
-    rw [hdiv, hDξ, ContinuousLinearMap.smulRight_apply, real_inner_smul_right,
-      Kernel.inner_gradient_left]
-    by_cases hyK : y ∈ K
-    · rw [hy (hφV hyK).1 (hφV hyK).2]
-      ring
-    · rw [hdφ0 y hyK]
-      simp
-  have hA : Integrable fun y => q y * fderiv ℝ φ y e - 2 * (fderiv ℝ φ y (gradient u y) * pe y) :=
-    hint _ ((hq1.continuousOn.mul (hdφc.clm_apply continuous_const).continuousOn).sub
-      (continuousOn_const.mul (((hdφc.continuousOn).clm_apply hgradu).mul hpe1.continuousOn)))
-      (fun y hy => by simp [hdφ0 y hy])
-  have hB : Integrable fun y => fderiv ℝ φ y e :=
-    (hdφc.clm_apply continuous_const).integrable_of_hasCompactSupport
-      (hφc.fderiv_apply (𝕜 := ℝ) e)
-  have hconst : ∫ y, fderiv ℝ φ y e = 0 := by
-    have := Registry.integral_mul_fderiv_eq_neg (Ω := univ) isOpen_univ (f := fun _ => (1 : ℝ))
-      (fun y _ => ⟨0, univ, univ_mem, (LipschitzWith.const (1 : ℝ)).lipschitzOnWith⟩)
-      (hφs.lipschitzWith_of_hasCompactSupport hφc (by simp)) hφc (subset_univ _) e
-    simpa using this
-  rw [innerVariation, integral_congr_ae hae, integral_add hA hB, hconst, add_zero] at hIV
+  -- step 1: the quadratic part of the inner variation along `ξ` vanishes
+  have hIV : ∫ y, (q y * fderiv ℝ φ y e - 2 * (fderiv ℝ φ y (gradient u y) * pe y)) = 0 := by
+    rw [← h.integral_gradVariation_eq_zero_of_pos hQ hξV]
+    refine integral_congr_ae (.of_forall fun y => ?_)
+    simp only [Kernel.gradVariation, hdiv, hDξ, ContinuousLinearMap.smulRight_apply,
+      real_inner_smul_right, Kernel.inner_gradient_left, hq, hpe]
   -- step 2: the pointwise identity on `V`
   have hD : ∀ y ∈ V, fderiv ℝ q y e = 2 * fderiv ℝ (fderiv ℝ u) y e (gradient u y) := by
     intro y hy
@@ -244,8 +218,10 @@ theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω 
   simpa only [hg, mul_assoc] using this
 
 /-- `∂_e u Δu = 0` on `Ω ∩ {u > 0}`. -/
-theorem fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) (e : Rn n)
-    {y : Rn n} (hy : y ∈ Ω ∩ {x | 0 < u x}) : fderiv ℝ u y e * Δ u y = 0 := by
+theorem fderiv_mul_laplacian_eq_zero (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') (e : Rn n)
+    {y : Rn n} (hy : y ∈ Ω ∩ {x | 0 < u x}) :
+    fderiv ℝ u y e * Δ u y = 0 := by
   set V := Ω ∩ {x | 0 < u x}
   have hV : IsOpen V := h.isOpen_pos
   have hu : ContDiffOn ℝ 2 u V := h.contDiffOn
@@ -264,7 +240,7 @@ theorem fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) (e : 
   have hae := hV.ae_eq_zero_of_integral_contDiff_smul_eq_zero (μ := volume)
     (hf.locallyIntegrableOn hV.measurableSet) (fun g hg hgc hgV => by
       simpa only [smul_eq_mul] using
-        h.integral_mul_fderiv_mul_laplacian_eq_zero ⟨hg, hgc, hgV⟩ e)
+        h.integral_mul_fderiv_mul_laplacian_eq_zero hQ ⟨hg, hgc, hgV⟩ e)
   set W := V ∩ f ⁻¹' {0}ᶜ
   have hW : IsOpen W := hf.isOpen_inter_preimage hV isOpen_compl_singleton
   have hW0 : volume W = 0 := by
@@ -278,7 +254,8 @@ theorem fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) (e : 
   exact this
 
 /-- `Δu = 0` on `Ω ∩ {u > 0}` (proof of Proposition 3.2). -/
-theorem laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) {y : Rn n}
+theorem laplacian_eq_zero (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {y : Rn n}
     (hy : y ∈ Ω ∩ {x | 0 < u x}) : Δ u y = 0 := by
   set V := Ω ∩ {x | 0 < u x}
   have hV : IsOpen V := h.isOpen_pos
@@ -299,7 +276,7 @@ theorem laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) {y : Rn n}
   have hDu : fderiv ℝ u =ᶠ[𝓝 y] fun _ => 0 := by
     filter_upwards [hW.mem_nhds hyW] with z hz
     ext e
-    have := h.fderiv_mul_laplacian_eq_zero e hz.1
+    have := h.fderiv_mul_laplacian_eq_zero hQ e hz.1
     rw [ContinuousLinearMap.zero_apply]
     exact (mul_eq_zero.1 this).resolve_right hz.2
   have hD2 : fderiv ℝ (fderiv ℝ u) y = 0 := by
@@ -310,28 +287,82 @@ theorem laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) {y : Rn n}
   simp
 
 /-- **Proposition 3.2**: a variational solution is harmonic on `Ω ∩ {u > 0}`. -/
-theorem harmonicOn_pos (h : IsVariationalSolution Ω C u χ) {x : Rn n} (hx : x ∈ Ω)
+theorem harmonicOn_pos (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {x : Rn n} (hx : x ∈ Ω)
     (hpos : 0 < u x) : HarmonicAt u x := by
   have hxV : Ω ∩ {x | 0 < u x} ∈ 𝓝 x := h.isOpen_pos.mem_nhds ⟨hx, hpos⟩
   exact ⟨h.contDiffOn.contDiffAt hxV,
-    Filter.mem_of_superset hxV fun y hy => h.laplacian_eq_zero hy⟩
+    Filter.mem_of_superset hxV fun y hy => h.laplacian_eq_zero hQ hy⟩
 
 /-- A variational solution satisfies `IsLipHarmonicPos`. -/
-theorem isLipHarmonicPos (h : IsVariationalSolution Ω C u χ) : IsLipHarmonicPos Ω u where
+theorem isLipHarmonicPos (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') : IsLipHarmonicPos Ω u where
   isOpen := h.isOpen
   nonneg := h.nonneg
   lipschitzOnWith := ⟨C, h.lipschitzOnWith⟩
-  harmonicAt _ hx hpos := h.harmonicOn_pos hx hpos
+  harmonicAt _ hx hpos := h.harmonicOn_pos hQ hx hpos
+
+/-- **Proposition 3.2**: a variational solution is weakly subharmonic on `Ω`. -/
+theorem weaklySubharmonic (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') : IsWeaklySubharmonicOn Ω u :=
+  (h.isLipHarmonicPos hQ).weaklySubharmonic
+
+/-- `u²` is weakly subharmonic on `Ω`. With the sub-mean-value property of weakly
+subharmonic functions this gives the monotonicity of the spherical means of `u²`. -/
+theorem weaklySubharmonic_sq (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') :
+    IsWeaklySubharmonicOn Ω fun z => u z ^ 2 :=
+  (h.isLipHarmonicPos hQ).weaklySubharmonic_sq
+
+end IsVariationalSolutionQ
+
+namespace IsVariationalSolution
+
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ}
+
+theorem isOpen_pos (h : IsVariationalSolution Ω C u χ) : IsOpen (Ω ∩ {x | 0 < u x}) :=
+  h.toQ.isOpen_pos
+
+/-- `χ = 1` a.e. on `Ω ∩ {u > 0}`. -/
+theorem ae_chi_eq_one (h : IsVariationalSolution Ω C u χ) :
+    ∀ᵐ y, y ∈ Ω → 0 < u y → χ y = 1 :=
+  h.toQ.ae_chi_eq_one
+
+/-- The identity `∫ φ ∂_e u Δu = 0` for `φ ∈ C^∞_c(Ω ∩ {u > 0})`. It comes from the inner
+variation in the direction `ξ = φ e` (proof of Proposition 3.2). -/
+theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ)
+    {φ : Rn n → ℝ} (hφ : IsTestFunction (Ω ∩ {x | 0 < u x}) φ) (e : Rn n) :
+    ∫ y, φ y * (fderiv ℝ u y e * Δ u y) = 0 :=
+  h.toQ.integral_mul_fderiv_mul_laplacian_eq_zero (QBounds.one Ω) hφ e
+
+/-- `∂_e u Δu = 0` on `Ω ∩ {u > 0}`. -/
+theorem fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) (e : Rn n)
+    {y : Rn n} (hy : y ∈ Ω ∩ {x | 0 < u x}) : fderiv ℝ u y e * Δ u y = 0 :=
+  h.toQ.fderiv_mul_laplacian_eq_zero (QBounds.one Ω) e hy
+
+/-- `Δu = 0` on `Ω ∩ {u > 0}` (proof of Proposition 3.2). -/
+theorem laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) {y : Rn n}
+    (hy : y ∈ Ω ∩ {x | 0 < u x}) : Δ u y = 0 :=
+  h.toQ.laplacian_eq_zero (QBounds.one Ω) hy
+
+/-- **Proposition 3.2**: a variational solution is harmonic on `Ω ∩ {u > 0}`. -/
+theorem harmonicOn_pos (h : IsVariationalSolution Ω C u χ) {x : Rn n} (hx : x ∈ Ω)
+    (hpos : 0 < u x) : HarmonicAt u x :=
+  h.toQ.harmonicOn_pos (QBounds.one Ω) hx hpos
+
+/-- A variational solution satisfies `IsLipHarmonicPos`. -/
+theorem isLipHarmonicPos (h : IsVariationalSolution Ω C u χ) : IsLipHarmonicPos Ω u :=
+  h.toQ.isLipHarmonicPos (QBounds.one Ω)
 
 /-- **Proposition 3.2**: a variational solution is weakly subharmonic on `Ω`. -/
 theorem weaklySubharmonic (h : IsVariationalSolution Ω C u χ) : IsWeaklySubharmonicOn Ω u :=
-  h.isLipHarmonicPos.weaklySubharmonic
+  h.toQ.weaklySubharmonic (QBounds.one Ω)
 
 /-- `u²` is weakly subharmonic on `Ω`. With the sub-mean-value property of weakly
 subharmonic functions this gives the monotonicity of the spherical means of `u²`. -/
 theorem weaklySubharmonic_sq (h : IsVariationalSolution Ω C u χ) :
     IsWeaklySubharmonicOn Ω fun z => u z ^ 2 :=
-  h.isLipHarmonicPos.weaklySubharmonic_sq
+  h.toQ.weaklySubharmonic_sq (QBounds.one Ω)
 
 end IsVariationalSolution
 

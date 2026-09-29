@@ -197,9 +197,11 @@ theorem tendsto_annulus_mul (hr₀ : 0 < r₀) (hHpos : ∀ s ∈ Ioo 0 r₀, 0 
     rw [e3, ← e1]
     linarith
 
-/-- **Assembly of the annuli** (proof of Lemma 8.5 (1)). See the module docstring. -/
-theorem tendsto_ball_of_tendsto_annulus (hm : m ≠ 0) (hr₀ : 0 < r₀)
-    (hHpos : ∀ s ∈ Ioo 0 r₀, 0 < H s) (hHmono : MonotoneOn H (Ioo 0 r₀))
+/-- **Assembly of the annuli** (proof of Lemma 8.5 (1)), with `H` nondecreasing up to a factor
+`D`: `H(s) ≤ D H(r)` for `s ≤ r` near `0`. See the module docstring. -/
+theorem tendsto_ball_of_tendsto_annulus' {D : ℝ} (hD : 0 ≤ D) (hm : m ≠ 0) (hr₀ : 0 < r₀)
+    (hHpos : ∀ s ∈ Ioo 0 r₀, 0 < H s)
+    (hHmono : ∀ s ∈ Ioo 0 r₀, ∀ r ∈ Ioo 0 r₀, s ≤ r → H s ≤ D * H r)
     (hratio : ∀ c, 0 < c → Tendsto (fun r => H (c * r) / H r) (𝓝[>] 0) (𝓝 1))
     (hint : ∀ k : ℝ, IntegrableOn (fun y => ‖f y - k • q y‖ ^ 2) (ball x r₀))
     (hqint : IntegrableOn (fun y => ‖q y‖ ^ 2) (ball x r₀)) (hK : 0 ≤ K)
@@ -217,8 +219,8 @@ theorem tendsto_ball_of_tendsto_annulus (hm : m ≠ 0) (hr₀ : 0 < r₀)
   set θ : ℝ := 5 / 7 with hθ
   have hθ0 : 0 ≤ θ := by norm_num [hθ]
   have hθ1 : θ ≤ 1 := by norm_num [hθ]
-  set B : ℝ := 2 * K + 2 * α ^ 2 * M with hB
-  have hB0 : 0 ≤ B := by positivity
+  set B : ℝ := 2 * K * D + 2 * α ^ 2 * M with hB
+  have hB0 : 0 ≤ B := add_nonneg (mul_nonneg (mul_nonneg two_pos.le hK) hD) (by positivity)
   rw [Metric.tendsto_nhds]
   intro η hη
   -- choose `J` with `B (R θ^J)^m < η / 2` and `R θ^J ≤ 1`
@@ -281,14 +283,14 @@ theorem tendsto_ball_of_tendsto_annulus (hm : m ≠ 0) (hr₀ : 0 < r₀)
         (hi1.const_mul 2) ((hi2.const_mul _).const_mul 2)]
       exact integral_mono_of_nonneg (Eventually.of_forall fun _ => sq_nonneg _)
         ((hi1.const_mul 2).add ((hi2.const_mul _).const_mul 2)) (Eventually.of_forall hpt)
-    have hfs : ∫ y in ball x s, ‖f y - (0 : ℝ) • q y‖ ^ 2 ≤ K * (s ^ m * H r) := by
+    have hfs : ∫ y in ball x s, ‖f y - (0 : ℝ) • q y‖ ^ 2 ≤ K * (s ^ m * (D * H r)) := by
       simp only [zero_smul, sub_zero]
       exact (hf s ⟨hs0, hs1⟩).trans (mul_le_mul_of_nonneg_left
-        (mul_le_mul_of_nonneg_left (hHmono ⟨hs0, hs1⟩ hr1 hsr) (by positivity)) hK)
+        (mul_le_mul_of_nonneg_left (hHmono s ⟨hs0, hs1⟩ r hr1 hsr) (by positivity)) hK)
     have hk2 : k ^ 2 = H r * α ^ 2 := by rw [hk, mul_pow, Real.sq_sqrt hH.le]
     have hqs := mul_le_mul_of_nonneg_left (hq s hs0) (sq_nonneg k)
     have e : B * (R * θ ^ J) ^ m * (r ^ m * H r) =
-        2 * (K * (s ^ m * H r)) + 2 * (k ^ 2 * (M * s ^ m)) := by
+        2 * (K * (s ^ m * (D * H r))) + 2 * (k ^ 2 * (M * s ^ m)) := by
       rw [hk2, hsR, hB, mul_pow]; ring
     rw [e]
     linarith
@@ -304,6 +306,23 @@ theorem tendsto_ball_of_tendsto_annulus (hm : m ≠ 0) (hr₀ : 0 < r₀)
   have h4 : ∑ j ∈ Finset.range J, (∫ y in annulusAt x (c j * r), F y) / (r ^ m * H r) <
       η / 2 := hr
   linarith
+
+/-- **Assembly of the annuli** (proof of Lemma 8.5 (1)). See the module docstring. -/
+theorem tendsto_ball_of_tendsto_annulus (hm : m ≠ 0) (hr₀ : 0 < r₀)
+    (hHpos : ∀ s ∈ Ioo 0 r₀, 0 < H s) (hHmono : MonotoneOn H (Ioo 0 r₀))
+    (hratio : ∀ c, 0 < c → Tendsto (fun r => H (c * r) / H r) (𝓝[>] 0) (𝓝 1))
+    (hint : ∀ k : ℝ, IntegrableOn (fun y => ‖f y - k • q y‖ ^ 2) (ball x r₀))
+    (hqint : IntegrableOn (fun y => ‖q y‖ ^ 2) (ball x r₀)) (hK : 0 ≤ K)
+    (hf : ∀ s ∈ Ioo 0 r₀, ∫ y in ball x s, ‖f y‖ ^ 2 ≤ K * (s ^ m * H s))
+    (hq : ∀ s, 0 < s → ∫ y in ball x s, ‖q y‖ ^ 2 ≤ M * s ^ m)
+    (hcons : Tendsto (fun ρ => (∫ y in annulusAt x ρ, ‖f y - (√(H ρ) * α) • q y‖ ^ 2) /
+      (ρ ^ m * H ρ)) (𝓝[>] 0) (𝓝 0))
+    {R : ℝ} (hR : 0 < R) :
+    Tendsto (fun r => (∫ y in ball x (R * r), ‖f y - (√(H r) * α) • q y‖ ^ 2) /
+      (r ^ m * H r)) (𝓝[>] 0) (𝓝 0) :=
+  tendsto_ball_of_tendsto_annulus' zero_le_one hm hr₀ hHpos
+    (fun _ hs _ hr hsr => (hHmono hs hr hsr).trans_eq (one_mul _).symm) hratio hint hqint hK hf
+    hq hcons hR
 
 end Singular
 

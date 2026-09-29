@@ -107,6 +107,161 @@ theorem exists_gt_ball_subset {Ω : Set (Rn n)} (hΩ : IsOpen Ω) {x : Rn n} {R 
 
 namespace IsVariationalSolution
 
+variable {Ω : Set (Rn n)} {x : Rn n} {R s : ℝ}
+
+theorem add_smul_mem_of_lt (hR : ball x R ⊆ Ω) (hs : 0 ≤ s) (hsR : s < R)
+    (ω : sphere (0 : Rn n) 1) : x + s • (ω : Rn n) ∈ Ω :=
+  hR ((add_smul_mem_ball_iff hs ω).2 hsR)
+
+theorem sphere_subset_of_lt (hR : ball x R ⊆ Ω) (hsR : s < R) :
+    sphere x s ⊆ Ω := fun _ hy =>
+  hR (mem_ball.2 ((mem_sphere.1 hy).trans_lt hsR))
+
+theorem aestronglyMeasurable_sphere_of_measurable {g : Rn n → ℝ} (hg : Measurable g) :
+    AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => g (x + s • (ω : Rn n)))
+      (sphereMeasure n) :=
+  (hg.comp (continuous_add_smul_sphere x s).measurable).aestronglyMeasurable
+
+end IsVariationalSolution
+
+/-! ### Sphere integrals for a variational solution with a coefficient `Q`
+
+These only use the Lipschitz bound on `u` and the measurability of `χ`; the versions for
+`Q ≡ 1` below are their specialisations. -/
+
+namespace IsVariationalSolutionQ
+
+open Kernel IsVariationalSolution
+
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {Q u χ : Rn n → ℝ} {x : Rn n} {R : ℝ} {L : ℝ≥0}
+  {c C' : ℝ}
+
+theorem sq_norm_gradient_le (h : IsVariationalSolutionQ Ω C Q u χ) {y : Rn n} (hy : y ∈ Ω) :
+    ‖gradient u y‖ ^ 2 ≤ (C : ℝ) ^ 2 :=
+  pow_le_pow_left₀ (norm_nonneg _) (h.norm_gradient_le hy) 2
+
+section Sphere
+
+variable {s : ℝ}
+
+theorem aestronglyMeasurable_sphere_chi (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hR : ball x R ⊆ Ω) (hs : 0 ≤ s) (hsR : s < R) :
+    AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => χ (x + s • (ω : Rn n)))
+      (sphereMeasure n) :=
+  (aestronglyMeasurable_sphere_of_measurable h.measurable_chi).congr
+    (.of_forall fun ω => indicator_of_mem (add_smul_mem_of_lt hR hs hsR ω) χ)
+
+/-- `|u| ≤ |u(x)| + C s` on `∂B_s(x)`. -/
+theorem abs_le_of_mem_sphere (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) : |u y| ≤ |u x| + C * s := by
+  have hx : x ∈ ball x R := mem_ball_self (hs.trans_lt hsR)
+  have hy' : y ∈ ball x R := mem_ball.2 ((mem_sphere.1 hy).trans_lt hsR)
+  have h1 := (h.lipschitzOnWith x R hR).dist_le_mul y hy' x hx
+  rw [Real.dist_eq, mem_sphere.1 hy] at h1
+  have := abs_sub_abs_le_abs_sub (u y) (u x)
+  linarith
+
+theorem abs_inner_le_of_mem_sphere (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) :
+    |⟪gradient u y, y - x⟫| ≤ C * s := by
+  rw [← Real.norm_eq_abs]
+  refine (norm_inner_le_norm _ _).trans ?_
+  rw [← dist_eq_norm, mem_sphere.1 hy]
+  exact mul_le_mul_of_nonneg_right (h.norm_gradient_le (sphere_subset_of_lt hR hsR hy)) hs
+
+theorem sphereIntegrable_u_sq (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) : SphereIntegrable (fun y => u y ^ 2) x s :=
+  (h.continuousOn.mono (sphere_subset_of_lt hR hsR)).pow 2 |>.sphereIntegrable hs
+
+theorem sphereIntegrable_inner_sq (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) : SphereIntegrable (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s :=
+  sphereIntegrable_of_bound
+    (aestronglyMeasurable_sphere_of_measurable
+      (((measurable_gradient u).inner (measurable_id.sub_const x)).pow_const 2))
+    (fun y hy => by
+      rw [abs_pow]
+      exact pow_le_pow_left₀ (abs_nonneg _) (h.abs_inner_le_of_mem_sphere hR hs hsR hy) 2) hs
+
+theorem sphereIntegrable_mix (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) :
+    SphereIntegrable (fun y => u y * ⟪gradient u y, y - x⟫) x s := by
+  have hm : AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => u (x + s • (ω : Rn n)) *
+      ⟪gradient u (x + s • (ω : Rn n)), x + s • (ω : Rn n) - x⟫) (sphereMeasure n) :=
+    ((h.continuousOn.comp_continuous (continuous_add_smul_sphere x s)
+      (add_smul_mem_of_lt hR hs hsR)).aestronglyMeasurable).mul
+      (aestronglyMeasurable_sphere_of_measurable (g := fun y => ⟪gradient u y, y - x⟫)
+        ((measurable_gradient u).inner (measurable_id.sub_const x)))
+  exact sphereIntegrable_of_bound hm
+    (fun y hy => by
+      rw [abs_mul]
+      exact mul_le_mul (h.abs_le_of_mem_sphere hR hs hsR hy)
+        (h.abs_inner_le_of_mem_sphere hR hs hsR hy) (abs_nonneg _)
+        ((abs_nonneg _).trans (h.abs_le_of_mem_sphere hR hs hsR hy))) hs
+
+/-- **Cauchy–Schwarz on `∂B_s(x)`**: `(∫ u ∇u·(y−x))² ≤ ∫ u² ∫ (∇u·(y−x))²`. -/
+theorem sq_sphereIntegral_mix_le (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) :
+    sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s ^ 2 ≤
+      sphereIntegral (fun y => u y ^ 2) x s *
+        sphereIntegral (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s :=
+  sq_sphereIntegral_mul_le (h.sphereIntegrable_u_sq hR hs hsR)
+    (h.sphereIntegrable_inner_sq hR hs hsR) (h.sphereIntegrable_mix hR hs hsR)
+
+/-- `∫_{∂B_s(x)} (u − ∇u·(y−x))² = ∫ (∇u·(y−x))² − 2 ∫ u ∇u·(y−x) + ∫ u²`. -/
+theorem sphereIntegral_sub_inner_sq (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω)
+    (hs : 0 ≤ s) (hsR : s < R) :
+    sphereIntegral (fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2) x s =
+      sphereIntegral (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s -
+        2 * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s +
+        sphereIntegral (fun y => u y ^ 2) x s := by
+  have e : (fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2) =
+      fun y => (⟪gradient u y, y - x⟫ ^ 2 - 2 * (u y * ⟪gradient u y, y - x⟫)) + u y ^ 2 := by
+    ext y; ring
+  have hm : SphereIntegrable (fun y => 2 * (u y * ⟪gradient u y, y - x⟫)) x s :=
+    (h.sphereIntegrable_mix hR hs hsR).const_mul 2
+  have hd : SphereIntegrable
+      (fun y => ⟪gradient u y, y - x⟫ ^ 2 - 2 * (u y * ⟪gradient u y, y - x⟫)) x s :=
+    (h.sphereIntegrable_inner_sq hR hs hsR).sub hm
+  rw [e, sphereIntegral_add hd (h.sphereIntegrable_u_sq hR hs hsR),
+    sphereIntegral_sub (h.sphereIntegrable_inner_sq hR hs hsR) hm, sphereIntegral_const_mul]
+
+end Sphere
+
+/-- The energy identity (3.8) with the normal `(y − x)`:
+`∫_{B_s(x)} |∇u|² = s⁻¹ ∫_{∂B_s(x)} u ∇u·(y − x)` for a.e. `s ∈ (0, R)`. -/
+theorem integral_norm_gradient_sq_eq_ae [NeZero n] (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω) :
+    ∀ᵐ s, s ∈ Ioo 0 R → ∫ y in ball x s, ‖gradient u y‖ ^ 2 =
+      s⁻¹ * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s := by
+  filter_upwards [(h.isLipHarmonicPos hQ).energy_eq_sphere_ae' hR] with s hs hsR
+  rw [hs hsR, ← sphereIntegral_const_mul]
+  refine sphereIntegral_congr hsR.1.le fun y _ => ?_
+  rw [real_inner_smul_right]
+  ring
+
+/-- **Derivative of `H`**: for a.e. `s ∈ (0, R)`,
+`H_x'(s) = −(2/s) H_x(s) + (2 / s^{n+2}) ∫_{∂B_s(x)} u ∇u·(y−x)`. -/
+theorem hasDerivAt_heightH_ae [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hR : ball x R ⊆ Ω) :
+    ∀ᵐ s, s ∈ Ioo 0 R →
+      HasDerivAt (heightH u x) (-(2 / s) * heightH u x s +
+        2 / s ^ (n + 2) * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s) s := by
+  filter_upwards [(h.lipschitzOnWith x R hR).ae_hasDerivAt_sphereIntegral_sq] with s hP hsR
+  have hs0 : s ≠ 0 := hsR.1.ne'
+  have hinv : HasDerivAt (fun t : ℝ => (t ^ (n + 1))⁻¹)
+      (-(↑(n + 1) * s ^ (n + 1 - 1)) / (s ^ (n + 1)) ^ 2) s :=
+    (hasDerivAt_pow (n + 1) s).inv (pow_ne_zero (n + 1) hs0)
+  refine (hinv.mul (hP hsR)).congr_deriv ?_
+  rw [heightH]
+  simp only [Nat.add_sub_cancel]
+  push_cast
+  field_simp
+  ring
+
+end IsVariationalSolutionQ
+
+namespace IsVariationalSolution
+
 open Kernel
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n} {R : ℝ}
@@ -115,7 +270,7 @@ variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n} {R : �
 
 theorem sq_norm_gradient_le (h : IsVariationalSolution Ω C u χ) {y : Rn n} (hy : y ∈ Ω) :
     ‖gradient u y‖ ^ 2 ≤ (C : ℝ) ^ 2 :=
-  pow_le_pow_left₀ (norm_nonneg _) (h.norm_gradient_le hy) 2
+  h.toQ.sq_norm_gradient_le hy
 
 theorem integrableOn_norm_gradient_sq (h : IsVariationalSolution Ω C u χ)
     (hR : ball x R ⊆ Ω) : IntegrableOn (fun y => ‖gradient u y‖ ^ 2) (ball x R) :=
@@ -154,19 +309,6 @@ section Sphere
 
 variable {s : ℝ}
 
-theorem add_smul_mem_of_lt (hR : ball x R ⊆ Ω) (hs : 0 ≤ s) (hsR : s < R)
-    (ω : sphere (0 : Rn n) 1) : x + s • (ω : Rn n) ∈ Ω :=
-  hR ((add_smul_mem_ball_iff hs ω).2 hsR)
-
-theorem sphere_subset_of_lt (hR : ball x R ⊆ Ω) (hsR : s < R) :
-    sphere x s ⊆ Ω := fun _ hy =>
-  hR (mem_ball.2 ((mem_sphere.1 hy).trans_lt hsR))
-
-theorem aestronglyMeasurable_sphere_of_measurable {g : Rn n → ℝ} (hg : Measurable g) :
-    AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => g (x + s • (ω : Rn n)))
-      (sphereMeasure n) :=
-  (hg.comp (continuous_add_smul_sphere x s).measurable).aestronglyMeasurable
-
 theorem aestronglyMeasurable_sphere_u (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) :
     AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => u (x + s • (ω : Rn n)))
@@ -178,54 +320,30 @@ theorem aestronglyMeasurable_sphere_chi (h : IsVariationalSolution Ω C u χ) (h
     (hs : 0 ≤ s) (hsR : s < R) :
     AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => χ (x + s • (ω : Rn n)))
       (sphereMeasure n) :=
-  (aestronglyMeasurable_sphere_of_measurable h.measurable_chi).congr
-    (.of_forall fun ω => indicator_of_mem (add_smul_mem_of_lt hR hs hsR ω) χ)
+  h.toQ.aestronglyMeasurable_sphere_chi hR hs hsR
 
 /-- `|u| ≤ |u(x)| + C s` on `∂B_s(x)`. -/
 theorem abs_le_of_mem_sphere (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
-    (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) : |u y| ≤ |u x| + C * s := by
-  have hx : x ∈ ball x R := mem_ball_self (hs.trans_lt hsR)
-  have hy' : y ∈ ball x R := mem_ball.2 ((mem_sphere.1 hy).trans_lt hsR)
-  have h1 := (h.lipschitzOnWith x R hR).dist_le_mul y hy' x hx
-  rw [Real.dist_eq, mem_sphere.1 hy] at h1
-  have := abs_sub_abs_le_abs_sub (u y) (u x)
-  linarith
+    (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) : |u y| ≤ |u x| + C * s :=
+  h.toQ.abs_le_of_mem_sphere hR hs hsR hy
 
 theorem abs_inner_le_of_mem_sphere (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) :
-    |⟪gradient u y, y - x⟫| ≤ C * s := by
-  rw [← Real.norm_eq_abs]
-  refine (norm_inner_le_norm _ _).trans ?_
-  rw [← dist_eq_norm, mem_sphere.1 hy]
-  exact mul_le_mul_of_nonneg_right (h.norm_gradient_le (sphere_subset_of_lt hR hsR hy)) hs
+    |⟪gradient u y, y - x⟫| ≤ C * s :=
+  h.toQ.abs_inner_le_of_mem_sphere hR hs hsR hy
 
 theorem sphereIntegrable_u_sq (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) : SphereIntegrable (fun y => u y ^ 2) x s :=
-  (h.continuousOn.mono (sphere_subset_of_lt hR hsR)).pow 2 |>.sphereIntegrable hs
+  h.toQ.sphereIntegrable_u_sq hR hs hsR
 
 theorem sphereIntegrable_inner_sq (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) : SphereIntegrable (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s :=
-  sphereIntegrable_of_bound
-    (aestronglyMeasurable_sphere_of_measurable
-      (((measurable_gradient u).inner (measurable_id.sub_const x)).pow_const 2))
-    (fun y hy => by
-      rw [abs_pow]
-      exact pow_le_pow_left₀ (abs_nonneg _) (h.abs_inner_le_of_mem_sphere hR hs hsR hy) 2) hs
+  h.toQ.sphereIntegrable_inner_sq hR hs hsR
 
 theorem sphereIntegrable_mix (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) :
-    SphereIntegrable (fun y => u y * ⟪gradient u y, y - x⟫) x s := by
-  have hm : AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => u (x + s • (ω : Rn n)) *
-      ⟪gradient u (x + s • (ω : Rn n)), x + s • (ω : Rn n) - x⟫) (sphereMeasure n) :=
-    (h.aestronglyMeasurable_sphere_u hR hs hsR).mul
-      (aestronglyMeasurable_sphere_of_measurable (g := fun y => ⟪gradient u y, y - x⟫)
-        ((measurable_gradient u).inner (measurable_id.sub_const x)))
-  exact sphereIntegrable_of_bound hm
-    (fun y hy => by
-      rw [abs_mul]
-      exact mul_le_mul (h.abs_le_of_mem_sphere hR hs hsR hy)
-        (h.abs_inner_le_of_mem_sphere hR hs hsR hy) (abs_nonneg _)
-        ((abs_nonneg _).trans (h.abs_le_of_mem_sphere hR hs hsR hy))) hs
+    SphereIntegrable (fun y => u y * ⟪gradient u y, y - x⟫) x s :=
+  h.toQ.sphereIntegrable_mix hR hs hsR
 
 theorem sphereIntegrable_energy (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) :
@@ -250,8 +368,7 @@ theorem sq_sphereIntegral_mix_le (h : IsVariationalSolution Ω C u χ) (hR : bal
     sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s ^ 2 ≤
       sphereIntegral (fun y => u y ^ 2) x s *
         sphereIntegral (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s :=
-  sq_sphereIntegral_mul_le (h.sphereIntegrable_u_sq hR hs hsR)
-    (h.sphereIntegrable_inner_sq hR hs hsR) (h.sphereIntegrable_mix hR hs hsR)
+  h.toQ.sq_sphereIntegral_mix_le hR hs hsR
 
 /-- `∫_{∂B_s(x)} (u − ∇u·(y−x))² = ∫ (∇u·(y−x))² − 2 ∫ u ∇u·(y−x) + ∫ u²`. -/
 theorem sphereIntegral_sub_inner_sq (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
@@ -259,17 +376,8 @@ theorem sphereIntegral_sub_inner_sq (h : IsVariationalSolution Ω C u χ) (hR : 
     sphereIntegral (fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2) x s =
       sphereIntegral (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s -
         2 * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s +
-        sphereIntegral (fun y => u y ^ 2) x s := by
-  have e : (fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2) =
-      fun y => (⟪gradient u y, y - x⟫ ^ 2 - 2 * (u y * ⟪gradient u y, y - x⟫)) + u y ^ 2 := by
-    ext y; ring
-  have hm : SphereIntegrable (fun y => 2 * (u y * ⟪gradient u y, y - x⟫)) x s :=
-    (h.sphereIntegrable_mix hR hs hsR).const_mul 2
-  have hd : SphereIntegrable
-      (fun y => ⟪gradient u y, y - x⟫ ^ 2 - 2 * (u y * ⟪gradient u y, y - x⟫)) x s :=
-    (h.sphereIntegrable_inner_sq hR hs hsR).sub hm
-  rw [e, sphereIntegral_add hd (h.sphereIntegrable_u_sq hR hs hsR),
-    sphereIntegral_sub (h.sphereIntegrable_inner_sq hR hs hsR) hm, sphereIntegral_const_mul]
+        sphereIntegral (fun y => u y ^ 2) x s :=
+  h.toQ.sphereIntegral_sub_inner_sq hR hs hsR
 
 end Sphere
 
@@ -280,12 +388,8 @@ end Sphere
 theorem integral_norm_gradient_sq_eq_ae [NeZero n] (h : IsVariationalSolution Ω C u χ)
     (hR : ball x R ⊆ Ω) :
     ∀ᵐ s, s ∈ Ioo 0 R → ∫ y in ball x s, ‖gradient u y‖ ^ 2 =
-      s⁻¹ * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s := by
-  filter_upwards [h.isLipHarmonicPos.energy_eq_sphere_ae' hR] with s hs hsR
-  rw [hs hsR, ← sphereIntegral_const_mul]
-  refine sphereIntegral_congr hsR.1.le fun y _ => ?_
-  rw [real_inner_smul_right]
-  ring
+      s⁻¹ * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s :=
+  IsVariationalSolutionQ.integral_norm_gradient_sq_eq_ae (QBounds.one Ω) h.toQ hR
 
 /-- **Identity (3.9)**, multiplied by `s^n`: for a.e. `s ∈ (0, R)`,
 `n ∫_{B_s(x)} (|∇u|² + χ) = s ∫_{∂B_s(x)} (|∇u|² + χ) − (2/s) ∫_{∂B_s(x)} (∇u·(y−x))²
@@ -384,18 +488,8 @@ theorem hasDerivAt_heightH_ae [NeZero n] (h : IsVariationalSolution Ω C u χ)
     (hR : ball x R ⊆ Ω) :
     ∀ᵐ s, s ∈ Ioo 0 R →
       HasDerivAt (heightH u x) (-(2 / s) * heightH u x s +
-        2 / s ^ (n + 2) * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s) s := by
-  filter_upwards [(h.lipschitzOnWith x R hR).ae_hasDerivAt_sphereIntegral_sq] with s hP hsR
-  have hs0 : s ≠ 0 := hsR.1.ne'
-  have hinv : HasDerivAt (fun t : ℝ => (t ^ (n + 1))⁻¹)
-      (-(↑(n + 1) * s ^ (n + 1 - 1)) / (s ^ (n + 1)) ^ 2) s :=
-    (hasDerivAt_pow (n + 1) s).inv (pow_ne_zero (n + 1) hs0)
-  refine (hinv.mul (hP hsR)).congr_deriv ?_
-  rw [heightH]
-  simp only [Nat.add_sub_cancel]
-  push_cast
-  field_simp
-  ring
+        2 / s ^ (n + 2) * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s) s :=
+  h.toQ.hasDerivAt_heightH_ae hR
 
 /-- **Derivative of `M`** (Proposition 3.4): for a.e. `s ∈ (0, R)`,
 `M_x'(s) = (2 / s^{n+2}) ∫_{∂B_s(x)} (u(y) − (y − x)·∇u(y))²`. -/

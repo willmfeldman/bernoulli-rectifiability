@@ -186,6 +186,88 @@ targets:
       0 ∉ Σ^H for (y_n)⁺ and 0 ∈ Σ^H for |y_n|; and H_0(α(n)|y_n|; r) = 1 for every r > 0.
       This guards against vacuous definitions; it is not a theorem of the paper.
 
+  - id: "sigma-h-density-lipschitz"
+    title: "Density characterization of Σ^H, Lipschitz coefficient"
+    kind: "headline-theorem"
+    lean_name: "InnerVariational.IsVariationalSolutionQ.mem_sigmaHQ_iff_frontier_inter"
+    lean_file: "InnerVariational/Statements/LipschitzQ.lean"
+    challenge: "challenges/lipschitz-q"
+    challenge_theorem: "challenge_sigmaHQ_density"
+    source: >-
+      Kriventsov–Weiss, Section 6 and Proposition 3.5 (the form of Σ^H in the introduction),
+      extended to a Lipschitz coefficient.
+    statement: >-
+      Let (u, χ) be a variational solution on Ω for the functional ∫ (|∇u|² + Q² χ), where Q is
+      Lipschitz on Ω with 0 < c ≤ Q ≤ C'. Then x ∈ Σ^H if and only if x ∈ Ω lies on the
+      relative free boundary ∂{y ∈ Ω : u(y) > 0} and |{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1 as
+      r → 0+. Here Σ^H = {x ∈ Ω ∩ closure {u > 0} : M^{Q(x)}_x(u; 0+) ≥ Q(x)² |B₁|}, with the
+      Weiss energy M^q computed with the coefficient frozen at q.
+
+  - id: "sigma-h-closed-lipschitz"
+    title: "Σ^H is relatively closed, Lipschitz coefficient"
+    kind: "headline-theorem"
+    lean_name: "InnerVariational.IsVariationalSolutionQ.closure_sigmaHQ_inter_subset"
+    lean_file: "InnerVariational/Statements/LipschitzQ.lean"
+    challenge: "challenges/lipschitz-q"
+    challenge_theorem: "challenge_sigmaHQ_closed"
+    source: "Kriventsov–Weiss, Section 6, extended to a Lipschitz coefficient."
+    statement: >-
+      Under the same hypotheses, closure(Σ^H) ∩ Ω ⊆ Σ^H.
+
+  - id: "viscosity-lipschitz"
+    title: "Viscosity property off Σ^H, Lipschitz coefficient (Lemma 8.3)"
+    kind: "headline-theorem"
+    lean_name: "InnerVariational.IsVariationalSolutionQ.isViscositySolutionQ_diff_sigmaHQ"
+    lean_file: "InnerVariational/Statements/LipschitzQ.lean"
+    challenge: "challenges/lipschitz-q"
+    challenge_theorem: "challenge_viscosityQ"
+    source: "Kriventsov–Weiss, Lemma 8.3, extended to a Lipschitz coefficient."
+    statement: >-
+      Let n ≥ 2. Under the same hypotheses, u is a viscosity solution of Δu = 0 in {u > 0},
+      |∇u| = Q on ∂{u > 0}, in the open set Ω \ Σ^H.
+
+  - id: "blowup-limit-lipschitz"
+    title: "Blow-up limits, Lipschitz coefficient"
+    kind: "headline-theorem"
+    lean_name: "InnerVariational.IsVariationalSolutionQ.exists_blowup_limit"
+    lean_file: "InnerVariational/Statements/LipschitzQ.lean"
+    challenge: "challenges/lipschitz-q"
+    challenge_theorem: "challenge_blowup_limitQ"
+    source: >-
+      Kriventsov–Weiss, the rescaling (3.6) and the first paragraph of the proof of Theorem 9.3,
+      extended to a Lipschitz coefficient.
+    statement: >-
+      Under the same hypotheses, let x ∈ Ω and r_k → 0+ with u(x + r_k ·)/r_k → u₀ locally
+      uniformly on ℝⁿ. Then along a subsequence χ(x + r_k ·) → χ₀ in L¹_loc(ℝⁿ), where (u₀, χ₀)
+      is a variational solution on ℝⁿ for the constant coefficient Q(x), with the same gradient
+      constant.
+
+  - id: "blowup-homogeneous-lipschitz"
+    title: "Homogeneity of blow-up limits, Lipschitz coefficient"
+    kind: "headline-theorem"
+    lean_name: "InnerVariational.IsVariationalSolutionQ.blowup_homogeneous"
+    lean_file: "InnerVariational/Statements/LipschitzQ.lean"
+    challenge: "challenges/lipschitz-q"
+    challenge_theorem: "challenge_blowup_homogeneousQ"
+    source: "Kriventsov–Weiss, Proposition 3.4 (last claim), extended to a Lipschitz coefficient."
+    statement: >-
+      Under the hypotheses of the blow-up limit theorem, u₀(t y) = t u₀(y) for all t > 0 and
+      y ∈ ℝⁿ.
+
+  - id: "chi-identification-lipschitz"
+    title: "Identification of χ, Lipschitz coefficient (Theorem 8.6)"
+    kind: "headline-theorem"
+    lean_name: "InnerVariational.Singular.chi_eq_indicator_of_localQ"
+    lean_file: "InnerVariational/Statements/LipschitzQ.lean"
+    challenge: "challenges/lipschitz-q"
+    challenge_theorem: "challenge_chi_eq_indicatorQ"
+    source: "Kriventsov–Weiss, Theorem 8.6, extended to a Lipschitz coefficient."
+    statement: >-
+      Let n ≥ 2 and let U ⊆ ℝⁿ be connected. Suppose every point of U has an open neighbourhood
+      V ⊆ U on which (u, χ) is a variational solution for the coefficient Q, with Q Lipschitz on
+      V and 0 < c ≤ Q ≤ C' there. Then either u ≡ 0 on U and χ = 1 a.e. on U, or χ = χ_{u>0}
+      a.e. on U.
+
 comparator:
   external_challenges:
     directory: "challenges"
@@ -233,6 +315,20 @@ comparator:
         checks: >-
           Sanity check, not coverage: the model solutions satisfy the challenge definitions and
           Σ^H separates them.
+      - id: "lipschitz-q"
+        path: "challenges/lipschitz-q"
+        theorem_names:
+          - "challenge_sigmaHQ_density"
+          - "challenge_sigmaHQ_closed"
+          - "challenge_viscosityQ"
+          - "challenge_blowup_limitQ"
+          - "challenge_blowup_homogeneousQ"
+          - "challenge_chi_eq_indicatorQ"
+        checks: >-
+          The results proved for a Lipschitz coefficient Q (Σ^H, the viscosity property, blow-up
+          limits and their homogeneity, the identification of χ), with variational and viscosity
+          solutions for Q and the frozen-coefficient Weiss energy written out in Mathlib
+          vocabulary.
 
 ci:
   workflow: ".github/workflows/ci.yml"

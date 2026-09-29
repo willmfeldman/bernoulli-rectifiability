@@ -6,6 +6,7 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Monotonicity.Radial
+public import InnerVariational.Frequency.ConcreteQ.Basic
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Data.Real.StarOrdered
 import Mathlib.Algebra.Ring.IsFormallyReal
@@ -80,27 +81,18 @@ variable {ω a b : ℝ} (d : RadialData n ω a b)
 /-- `(s² H)' = 2 s ∫_{B_s} |∇u|² / sⁿ` for a.e. `s`, from the derivative of `H` and the energy
 identity (3.8). -/
 theorem hasDerivAt_sq_mul_heightH : ∀ᵐ s, s ∈ Ioo a b →
-    HasDerivAt (fun s => s ^ 2 * d.heightH s) (2 * s * d.gradInt s / s ^ n) s := by
-  filter_upwards [d.hasDerivAt_heightH, d.gradInt_eq] with s hH hG hs
-  have hs0 : s ≠ 0 := (d.pos.trans hs.1).ne'
-  refine ((hasDerivAt_pow 2 s).mul (hH hs)).congr_deriv ?_
-  rw [hG hs]
-  field_simp
-  ring
+    HasDerivAt (fun s => s ^ 2 * d.heightH s) (2 * s * d.gradInt s / s ^ n) s :=
+  d.toErr.hasDerivAt_sq_mul_heightH
 
 theorem absolutelyContinuousOnInterval_sq_mul_heightH :
     AbsolutelyContinuousOnInterval (fun s => s ^ 2 * d.heightH s) a b :=
-  (ContDiffOn.absolutelyContinuousOnInterval (f := fun s : ℝ => s ^ 2)
-    (contDiff_id.pow 2).contDiffOn).fun_mul d.absolutelyContinuousOnInterval_heightH
+  d.toErr.absolutelyContinuousOnInterval_sq_mul_heightH
 
 /-- The spherical mean of `u²` is nondecreasing: `s ↦ s² H(s)` is nondecreasing on `[a, b]` when
 `∫_{B_s} |∇u|² ≥ 0`. -/
 theorem monotoneOn_sq_mul_heightH (hG : ∀ s ∈ Ioo a b, 0 ≤ d.gradInt s) :
     MonotoneOn (fun s => s ^ 2 * d.heightH s) (Icc a b) :=
-  d.absolutelyContinuousOnInterval_sq_mul_heightH.monotoneOn_of_ae_hasDerivAt_nonneg
-    d.hasDerivAt_sq_mul_heightH (.of_forall fun s hs => by
-      have hs0 : 0 < s := d.pos.trans hs.1
-      exact div_nonneg (mul_nonneg (by positivity) (hG s hs)) (by positivity))
+  d.toErr.monotoneOn_sq_mul_heightH hG
 
 /-- A radius with small `V`: if `H > 0` on `[t₁, t₂]`, `M(t₁) ≥ ω`, `0 ≤ v` and
 `N(t₂) − N(t₁) < 2 v² log(t₂ / t₁)`, then `V(σ) < v` for some `σ ∈ (t₁, t₂)`. This is the
@@ -140,43 +132,10 @@ theorem exists_volumeV_lt {t₁ t₂ : ℝ} (ht₁ : a ≤ t₁) (ht : t₁ < t�
 
 end Abstract.RadialData
 
-/-- `H_x(u; r) ≥ 0` for `r ≥ 0`. -/
-theorem heightH_nonneg (u : Rn n → ℝ) (x : Rn n) {r : ℝ} (hr : 0 ≤ r) : 0 ≤ heightH u x r :=
-  mul_nonneg (inv_nonneg.2 (pow_nonneg hr _)) (sphereIntegral_nonneg hr fun _ _ => sq_nonneg _)
-
 /-- `N_x(u; r) = 0` where `H_x(u; r) = 0` (Lean's `x / 0 = 0`; the paper sets `N = −∞`). -/
 theorem frequencyN_of_heightH_eq_zero {u χ : Rn n → ℝ} {x : Rn n} {r : ℝ}
     (hH : heightH u x r = 0) : frequencyN u χ x r = 0 := by
   rw [frequencyN, hH, div_zero]
-
-/-- `∫_{∂B_s(x)} u² = s^{n+1} H_x(u; s)` for `s ≠ 0`. -/
-theorem sphereIntegral_sq_eq (u : Rn n → ℝ) (x : Rn n) {s : ℝ} (hs : s ≠ 0) :
-    sphereIntegral (fun y => u y ^ 2) x s = s ^ (n + 1) * heightH u x s := by
-  rw [heightH, ← mul_assoc, mul_inv_cancel₀ (pow_ne_zero _ hs), one_mul]
-
-/-- `s^{n+1} = s^{n-1} s²` for `n ≥ 1`. -/
-theorem pow_succ_eq_pow_pred_mul_sq [NeZero n] (s : ℝ) : s ^ (n + 1) = s ^ (n - 1) * s ^ 2 := by
-  rw [← pow_add]
-  congr 1
-  have := NeZero.pos n
-  omega
-
-/-- The constant `8 (8/5)^{n+1}` of the upper bound of Lemma 4.6 on `H`
-(`IsVariationalSolution.heightH_change_of_point_le`). -/
-def heightHChangeConst (n : ℕ) : ℝ := 8 * (8 / 5) ^ (n + 1)
-
-theorem heightHChangeConst_pos (n : ℕ) : 0 < heightHChangeConst n := by
-  unfold heightHChangeConst; positivity
-
-/-- The constant `8 · 4^{n+1} C(N₊')²`, `N₊' = max N₊ 1 + 1`, of the lower bound of Lemma 4.6 on
-`H` (`IsVariationalSolution.heightH_le_change_of_point`). `C` is the constant of Lemma 4.3. -/
-def heightHChangeConst' (n : ℕ) (Np : ℝ) : ℝ :=
-  8 * 4 ^ (n + 1) * Abstract.RadialData.doublingConst (max Np 1 + 1) ^ 2
-
-theorem heightHChangeConst'_pos (n : ℕ) (Np : ℝ) : 0 < heightHChangeConst' n Np := by
-  unfold heightHChangeConst'
-  have := Abstract.RadialData.doublingConst_pos (max Np 1 + 1)
-  positivity
 
 /-- The constant `K(n, N₊) = max{1, (8/5)ⁿ (3 N₊' + 1) heightHChangeConst' n N₊}`,
 `N₊' = max N₊ 1`, of Lemma 4.6 on `N`, in the corrected form
@@ -187,14 +146,6 @@ def frequencyNChangeConst (n : ℕ) (Np : ℝ) : ℝ :=
 theorem one_le_frequencyNChangeConst (n : ℕ) (Np : ℝ) : 1 ≤ frequencyNChangeConst n Np :=
   le_max_left _ _
 
-/-- A function that is a.e.-measurable on `B_R(x)` and bounded there is integrable there. -/
-theorem integrableOn_ball_of_abs_le {f : Rn n → ℝ} {x : Rn n} {R : ℝ} (A : ℝ)
-    (hf : AEStronglyMeasurable f (volume.restrict (ball x R))) (hb : ∀ y ∈ ball x R, |f y| ≤ A) :
-    IntegrableOn f (ball x R) :=
-  IntegrableOn.of_bound measure_ball_lt_top hf A
-    ((ae_restrict_iff' measurableSet_ball).2 (.of_forall fun y hy => by
-      rw [Real.norm_eq_abs]; exact hb y hy))
-
 namespace IsVariationalSolution
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n}
@@ -203,8 +154,7 @@ variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n}
 
 theorem integrableOn_sq_of_closedBall (h : IsVariationalSolution Ω C u χ) {r : ℝ}
     (hΩ : closedBall x r ⊆ Ω) : IntegrableOn (fun y => u y ^ 2) (ball x r) :=
-  (((h.continuousOn.mono hΩ).pow 2).integrableOn_compact (isCompact_closedBall x r)).mono_set
-    ball_subset_closedBall
+  h.toQ.integrableOn_sq_of_closedBall hΩ
 
 /-- `∫_{∂B_s(x)} (∇u·(y−x) − c u)² = ∫ (∇u·(y−x))² − 2c ∫ u ∇u·(y−x) + c² ∫ u²`. -/
 theorem sphereIntegral_inner_sub_mul_sq (h : IsVariationalSolution Ω C u χ) {R s : ℝ}
@@ -212,30 +162,13 @@ theorem sphereIntegral_inner_sub_mul_sq (h : IsVariationalSolution Ω C u χ) {R
     sphereIntegral (fun y => (⟪gradient u y, y - x⟫ - c * u y) ^ 2) x s =
       sphereIntegral (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s -
         2 * c * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s +
-        c ^ 2 * sphereIntegral (fun y => u y ^ 2) x s := by
-  have e : (fun y => (⟪gradient u y, y - x⟫ - c * u y) ^ 2) = fun y =>
-      (⟪gradient u y, y - x⟫ ^ 2 - (2 * c) * (u y * ⟪gradient u y, y - x⟫)) + c ^ 2 * u y ^ 2 := by
-    ext y; ring
-  have hm : SphereIntegrable (fun y => (2 * c) * (u y * ⟪gradient u y, y - x⟫)) x s :=
-    (h.sphereIntegrable_mix hR hs hsR).const_mul (2 * c)
-  have hq : SphereIntegrable (fun y => c ^ 2 * u y ^ 2) x s :=
-    (h.sphereIntegrable_u_sq hR hs hsR).const_mul (c ^ 2)
-  have hd : SphereIntegrable
-      (fun y => ⟪gradient u y, y - x⟫ ^ 2 - (2 * c) * (u y * ⟪gradient u y, y - x⟫)) x s :=
-    (h.sphereIntegrable_inner_sq hR hs hsR).sub hm
-  rw [e, sphereIntegral_add hd hq, sphereIntegral_sub (h.sphereIntegrable_inner_sq hR hs hsR) hm,
-    sphereIntegral_const_mul, sphereIntegral_const_mul]
+        c ^ 2 * sphereIntegral (fun y => u y ^ 2) x s :=
+  h.toQ.sphereIntegral_inner_sub_mul_sq hR hs hsR c
 
 theorem sphereIntegrable_inner_sub_mul_sq (h : IsVariationalSolution Ω C u χ) {R s : ℝ}
     (hR : ball x R ⊆ Ω) (hs : 0 ≤ s) (hsR : s < R) (c : ℝ) :
-    SphereIntegrable (fun y => (⟪gradient u y, y - x⟫ - c * u y) ^ 2) x s := by
-  have e : (fun y => (⟪gradient u y, y - x⟫ - c * u y) ^ 2) = fun y =>
-      (⟪gradient u y, y - x⟫ ^ 2 - (2 * c) * (u y * ⟪gradient u y, y - x⟫)) + c ^ 2 * u y ^ 2 := by
-    ext y; ring
-  rw [e]
-  exact ((h.sphereIntegrable_inner_sq hR hs hsR).sub
-    ((h.sphereIntegrable_mix hR hs hsR).const_mul (2 * c))).add
-    ((h.sphereIntegrable_u_sq hR hs hsR).const_mul (c ^ 2))
+    SphereIntegrable (fun y => (⟪gradient u y, y - x⟫ - c * u y) ^ 2) x s :=
+  h.toQ.sphereIntegrable_inner_sub_mul_sq hR hs hsR c
 
 /-! ### Spherical means of `u²` and positivity of `H` -/
 
@@ -243,69 +176,40 @@ theorem sphereIntegrable_inner_sub_mul_sq (h : IsVariationalSolution Ω C u χ) 
 `(0, R)` when `B_R(x) ⊆ Ω`. Here `s² H_x(s) = s^{1-n} ∫_{∂B_s(x)} u²`. This follows from
 `(s² H)' = 2 s^{1-n} ∫_{B_s(x)} |∇u|² ≥ 0`, a consequence of the energy identity (3.8). -/
 theorem monotoneOn_sq_mul_heightH [NeZero n] (h : IsVariationalSolution Ω C u χ) {R : ℝ}
-    (hR : ball x R ⊆ Ω) : MonotoneOn (fun s => s ^ 2 * heightH u x s) (Ioo 0 R) := by
-  intro s hs t ht hst
-  exact (h.radialData hR hs.1 hst ht.2).monotoneOn_sq_mul_heightH
-    (fun r _ => setIntegral_nonneg measurableSet_ball fun y _ => sq_nonneg _)
-    ⟨le_rfl, hst⟩ ⟨hst, le_rfl⟩ hst
+    (hR : ball x R ⊆ Ω) : MonotoneOn (fun s => s ^ 2 * heightH u x s) (Ioo 0 R) :=
+  IsVariationalSolutionQ.monotoneOn_sq_mul_heightH (QBounds.one Ω) h.toQ hR
 
 /-- `s ↦ s² H_x(u; s)` is nondecreasing on `(0, R]` when `B̄_R(x) ⊆ Ω`. -/
 theorem monotoneOn_sq_mul_heightH_Ioc [NeZero n] (h : IsVariationalSolution Ω C u χ) {R : ℝ}
-    (hR : closedBall x R ⊆ Ω) : MonotoneOn (fun s => s ^ 2 * heightH u x s) (Ioc 0 R) := by
-  intro s hs t ht hst
-  obtain ⟨R', hRR', hR'⟩ := exists_gt_ball_subset h.isOpen (ht.1.le.trans ht.2) hR
-  exact h.monotoneOn_sq_mul_heightH hR' ⟨hs.1, hs.2.trans_lt hRR'⟩ ⟨ht.1, ht.2.trans_lt hRR'⟩ hst
+    (hR : closedBall x R ⊆ Ω) : MonotoneOn (fun s => s ^ 2 * heightH u x s) (Ioc 0 R) :=
+  IsVariationalSolutionQ.monotoneOn_sq_mul_heightH_Ioc (QBounds.one Ω) h.toQ hR
 
 /-- `s² H_x(s) ≤ t² H_x(t)` for `0 < s ≤ t` and `B̄_t(x) ⊆ Ω`. -/
 theorem sq_mul_heightH_le [NeZero n] (h : IsVariationalSolution Ω C u χ) {s t : ℝ}
     (hs : 0 < s) (hst : s ≤ t) (ht : closedBall x t ⊆ Ω) :
     s ^ 2 * heightH u x s ≤ t ^ 2 * heightH u x t :=
-  h.monotoneOn_sq_mul_heightH_Ioc ht ⟨hs, hst⟩ ⟨hs.trans_le hst, le_rfl⟩ hst
+  IsVariationalSolutionQ.sq_mul_heightH_le (QBounds.one Ω) h.toQ hs hst ht
 
 /-- Positivity of `H` propagates outwards: if `H_x(s) > 0`, `s ≤ t` and `B̄_t(x) ⊆ Ω`, then
 `H_x(t) > 0`. -/
 theorem heightH_pos_of_le [NeZero n] (h : IsVariationalSolution Ω C u χ) {s t : ℝ}
     (hs : 0 < s) (hst : s ≤ t) (ht : closedBall x t ⊆ Ω) (hH : 0 < heightH u x s) :
-    0 < heightH u x t := by
-  have h1 : 0 < s ^ 2 * heightH u x s := by positivity
-  exact pos_of_mul_pos_right (h1.trans_le (h.sq_mul_heightH_le hs hst ht)) (sq_nonneg t)
+    0 < heightH u x t :=
+  IsVariationalSolutionQ.heightH_pos_of_le (QBounds.one Ω) h.toQ hs hst ht hH
 
 /-- **Positivity of `H`** (§4): if `x ∈ closure {u > 0}`, `0 < r` and `B̄_r(x) ⊆ Ω`, then
 `H_x(u; r) > 0`. If `H_x(r) = 0`, the monotonicity of spherical means gives `H_x(s) = 0` for
 `s ≤ r`, so `∫_{B_r(x)} u² = 0` and `u ≡ 0` on `B_r(x)`, contradicting `x ∈ closure {u > 0}`. -/
 theorem heightH_pos [NeZero n] (h : IsVariationalSolution Ω C u χ)
     (hx : x ∈ closure {y | 0 < u y}) {r : ℝ} (hr : 0 < r) (hΩ : closedBall x r ⊆ Ω) :
-    0 < heightH u x r := by
-  by_contra hneg
-  have hH0 : heightH u x r = 0 := le_antisymm (not_lt.1 hneg) (heightH_nonneg u x hr.le)
-  have hS : ∀ s ∈ Ioc 0 r, sphereIntegral (fun y => u y ^ 2) x s = 0 := by
-    intro s hs
-    have hmono := h.sq_mul_heightH_le hs.1 hs.2 hΩ
-    rw [hH0, mul_zero] at hmono
-    have hHs : heightH u x s = 0 := by
-      have h0 := heightH_nonneg u x hs.1.le
-      have hs2 : 0 < s ^ 2 := by have := hs.1; positivity
-      nlinarith
-    rw [sphereIntegral_sq_eq u x hs.1.ne', hHs, mul_zero]
-  have hint := h.integrableOn_sq_of_closedBall hΩ
-  have hball : ∫ y in ball x r, u y ^ 2 = 0 := by
-    rw [integral_ball_eq hr.le hint, intervalIntegral.integral_of_le hr.le]
-    exact setIntegral_eq_zero_of_forall_eq_zero hS
-  have hae : (fun y => u y ^ 2) =ᵐ[volume.restrict (ball x r)] 0 :=
-    (setIntegral_eq_zero_iff_of_nonneg_ae (.of_forall fun y => sq_nonneg (u y)) hint).1 hball
-  have heq := Measure.eqOn_open_of_ae_eq hae isOpen_ball
-    ((h.continuousOn.mono (ball_subset_closedBall.trans hΩ)).pow 2) continuousOn_const
-  obtain ⟨z, hz, hzpos⟩ := mem_closure_iff_nhds.1 hx (ball x r) (ball_mem_nhds x hr)
-  have := heq hz
-  simp only [Pi.zero_apply] at this
-  have : 0 < u z ^ 2 := by have := hzpos.out; positivity
-  linarith
+    0 < heightH u x r :=
+  IsVariationalSolutionQ.heightH_pos (QBounds.one Ω) h.toQ hx hr hΩ
 
 /-- `H_x(u; s) > 0` on `[t, R]` if `H_x(u; t) > 0` and `B̄_R(x) ⊆ Ω`. -/
 theorem heightH_pos_of_mem_Icc [NeZero n] (h : IsVariationalSolution Ω C u χ) {t R : ℝ}
     (ht : 0 < t) (hHt : 0 < heightH u x t) (hΩ : closedBall x R ⊆ Ω) {s : ℝ}
     (hs : s ∈ Icc t R) : 0 < heightH u x s :=
-  h.heightH_pos_of_le ht hs.1 ((closedBall_subset_closedBall hs.2).trans hΩ) hHt
+  IsVariationalSolutionQ.heightH_pos_of_mem_Icc (QBounds.one Ω) h.toQ ht hHt hΩ hs
 
 /-! ### Lemma 4.1 -/
 
@@ -443,33 +347,8 @@ omit [NeZero n] in
 theorem integrableOn_ball_inner_gradient {R : ℝ} (hΩ : closedBall x R ⊆ Ω) :
     IntegrableOn (fun y => u y * ⟪gradient u y, y - x⟫) (ball x R) ∧
       IntegrableOn (fun y => ⟪gradient u y, y - x⟫ ^ 2) (ball x R) ∧
-      ∀ l : ℝ, IntegrableOn (fun y => (⟪gradient u y, y - x⟫ - l * u y) ^ 2) (ball x R) := by
-  obtain ⟨A, hA⟩ := (isCompact_closedBall x R).exists_bound_of_continuousOn
-    (h.continuousOn.mono hΩ)
-  have hu : AEStronglyMeasurable u (volume.restrict (ball x R)) :=
-    (h.continuousOn.mono (ball_subset_closedBall.trans hΩ)).aestronglyMeasurable measurableSet_ball
-  have hg : AEStronglyMeasurable (fun y => ⟪gradient u y, y - x⟫) (volume.restrict (ball x R)) :=
-    ((measurable_gradient u).inner (measurable_id.sub_const x)).aestronglyMeasurable
-  have hub : ∀ y ∈ ball x R, |u y| ≤ A := fun y hy => by
-    rw [← Real.norm_eq_abs]; exact hA y (ball_subset_closedBall hy)
-  have hgb : ∀ y ∈ ball x R, |⟪gradient u y, y - x⟫| ≤ C * R := fun y hy => by
-    rw [← Real.norm_eq_abs]
-    refine (norm_inner_le_norm _ _).trans ?_
-    rw [← dist_eq_norm]
-    exact mul_le_mul (h.norm_gradient_le (hΩ (ball_subset_closedBall hy))) (mem_ball.1 hy).le
-      dist_nonneg C.2
-  refine ⟨integrableOn_ball_of_abs_le (A * (C * R)) (hu.mul hg) fun y hy => ?_,
-    integrableOn_ball_of_abs_le ((C * R) ^ 2) (hg.pow 2) fun y hy => ?_, fun l =>
-      integrableOn_ball_of_abs_le ((C * R + |l| * A) ^ 2) ((hg.sub (hu.const_mul l)).pow 2)
-        fun y hy => ?_⟩
-  · rw [abs_mul]
-    exact mul_le_mul (hub y hy) (hgb y hy) (abs_nonneg _) ((abs_nonneg _).trans (hub y hy))
-  · rw [abs_pow]
-    exact pow_le_pow_left₀ (abs_nonneg _) (hgb y hy) 2
-  · rw [abs_pow]
-    refine pow_le_pow_left₀ (abs_nonneg _) ((abs_sub _ _).trans (add_le_add (hgb y hy) ?_)) 2
-    rw [abs_mul]
-    exact mul_le_mul_of_nonneg_left (hub y hy) (abs_nonneg l)
+      ∀ l : ℝ, IntegrableOn (fun y => (⟪gradient u y, y - x⟫ - l * u y) ^ 2) (ball x R) :=
+  h.toQ.integrableOn_ball_inner_gradient hΩ
 
 /-- **Integrated form of (4.13)** (as in the proof of Theorem 6.1): for `0 < t ≤ s₁ ≤ s₂`, if
 `x ∈ closure {u > 0}`, `M_x(u; t) ≥ |B_1|` and `B̄_{s₂}(x) ⊆ Ω`, then

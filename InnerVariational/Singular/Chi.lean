@@ -6,11 +6,18 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Singular.Density
+public import InnerVariational.Singular.DensityQ
 public import InnerVariational.Singular.FedererCriterion
 import Mathlib.Geometry.Euclidean.Volume.Measure
 public import Mathlib.Order.CompletePartialOrder
 import InnerVariational.Regular.Perimeter
 import InnerVariational.Regular.ChiInterior
+import InnerVariational.Regular.PerimeterQ
+import InnerVariational.Regular.ChiInteriorQ
+import InnerVariational.Monotonicity.HighestDensityQ
+import InnerVariational.Monotonicity.LimitsQ
+import InnerVariational.Monotonicity.SigmaHQ
+import InnerVariational.Kernel.VariationalQ
 import InnerVariational.Monotonicity.HighestDensity
 public import InnerVariational.Defs.HighestDensity
 public import InnerVariational.Monotonicity.Limits
@@ -27,26 +34,32 @@ no. 3, DOI 10.1002/cpa.22226; arXiv:2306.10131 (numbering of arXiv v2). Let `(u,
 variational solution on an open connected `Ω`. Then either `u ≡ 0` or `χ = χ_{u>0}` a.e.
 (`Singular.chi_eq_indicator`).
 
+The theorem is proved for a variational solution with a Lipschitz coefficient `Q`
+(`QBounds Ω Q L c C'`, `Singular.chi_eq_indicatorQ`); the paper treats `Q ≡ 1`, and the proof is
+the same. The statements for `Q ≡ 1` are the specializations (`IsVariationalSolution.toQ`,
+`QBounds.one`, `IsVariationalSolution.sigmaHQ_one`). Below, `Σ^H` stands for `Σ^H_Q` and
+`M_x(u; 0+)` for `M^{Q(x)}_x(u; 0+)`, whose value on `Σ^H_Q` is `Q(x)² |B_1|`.
+
 ## Proof
 
 Let `A` be the *pathological set* (`pathologicalSet`): the points near which `u = 0` and `χ = 1`
-a.e. It is open. By the upper semicontinuity of `M_x(u; 0+)` (Prop 3.5), every point of
-`Ω ∩ closure A` lies in `A` or in `Σ^H` (`mem_pathologicalSet_or_mem_sigmaH`). Points
-of `A` have density `1` in `A`, and points off `closure A` density `0`. At a point of `Σ^H` where
-`{u > 0}` has density `1`, `A` (on which `u = 0`) has density `0`. So Lemma 8.5 (2) makes
-`∂ᵉA ∩ Ω` an `ℋ^{n-1}`-null set (`essentialBoundary_pathologicalSet_inter_subset`), and Federer's
-criterion (an `ℋ^{n-1}`-null essential boundary in a ball forces a trivial set; H. Federer,
-*Geometric Measure Theory*, Springer, 1969, 4.5.11 and 4.5.6; see
-`Singular/FedererCriterion.lean`) makes
-`A` trivial in every ball in `Ω`.
+a.e. It is open. By the upper semicontinuity of `M_x(u; 0+)` (Prop 3.5) and the continuity of
+`Q`, every point of `Ω ∩ closure A` lies in `A` or in `Σ^H`
+(`mem_pathologicalSet_or_mem_sigmaHQ`). Points of `A` have density `1` in `A`, and points off
+`closure A` density `0`. At a point of `Σ^H` where `{u > 0}` has density `1`, `A` (on which
+`u = 0`) has density `0`. So Lemma 8.5 (2) makes `∂ᵉA ∩ Ω` an `ℋ^{n-1}`-null set
+(`essentialBoundary_pathologicalSet_inter_subsetQ`), and Federer's criterion (an
+`ℋ^{n-1}`-null essential boundary in a ball forces a trivial set; H. Federer, *Geometric Measure
+Theory*, Springer, 1969, 4.5.11 and 4.5.6; see `Singular/FedererCriterion.lean`) makes `A`
+trivial in every ball in `Ω`.
 Since `Ω` is connected, `A` is dense in `Ω` (then `u ≡ 0` by continuity) or `A = ∅`.
 
 If `A = ∅`, then `χ = 0` a.e. on `Ω \ closure {u > 0}` (`χ` is locally constant there,
-`IsVariationalSolution.exists_ae_eq_const_of_eq_zero`), and `χ = 1` a.e. on `{u > 0}`. The rest,
-`Ω ∩ ∂{u > 0}`, is Lebesgue-null (`volume_inter_frontier_pos_eq_zero`): off `Σ^H` by the density
-argument of the proof of Lemma 8.2
-(`IsVariationalSolution.volume_inter_frontier_pos_eq_zero` on `Ω \ Σ^H`), and `Σ^H` itself is
-null (`volume_sigmaH_eq_zero`) by Lemma 8.5 (2) and the Lebesgue density theorem.
+`IsVariationalSolutionQ.exists_ae_eq_const_of_eq_zero`), and `χ = 1` a.e. on `{u > 0}`. The
+rest, `Ω ∩ ∂{u > 0}`, is Lebesgue-null (`volume_inter_frontier_pos_eq_zeroQ`): off `Σ^H` by the
+density argument of the proof of Lemma 8.2
+(`IsVariationalSolutionQ.volume_inter_frontier_pos_eq_zero` on `Ω \ Σ^H`), and `Σ^H` itself is
+null (`volume_sigmaHQ_eq_zero`) by Lemma 8.5 (2) and the Lebesgue density theorem.
 
 ## Comparison with the paper
 
@@ -60,7 +73,8 @@ inference "locally finite `ℋ^{n-1}` measure ⇒ locally finite perimeter" is i
 
 ## Gluing
 
-`chi_eq_indicator_of_local`: the same conclusion on a connected open `U` when `(u, χ)` is only a
+`chi_eq_indicator_of_localQ'` (and `chi_eq_indicator_of_local` for `Q ≡ 1`): the same conclusion
+on a connected open `U` when `(u, χ)` is only a
 variational solution near each point of `U` (with constants that may vary from point to point).
 The two alternatives are glued along `U` by connectedness.
 -/
@@ -171,33 +185,49 @@ theorem disjoint_pathologicalSet_pos : Disjoint (pathologicalSet Ω u χ) {y | 0
     rw [eq_zero_of_mem_pathologicalSet hy] at this
     exact lt_irrefl _ this
 
-/-- `M_x(u; 0+) = |B_1|` on the pathological set. -/
-theorem Mzero_eq_of_mem_pathologicalSet [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
-    (hx : x ∈ pathologicalSet Ω u χ) : Mzero u χ x = unitBallVolume n := by
+/-! ### The pathological set and `Σ^H` -/
+
+section Coefficient
+
+variable {Q : Rn n → ℝ} {L : ℝ≥0} {c C' : ℝ}
+
+/-- `M^{Q(x)}_x(u; 0+) = Q(x)² |B_1|` on the pathological set. -/
+theorem MzeroQ_eq_of_mem_pathologicalSet [NeZero n] (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) {x : Rn n} (hx : x ∈ pathologicalSet Ω u χ) :
+    MzeroQ (Q x) u χ x = ((Q x ^ 2 * unitBallVolume n : ℝ) : EReal) := by
   obtain ⟨δ, hδ, hδΩ, hu, hc⟩ := hx
-  rw [h.Mzero_eq_of_ae_eq_const (hδΩ (mem_ball_self hδ)) (hu x (mem_ball_self hδ)) hδ hc,
+  rw [h.MzeroQ_eq_of_ae_eq_const hQ (hδΩ (mem_ball_self hδ)) (hu x (mem_ball_self hδ)) hδ hc,
     one_mul]
 
 /-- **`∂U ∩ Ω ⊆ Σ^H`** (proof of Theorem 8.6). A point of `Ω` in the closure of the pathological
-set lies in it or in `Σ^H`. By upper semicontinuity (Proposition 3.5), `M_x(u; 0+) ≥ |B_1|`. If
-`x ∈ closure {u > 0}`, then `x ∈ Σ^H`. Otherwise `u = 0` on a ball around `x`, where `χ` is a.e.
-constant, and that constant is `1` because the ball meets the pathological set. -/
-theorem mem_pathologicalSet_or_mem_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    {x : Rn n} (hx : x ∈ Ω) (hcl : x ∈ closure (pathologicalSet Ω u χ)) :
-    x ∈ pathologicalSet Ω u χ ∨ x ∈ sigmaH Ω u χ := by
-  have hM : (unitBallVolume n : EReal) ≤ Mzero u χ x := by
+set lies in it or in `Σ^H_Q`. By upper semicontinuity of `x ↦ M^{Q(x)}_x(u; 0+)` and continuity
+of `Q`, `M^{Q(x)}_x(u; 0+) ≥ Q(x)² |B_1|`. If `x ∈ closure {u > 0}`, then `x ∈ Σ^H_Q`. Otherwise
+`u = 0` on a ball around `x`, where `χ` is a.e. constant, and that constant is `1` because the
+ball meets the pathological set. -/
+theorem mem_pathologicalSet_or_mem_sigmaHQ [NeZero n] (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) {x : Rn n} (hx : x ∈ Ω)
+    (hcl : x ∈ closure (pathologicalSet Ω u χ)) :
+    x ∈ pathologicalSet Ω u χ ∨ x ∈ sigmaHQ Ω Q u χ := by
+  have hM : ((Q x ^ 2 * unitBallVolume n : ℝ) : EReal) ≤ MzeroQ (Q x) u χ x := by
     by_contra hlt
     rw [not_le] at hlt
-    have hev := h.upperSemicontinuousOn_Mzero x hx _ hlt
+    obtain ⟨a, ha1, ha2⟩ := EReal.lt_iff_exists_real_btwn.1 hlt
+    have hev := h.upperSemicontinuousOn_MzeroQ hQ x hx _ ha1
     rw [h.isOpen.nhdsWithin_eq hx] at hev
-    obtain ⟨y, hyA, hy⟩ := ((mem_closure_iff_frequently.1 hcl).and_eventually hev).exists
-    rw [Mzero_eq_of_mem_pathologicalSet h hyA] at hy
-    exact lt_irrefl _ hy
+    have hQc : ContinuousAt (fun y => Q y ^ 2 * unitBallVolume n) x :=
+      ((hQ.continuousOn.continuousAt (h.isOpen.mem_nhds hx)).pow 2).mul continuousAt_const
+    have hev2 : ∀ᶠ y in 𝓝 x, a < Q y ^ 2 * unitBallVolume n :=
+      hQc.eventually (lt_mem_nhds (EReal.coe_lt_coe_iff.1 ha2))
+    obtain ⟨y, hyA, hy, hy2⟩ :=
+      ((mem_closure_iff_frequently.1 hcl).and_eventually (hev.and hev2)).exists
+    have hy' : MzeroQ (Q y) u χ y < a := hy
+    rw [MzeroQ_eq_of_mem_pathologicalSet hQ h hyA] at hy'
+    exact lt_asymm (EReal.coe_lt_coe_iff.1 hy') hy2
   by_cases hpos : x ∈ closure {y | 0 < u y}
-  · exact Or.inr (h.mem_sigmaH_iff_le_Mzero.2 ⟨hx, hpos, hM⟩)
+  · exact Or.inr ⟨hx, hpos, hM⟩
   left
   obtain ⟨δ, hδ, hδΩ, hu0⟩ := h.exists_ball_eq_zero hx hpos
-  obtain ⟨c, -, hc⟩ := h.exists_ae_eq_const_of_eq_zero isOpen_ball
+  obtain ⟨c₀, -, hc⟩ := h.exists_ae_eq_const_of_eq_zero hQ isOpen_ball
     (convex_ball x δ).isPreconnected hδΩ hu0
   obtain ⟨z, hzB, hzA⟩ := mem_closure_iff.1 hcl (ball x δ) isOpen_ball (mem_ball_self hδ)
   obtain ⟨δz, hδz, -, -, hcz⟩ := hzA
@@ -211,46 +241,46 @@ theorem mem_pathologicalSet_or_mem_sigmaH [NeZero n] (h : IsVariationalSolution 
     ae_neBot.2 fun h0 => (measure_ball_pos volume z hρ).ne' (Measure.restrict_eq_zero.1 h0)
   obtain ⟨w, hw1, hwc⟩ := ((ae_restrict_of_ae_restrict_of_subset hsub1 hcz).and
     (ae_restrict_of_ae_restrict_of_subset hsub2 hc)).exists
-  have hc1 : c = 1 := hwc.symm.trans hw1
+  have hc1 : c₀ = 1 := hwc.symm.trans hw1
   subst hc1
   exact ⟨δ, hδ, hδΩ, hu0, hc⟩
 
-/-- The essential boundary of the pathological set inside `Ω` consists of points of `Σ^H` at
+/-- The essential boundary of the pathological set inside `Ω` consists of points of `Σ^H_Q` at
 which `{u > 0}` does not have density `1`. -/
-theorem essentialBoundary_pathologicalSet_inter_subset [NeZero n]
-    (h : IsVariationalSolution Ω C u χ) :
+theorem essentialBoundary_pathologicalSet_inter_subsetQ [NeZero n] (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) :
     essentialBoundary (pathologicalSet Ω u χ) ∩ Ω ⊆
-      {x | x ∈ sigmaH Ω u χ ∧ ¬ HasDensity {y | 0 < u y} x 1} := by
+      {x | x ∈ sigmaHQ Ω Q u χ ∧ ¬ HasDensity {y | 0 < u y} x 1} := by
   rintro x ⟨⟨h0, h1⟩, hx⟩
   by_cases hcl : x ∈ closure (pathologicalSet Ω u χ)
-  · rcases mem_pathologicalSet_or_mem_sigmaH h hx hcl with hA | hS
+  · rcases mem_pathologicalSet_or_mem_sigmaHQ hQ h hx hcl with hA | hS
     · exact absurd (hasDensity_one_of_mem_nhds (isOpen_pathologicalSet.mem_nhds hA)) h1
     · exact ⟨hS, fun hd => h0 (hasDensity_zero_of_disjoint isOpen_pathologicalSet.measurableSet
         disjoint_pathologicalSet_pos hd)⟩
   · exact absurd (hasDensity_zero_of_notMem_closure hcl) h0
 
 /-- **Federer's criterion applied to the pathological set.** In every ball `B ⊆ Ω` the
-pathological set is null or of full measure (Lemma 8.5 (2) and Federer's criterion,
+pathological set is null or of full measure (Lemma 8.5 (2) with a Lipschitz coefficient and
+Federer's criterion,
 `Singular.FedererCriterion.ae_trivial_of_hausdorffN_essentialBoundary_inter_ball`). -/
-theorem pathologicalSet_ae_trivial [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ)
-    {c : Rn n} {r : ℝ} (hball : ball c r ⊆ Ω) :
-    volume (pathologicalSet Ω u χ ∩ ball c r) = 0 ∨
-      volume (ball c r \ pathologicalSet Ω u χ) = 0 := by
+theorem pathologicalSet_ae_trivialQ [NeZero n] (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) {c₀ : Rn n} {r : ℝ} (hball : ball c₀ r ⊆ Ω) :
+    volume (pathologicalSet Ω u χ ∩ ball c₀ r) = 0 ∨
+      volume (ball c₀ r \ pathologicalSet Ω u χ) = 0 := by
   refine FedererCriterion.ae_trivial_of_hausdorffN_essentialBoundary_inter_ball hn
-    isOpen_pathologicalSet.measurableSet (measure_mono_null ?_ (density_pos_eq_one_ae hn h))
-  exact fun y hy => essentialBoundary_pathologicalSet_inter_subset h ⟨hy.1, hball hy.2⟩
+    isOpen_pathologicalSet.measurableSet
+    (measure_mono_null ?_ (density_pos_eq_one_aeQ hn hQ h))
+  exact fun y hy => essentialBoundary_pathologicalSet_inter_subsetQ hQ h ⟨hy.1, hball hy.2⟩
 
-/-! ### `|∂{u > 0} ∩ Ω| = 0` -/
-
-/-- **`|Σ^H| = 0`.** By Lemma 8.5 (2), outside an `ℋ^{n-1}`-null (hence Lebesgue-null) set, the
-points of `Σ^H` are zeros of `u` at which `{u > 0}` has density `1`. The Lebesgue density theorem
-makes those a null set. -/
-theorem volume_sigmaH_eq_zero [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
-    volume (sigmaH Ω u χ) = 0 := by
+/-- **`|Σ^H_Q| = 0`.** By Lemma 8.5 (2), outside an `ℋ^{n-1}`-null (hence Lebesgue-null) set, the
+points of `Σ^H_Q` are zeros of `u` at which `{u > 0}` has density `1`. The Lebesgue density
+theorem makes those a null set. -/
+theorem volume_sigmaHQ_eq_zero [NeZero n] (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) : volume (sigmaHQ Ω Q u χ) = 0 := by
   set F : Set (Rn n) := Ω ∩ {y | 0 < u y} with hFdef
   have hFm : MeasurableSet F :=
     (h.continuousOn.isOpen_inter_preimage h.isOpen isOpen_Ioi).measurableSet
-  have hE1 := volume_eq_zero_of_hausdorffN_eq_zero (by omega) (density_pos_eq_one_ae hn h)
+  have hE1 := volume_eq_zero_of_hausdorffN_eq_zero (by omega) (density_pos_eq_one_aeQ hn hQ h)
   have hE2 := ae_iff.1 (Regular.ae_hasDensity_indicator hFm)
   refine measure_mono_null (fun x hx => ?_) (measure_union_null hE1 hE2)
   by_cases hd : HasDensity {y | 0 < u y} x 1
@@ -259,28 +289,29 @@ theorem volume_sigmaH_eq_zero [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSoluti
     have hF1 : HasDensity F x 1 := (hasDensity_inter_iff (h.isOpen.mem_nhds hx.1)).2 hd
     have hxF : x ∉ F := fun hxF => by
       have : 0 < u x := hxF.2
-      rw [h.eq_zero_of_mem_sigmaH hx] at this
+      rw [h.eq_zero_of_mem_sigmaHQ hQ hx] at this
       exact lt_irrefl _ this
     rw [indicator_of_notMem hxF] at hx'
     exact one_ne_zero (tendsto_nhds_unique hF1 hx')
   · exact Or.inl ⟨hx, hd⟩
 
-/-- **`|Ω ∩ ∂{u > 0}| = 0`** (first step of the proof of Theorem 8.6). Off `Σ^H` this is the
-density argument of the proof of Lemma 8.2 on the open set `Ω \ Σ^H`, where `Σ^H` is empty.
-`Σ^H` is null by `volume_sigmaH_eq_zero`. -/
-theorem volume_inter_frontier_pos_eq_zero [NeZero n] (hn : 2 ≤ n)
-    (h : IsVariationalSolution Ω C u χ) : volume (Ω ∩ frontier {y | 0 < u y}) = 0 := by
-  have h1 := h.diff_sigmaH.volume_inter_frontier_pos_eq_zero hn h.sigmaH_diff_sigmaH_eq_empty
-  refine measure_mono_null (fun x hx => ?_) (measure_union_null h1 (volume_sigmaH_eq_zero hn h))
-  by_cases hS : x ∈ sigmaH Ω u χ
+/-- **`|Ω ∩ ∂{u > 0}| = 0`** (first step of the proof of Theorem 8.6). Off `Σ^H_Q` this is the
+density argument of the proof of Lemma 8.2 on the open set `Ω \ Σ^H_Q`, where `Σ^H_Q` is empty.
+`Σ^H_Q` is null by `volume_sigmaHQ_eq_zero`. -/
+theorem volume_inter_frontier_pos_eq_zeroQ [NeZero n] (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C Q u χ) : volume (Ω ∩ frontier {y | 0 < u y}) = 0 := by
+  have h1 := (h.diff_sigmaHQ hQ).volume_inter_frontier_pos_eq_zero hn (hQ.mono diff_subset)
+    (sigmaHQ_diff_sigmaHQ_eq_empty Ω Q u χ)
+  refine measure_mono_null (fun x hx => ?_)
+    (measure_union_null h1 (volume_sigmaHQ_eq_zero hn hQ h))
+  by_cases hS : x ∈ sigmaHQ Ω Q u χ
   · exact Or.inr hS
   · exact Or.inl ⟨⟨hx.1, hS⟩, hx.2⟩
 
-/-! ### Theorem 8.6 -/
-
 /-- If the pathological set is empty, then `χ = χ_{u>0}` a.e. on `Ω`. -/
-theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty [NeZero n] (hn : 2 ≤ n)
-    (h : IsVariationalSolution Ω C u χ) (hA : pathologicalSet Ω u χ = ∅) :
+theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_emptyQ [NeZero n] (hn : 2 ≤ n)
+    (hQ : QBounds Ω Q L c C') (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hA : pathologicalSet Ω u χ = ∅) :
     ∀ᵐ y ∂(volume.restrict Ω), χ y = posIndicator u y := by
   -- `χ = 0` a.e. on `Ω \ closure {u > 0}`
   have hG : ∀ᵐ y, y ∈ Ω → y ∉ closure {y | 0 < u y} → χ y = 0 := by
@@ -289,9 +320,9 @@ theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty [NeZero n] (hn : 2 �
     simp only [mem_setOf_eq, Classical.not_imp] at hx
     obtain ⟨hxΩ, hncl, -⟩ := hx
     obtain ⟨δ, hδ, hδΩ, hu0⟩ := h.exists_ball_eq_zero hxΩ hncl
-    obtain ⟨c, hc01, hc⟩ := h.exists_ae_eq_const_of_eq_zero isOpen_ball
+    obtain ⟨c₀, hc01, hc⟩ := h.exists_ae_eq_const_of_eq_zero hQ isOpen_ball
       (convex_ball x δ).isPreconnected hδΩ hu0
-    have hc0 : c = 0 := by
+    have hc0 : c₀ = 0 := by
       rcases hc01 with h0 | h1
       · exact h0
       · subst h1
@@ -305,7 +336,7 @@ theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty [NeZero n] (hn : 2 �
     refine measure_mono_null (fun z hz => ?_) hc
     simp only [mem_setOf_eq, Classical.not_imp] at hz ⊢
     exact ⟨hz.2, hz.1.2.2⟩
-  have hF := volume_inter_frontier_pos_eq_zero hn h
+  have hF := volume_inter_frontier_pos_eq_zeroQ hn hQ h
   rw [ae_restrict_iff' h.isOpen.measurableSet]
   filter_upwards [h.ae_chi_eq_one, hG, measure_eq_zero_iff_ae_notMem.1 hF] with y h1 h2 h3 hyΩ
   rcases (h.nonneg y hyΩ).lt_or_eq with hpos | hzero
@@ -314,14 +345,17 @@ theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty [NeZero n] (hn : 2 �
       h3 ⟨hyΩ, (h.mem_frontier_pos_iff hyΩ).2 ⟨hcl, hzero.symm⟩⟩
     rw [h2 hyΩ hncl, posIndicator_of_nonpos hzero.symm.le]
 
-/-- **Theorem 8.6**. Let `(u, χ)` be a variational solution on an
-open connected `Ω`. Then either `u ≡ 0` on `Ω` or `χ = χ_{u>0}` a.e. on `Ω`.
+end Coefficient
 
-This has literally the type of `Statements.chi_eq_indicator` (Theorem 1.2 (i)). The proof is in
-the module docstring. It uses Lemma 8.5 (2) (`density_pos_eq_one_ae`) and Federer's criterion
-for an `ℋ^{n-1}`-null essential boundary in place of the paper's appeal to Theorem 7.2. -/
-theorem chi_eq_indicator (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {u χ : Rn n → ℝ}
-    (hΩ : IsConnected Ω) (h : IsVariationalSolution Ω C_V u χ) :
+/-! ### Theorem 8.6 -/
+
+/-- **Theorem 8.6 with a Lipschitz coefficient**. Let `(u, χ)` be a variational solution with a
+Lipschitz coefficient `Q` (`QBounds Ω Q L c C'`) on an open connected `Ω`. Then either `u ≡ 0`
+on `Ω` or `χ = χ_{u>0}` a.e. on `Ω`. The paper treats `Q ≡ 1`; the proof is the same (module
+docstring), with Lemma 8.5 (2) for a Lipschitz coefficient (`density_pos_eq_one_aeQ`). -/
+theorem chi_eq_indicatorQ (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {Q u χ : Rn n → ℝ}
+    {L : ℝ≥0} {c C' : ℝ} (hΩ : IsConnected Ω) (hQ : QBounds Ω Q L c C')
+    (h : IsVariationalSolutionQ Ω C_V Q u χ) :
     (∀ x ∈ Ω, u x = 0) ∨ χ =ᵐ[volume.restrict Ω] posIndicator u := by
   haveI : NeZero n := ⟨by omega⟩
   set A := pathologicalSet Ω u χ with hAdef
@@ -329,7 +363,7 @@ theorem chi_eq_indicator (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {u χ 
   have hcover : Ω ⊆ interior (closure A) ∪ (closure A)ᶜ := by
     intro x hx
     obtain ⟨δ, hδ, hδΩ⟩ := Metric.isOpen_iff.1 h.isOpen x hx
-    rcases pathologicalSet_ae_trivial hn h hδΩ with h0 | h1
+    rcases pathologicalSet_ae_trivialQ hn hQ h hδΩ with h0 | h1
     · right
       have hempty : A ∩ ball x δ = ∅ :=
         (isOpen_pathologicalSet.inter isOpen_ball).measure_eq_zero_iff volume |>.1 h0
@@ -362,29 +396,30 @@ theorem chi_eq_indicator (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {u χ 
     right
     have hA : A = ∅ := eq_empty_iff_forall_notMem.2 fun x hxA =>
       hsub (pathologicalSet_subset hxA) (subset_closure hxA)
-    exact ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty hn h hA
+    exact ae_chi_eq_posIndicator_of_pathologicalSet_eq_emptyQ hn hQ h hA
 
-/-- **Theorem 8.6, glued form**. Let `U` be connected and let `(u, χ)` be a variational solution
-near every point of `U`: each `x ∈ U` has an open neighbourhood `V ⊆ U` on which `(u, χ)` is a
-variational solution with some constant `C_V(x)`. Then either `u ≡ 0` on `U` and `χ = 1` a.e. on
-`U`, or `χ = χ_{u>0}` a.e. on `U`.
+/-- **Theorem 8.6 with a Lipschitz coefficient, glued form**. Let `U` be connected and let
+`(u, χ)` be a variational solution with a Lipschitz coefficient near every point of `U`: each
+`x ∈ U` has an open neighbourhood `V ⊆ U` with `QBounds V Q L c C'` on which `(u, χ)` is a
+`Q`-variational solution, with constants depending on `x`. Then either `u ≡ 0` on `U` and `χ = 1`
+a.e. on `U`, or `χ = χ_{u>0}` a.e. on `U`.
 
-This is the form that a locally Lipschitz `u` provides: the Lipschitz constant only needs to be
-uniform near each point. The proof applies `chi_eq_indicator` on small balls and glues the two
-alternatives, `{u = 0, χ = 1 a.e. near x}` and `{χ = χ_{u>0} a.e. near x}`, which are open,
-disjoint, and cover `U`. -/
-theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n → ℝ}
+The proof applies `chi_eq_indicatorQ` on small balls and glues the two alternatives,
+`{u = 0, χ = 1 a.e. near x}` and `{χ = χ_{u>0} a.e. near x}`, which are open, disjoint, and cover
+`U`. -/
+theorem chi_eq_indicator_of_localQ' (hn : 2 ≤ n) {U : Set (Rn n)} {Q u χ : Rn n → ℝ}
     (hU : IsConnected U)
-    (h : ∀ x ∈ U, ∃ V, IsOpen V ∧ x ∈ V ∧ V ⊆ U ∧ ∃ C : ℝ≥0, IsVariationalSolution V C u χ) :
+    (h : ∀ x ∈ U, ∃ V, IsOpen V ∧ x ∈ V ∧ V ⊆ U ∧ ∃ (C : ℝ≥0) (L : ℝ≥0) (c C' : ℝ),
+      QBounds V Q L c C' ∧ IsVariationalSolutionQ V C Q u χ) :
     ((∀ x ∈ U, u x = 0) ∧ ∀ᵐ y ∂(volume.restrict U), χ y = 1) ∨
       χ =ᵐ[volume.restrict U] posIndicator u := by
   haveI : NeZero n := ⟨by omega⟩
-  have hball : ∀ x ∈ U, ∃ δ > 0, ball x δ ⊆ U ∧ ∃ C : ℝ≥0,
-      IsVariationalSolution (ball x δ) C u χ := by
+  have hball : ∀ x ∈ U, ∃ δ > 0, ball x δ ⊆ U ∧ ∃ (C : ℝ≥0) (L : ℝ≥0) (c C' : ℝ),
+      QBounds (ball x δ) Q L c C' ∧ IsVariationalSolutionQ (ball x δ) C Q u χ := by
     intro x hx
-    obtain ⟨V, hVo, hxV, hVU, C, hC⟩ := h x hx
+    obtain ⟨V, hVo, hxV, hVU, C, L, c, C', hQ, hC⟩ := h x hx
     obtain ⟨δ, hδ, hδV⟩ := Metric.isOpen_iff.1 hVo x hxV
-    exact ⟨δ, hδ, hδV.trans hVU, C, hC.mono isOpen_ball hδV⟩
+    exact ⟨δ, hδ, hδV.trans hVU, C, L, c, C', hQ.mono hδV, hC.mono isOpen_ball hδV⟩
   have hUo : IsOpen U := isOpen_iff_mem_nhds.2 fun x hx => by
     obtain ⟨V, hVo, hxV, hVU, -⟩ := h x hx
     exact mem_of_superset (hVo.mem_nhds hxV) hVU
@@ -394,24 +429,24 @@ theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n �
       linarith [dist_triangle w z x]
   set P : Set (Rn n) := {x | ∃ δ > 0, ball x δ ⊆ U ∧ (∀ y ∈ ball x δ, u y = 0) ∧
     ∀ᵐ y ∂(volume.restrict (ball x δ)), χ y = 1} with hPdef
-  set Q : Set (Rn n) := {x | ∃ δ > 0, ball x δ ⊆ U ∧
-    ∀ᵐ y ∂(volume.restrict (ball x δ)), χ y = posIndicator u y} with hQdef
+  set P' : Set (Rn n) := {x | ∃ δ > 0, ball x δ ⊆ U ∧
+    ∀ᵐ y ∂(volume.restrict (ball x δ)), χ y = posIndicator u y} with hP'def
   have hPo : IsOpen P := by
     rw [Metric.isOpen_iff]
     rintro x ⟨δ, hδ, hδU, hu, hc⟩
     exact ⟨δ, hδ, fun z hz => ⟨δ - dist z x, sub_pos.2 hz, (hsub x z δ hz).trans hδU,
       fun y hy => hu y (hsub x z δ hz hy), ae_restrict_of_ae_restrict_of_subset (hsub x z δ hz) hc⟩⟩
-  have hQo : IsOpen Q := by
+  have hP'o : IsOpen P' := by
     rw [Metric.isOpen_iff]
     rintro x ⟨δ, hδ, hδU, hc⟩
     exact ⟨δ, hδ, fun z hz => ⟨δ - dist z x, sub_pos.2 hz, (hsub x z δ hz).trans hδU,
       ae_restrict_of_ae_restrict_of_subset (hsub x z δ hz) hc⟩⟩
-  have hcover : U ⊆ P ∪ Q := by
+  have hcover : U ⊆ P ∪ P' := by
     intro x hx
-    obtain ⟨δ, hδ, hδU, C, hC⟩ := hball x hx
-    rcases chi_eq_indicator hn ((convex_ball x δ).isConnected (nonempty_ball.2 hδ)) hC with
+    obtain ⟨δ, hδ, hδU, C, L, c, C', hQ, hC⟩ := hball x hx
+    rcases chi_eq_indicatorQ hn ((convex_ball x δ).isConnected (nonempty_ball.2 hδ)) hQ hC with
       hu | hae
-    · obtain ⟨c, hc01, hc⟩ := hC.exists_ae_eq_const_of_eq_zero isOpen_ball
+    · obtain ⟨c₀, hc01, hc⟩ := hC.exists_ae_eq_const_of_eq_zero hQ isOpen_ball
         (convex_ball x δ).isPreconnected subset_rfl hu
       rcases hc01 with rfl | rfl
       · right
@@ -420,7 +455,7 @@ theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n �
         rw [hy, posIndicator_of_nonpos (hu y hyB).le]
       · exact Or.inl ⟨δ, hδ, hδU, hu, hc⟩
     · exact Or.inr ⟨δ, hδ, hδU, hae⟩
-  have hdisj : U ∩ (P ∩ Q) = ∅ := by
+  have hdisj : U ∩ (P ∩ P') = ∅ := by
     refine eq_empty_iff_forall_notMem.2 fun x ⟨_, ⟨δ₁, hδ₁, _, hu, hc1⟩, ⟨δ₂, hδ₂, _, hc2⟩⟩ => ?_
     have hδ : 0 < min δ₁ δ₂ := lt_min hδ₁ hδ₂
     have hne : (ae (volume.restrict (ball x (min δ₁ δ₂)))).NeBot :=
@@ -431,8 +466,8 @@ theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n �
         (ae_restrict_mem measurableSet_ball)).exists
     rw [posIndicator_of_nonpos (hu y (ball_subset_ball (min_le_left _ _) hyB)).le] at hy2
     exact one_ne_zero (hy1.symm.trans hy2)
-  rcases isPreconnected_iff_subset_of_disjoint.1 hU.isPreconnected P Q hPo hQo hcover hdisj with
-    hP | hQ
+  rcases isPreconnected_iff_subset_of_disjoint.1 hU.isPreconnected P P' hPo hP'o hcover hdisj with
+    hP | hP'
   · left
     refine ⟨fun x hx => ?_, ?_⟩
     · obtain ⟨δ, hδ, -, hu, -⟩ := hP hx
@@ -451,13 +486,97 @@ theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n �
     rw [EventuallyEq, ae_restrict_iff' hUo.measurableSet, ae_iff]
     refine measure_null_of_locally_null _ fun x hx => ?_
     simp only [mem_setOf_eq, Classical.not_imp] at hx
-    obtain ⟨δ, hδ, -, hc⟩ := hQ hx.1
+    obtain ⟨δ, hδ, -, hc⟩ := hP' hx.1
     refine ⟨{y | ¬(y ∈ U → χ y = posIndicator u y)} ∩ ball x δ,
       inter_mem_nhdsWithin _ (ball_mem_nhds x hδ), ?_⟩
     rw [ae_restrict_iff' measurableSet_ball, ae_iff] at hc
     refine measure_mono_null (fun z hz => ?_) hc
     simp only [mem_setOf_eq, Classical.not_imp] at hz ⊢
     exact ⟨hz.2, hz.1.2⟩
+
+/-! ### The coefficient `Q ≡ 1` -/
+
+/-- `M_x(u; 0+) = |B_1|` on the pathological set. -/
+theorem Mzero_eq_of_mem_pathologicalSet [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
+    (hx : x ∈ pathologicalSet Ω u χ) : Mzero u χ x = unitBallVolume n := by
+  have := MzeroQ_eq_of_mem_pathologicalSet (QBounds.one Ω) h.toQ hx
+  rwa [MzeroQ_one, one_pow, one_mul] at this
+
+/-- **`∂U ∩ Ω ⊆ Σ^H`** (proof of Theorem 8.6). A point of `Ω` in the closure of the pathological
+set lies in it or in `Σ^H`. By upper semicontinuity (Proposition 3.5), `M_x(u; 0+) ≥ |B_1|`. If
+`x ∈ closure {u > 0}`, then `x ∈ Σ^H`. Otherwise `u = 0` on a ball around `x`, where `χ` is a.e.
+constant, and that constant is `1` because the ball meets the pathological set. -/
+theorem mem_pathologicalSet_or_mem_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ)
+    {x : Rn n} (hx : x ∈ Ω) (hcl : x ∈ closure (pathologicalSet Ω u χ)) :
+    x ∈ pathologicalSet Ω u χ ∨ x ∈ sigmaH Ω u χ := by
+  rw [← h.sigmaHQ_one]
+  exact mem_pathologicalSet_or_mem_sigmaHQ (QBounds.one Ω) h.toQ hx hcl
+
+/-- The essential boundary of the pathological set inside `Ω` consists of points of `Σ^H` at
+which `{u > 0}` does not have density `1`. -/
+theorem essentialBoundary_pathologicalSet_inter_subset [NeZero n]
+    (h : IsVariationalSolution Ω C u χ) :
+    essentialBoundary (pathologicalSet Ω u χ) ∩ Ω ⊆
+      {x | x ∈ sigmaH Ω u χ ∧ ¬ HasDensity {y | 0 < u y} x 1} := by
+  rw [← h.sigmaHQ_one]
+  exact essentialBoundary_pathologicalSet_inter_subsetQ (QBounds.one Ω) h.toQ
+
+/-- **Federer's criterion applied to the pathological set.** In every ball `B ⊆ Ω` the
+pathological set is null or of full measure (Lemma 8.5 (2) and Federer's criterion,
+`Singular.FedererCriterion.ae_trivial_of_hausdorffN_essentialBoundary_inter_ball`). -/
+theorem pathologicalSet_ae_trivial [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ)
+    {c : Rn n} {r : ℝ} (hball : ball c r ⊆ Ω) :
+    volume (pathologicalSet Ω u χ ∩ ball c r) = 0 ∨
+      volume (ball c r \ pathologicalSet Ω u χ) = 0 :=
+  pathologicalSet_ae_trivialQ hn (QBounds.one Ω) h.toQ hball
+
+/-- **`|Σ^H| = 0`.** By Lemma 8.5 (2), outside an `ℋ^{n-1}`-null (hence Lebesgue-null) set, the
+points of `Σ^H` are zeros of `u` at which `{u > 0}` has density `1`. The Lebesgue density theorem
+makes those a null set. -/
+theorem volume_sigmaH_eq_zero [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
+    volume (sigmaH Ω u χ) = 0 := by
+  rw [← h.sigmaHQ_one]
+  exact volume_sigmaHQ_eq_zero hn (QBounds.one Ω) h.toQ
+
+/-- **`|Ω ∩ ∂{u > 0}| = 0`** (first step of the proof of Theorem 8.6). Off `Σ^H` this is the
+density argument of the proof of Lemma 8.2 on the open set `Ω \ Σ^H`, where `Σ^H` is empty.
+`Σ^H` is null by `volume_sigmaH_eq_zero`. -/
+theorem volume_inter_frontier_pos_eq_zero [NeZero n] (hn : 2 ≤ n)
+    (h : IsVariationalSolution Ω C u χ) : volume (Ω ∩ frontier {y | 0 < u y}) = 0 :=
+  volume_inter_frontier_pos_eq_zeroQ hn (QBounds.one Ω) h.toQ
+
+/-- If the pathological set is empty, then `χ = χ_{u>0}` a.e. on `Ω`. -/
+theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty [NeZero n] (hn : 2 ≤ n)
+    (h : IsVariationalSolution Ω C u χ) (hA : pathologicalSet Ω u χ = ∅) :
+    ∀ᵐ y ∂(volume.restrict Ω), χ y = posIndicator u y :=
+  ae_chi_eq_posIndicator_of_pathologicalSet_eq_emptyQ hn (QBounds.one Ω) h.toQ hA
+
+/-- **Theorem 8.6**. Let `(u, χ)` be a variational solution on an
+open connected `Ω`. Then either `u ≡ 0` on `Ω` or `χ = χ_{u>0}` a.e. on `Ω`.
+
+This has literally the type of `Statements.chi_eq_indicator` (Theorem 1.2 (i)). The proof is in
+the module docstring. It uses Lemma 8.5 (2) (`density_pos_eq_one_ae`) and Federer's criterion
+for an `ℋ^{n-1}`-null essential boundary in place of the paper's appeal to Theorem 7.2. -/
+theorem chi_eq_indicator (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {u χ : Rn n → ℝ}
+    (hΩ : IsConnected Ω) (h : IsVariationalSolution Ω C_V u χ) :
+    (∀ x ∈ Ω, u x = 0) ∨ χ =ᵐ[volume.restrict Ω] posIndicator u :=
+  chi_eq_indicatorQ hn hΩ (QBounds.one Ω) h.toQ
+
+/-- **Theorem 8.6, glued form**. Let `U` be connected and let `(u, χ)` be a variational solution
+near every point of `U`: each `x ∈ U` has an open neighbourhood `V ⊆ U` on which `(u, χ)` is a
+variational solution with some constant `C_V(x)`. Then either `u ≡ 0` on `U` and `χ = 1` a.e. on
+`U`, or `χ = χ_{u>0}` a.e. on `U`.
+
+This is the form that a locally Lipschitz `u` provides: the Lipschitz constant only needs to be
+uniform near each point. The proof is `chi_eq_indicator_of_localQ'` for the coefficient `1`. -/
+theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n → ℝ}
+    (hU : IsConnected U)
+    (h : ∀ x ∈ U, ∃ V, IsOpen V ∧ x ∈ V ∧ V ⊆ U ∧ ∃ C : ℝ≥0, IsVariationalSolution V C u χ) :
+    ((∀ x ∈ U, u x = 0) ∧ ∀ᵐ y ∂(volume.restrict U), χ y = 1) ∨
+      χ =ᵐ[volume.restrict U] posIndicator u :=
+  chi_eq_indicator_of_localQ' (Q := fun _ => 1) hn hU fun x hx => by
+    obtain ⟨V, hVo, hxV, hVU, C, hC⟩ := h x hx
+    exact ⟨V, hVo, hxV, hVU, C, 0, 1, 1, QBounds.one V, hC.toQ⟩
 
 end Singular
 

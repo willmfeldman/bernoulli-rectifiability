@@ -1,5 +1,5 @@
 name = "inner_variational"
-version = "0.1.0"
+version = "0.2.0"
 description = "Lean 4 formalization of D. Kriventsov and G. S. Weiss, Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries (Comm. Pure Appl. Math. 2025, arXiv:2306.10131)"
 keywords = ["math", "free-boundary", "bernoulli-problem", "rectifiability", "geometric-measure-theory", "calculus-of-variations"]
 defaultTargets = ["InnerVariational", "Sperner"]

@@ -6,6 +6,7 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Kernel.RellichPohozaev
+public import InnerVariational.Kernel.GradVariation
 import Mathlib.Topology.UniformSpace.Uniformizable
 import Mathlib.MeasureTheory.Order.Group.Lattice
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
@@ -38,27 +39,34 @@ measure where it is needed.
 ## Main statements
 
 * `Kernel.gradVariation u ξ = |∇u|² div ξ − 2 ∇u · Dξ ∇u`, the quadratic part of the inner
-  variation.
+  variation (in `Kernel/GradVariation.lean`).
 * `IsVariationalSolution.integral_chi_mul_divergence_eq`:
   `∫ χ div ξ = −∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)`.
-* `IsVariationalSolution.abs_integral_gradVariation_le`: for a cutoff `η ≥ 0` with `η = 1` on
+* `IsVariationalSolutionQ.abs_integral_gradVariation_le`: for a cutoff `η ≥ 0` with `η = 1` on
   `spt ξ`, `|∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)| ≤ C_V sup|ξ| ∫ |∇u · ∇η|`.
-* `IsVariationalSolution.chi_divergence_bound`: Lemma 3.3. Variants: `chi_divergence_bound_iSup`
-  (with `⨆ y, ‖ξ y‖`) and `abs_setIntegral_divergence_le` (on `Ω ∩ {χ = 1}`, the form taken by the
-  BV structure theorem).
+* `IsVariationalSolutionQ.abs_integral_chi_mul_divergence_sq_smul_le`:
+  `|∫ χ div (Q² ξ)| ≤ 2^{n+1} |B_1| C_V² sup|ξ| r^{n-1}`.
+* `IsVariationalSolutionQ.chi_divergence_bound`: Lemma 3.3 with a Lipschitz coefficient
+  `0 < c ≤ Q`, `|∫ χ div ξ| ≤ 2^{n+1} |B_1| C_V² sup|ξ| r^{n-1} / c²`. Variants:
+  `chi_divergence_bound_iSup` (with `⨆ y, ‖ξ y‖`) and `abs_setIntegral_divergence_le` (on
+  `Ω ∩ {χ = 1}`, the form taken by the BV structure theorem).
+* The `IsVariationalSolution` versions (the coefficient `Q ≡ 1`, with constant
+  `2^{n+1} |B_1| C_V²`) are specializations.
 
 ## Proof
 
 The paper mollifies `u` and uses that `Δu` is a nonnegative measure. We avoid mollifiers. Let
 `F_k(t) = S((k+1)t − 1)`, with `S` a smooth step, so that `F_k(u) → χ_{u>0}` and `F_k(u)` vanishes
 near `{u = 0}`. Testing the inner variation with `ζ_k = F_k(u) ξ`, which is supported in
-`{u > 0}` where `χ = 1`, gives `∫ (|∇u|² div ζ_k − 2 ∇u·Dζ_k∇u) = −∫ div ζ_k = 0`. The chain rule
-turns this into
+`{u > 0}` where `χ = 1`, gives `∫ (|∇u|² div ζ_k − 2 ∇u·Dζ_k∇u) = −∫ div (Q² ζ_k) = 0`. The
+chain rule turns this into
 `∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) = ∫ F_k'(u) (∇u · ξ) |∇u|²`.
-Since `∇u = 0` on `{u = 0}`, the left side tends to `∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u) = −∫ χ div ξ`.
+Since `∇u = 0` on `{u = 0}`, the left side tends to
+`∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u) = −∫ χ div (Q² ξ)`.
 The right side is bounded by `C_V sup|ξ| ∫ F_k'(u) |∇u|² η = −C_V sup|ξ| ∫ F_k(u) ∇u·∇η`
 (the energy identity `IsLipHarmonicPos.integral_comp_mul_inner_gradient`). This plays the role
-of the paper's bound `Δu(B_{3r/2}(x)) ≤ −∫ ∇u·∇η ≤ C r^{n-1}`.
+of the paper's bound `Δu(B_{3r/2}(x)) ≤ −∫ ∇u·∇η ≤ C r^{n-1}`. Replacing `ξ` by the test field
+`Q⁻² ξ` bounds `∫ χ div ξ`, at the cost of the factor `c⁻²`. The paper treats `Q ≡ 1`.
 
 ## References
 
@@ -79,170 +87,6 @@ namespace InnerVariational
 variable {n : ℕ}
 
 namespace Kernel
-
-/-! ### The quadratic part of the inner variation -/
-
-/-- The quadratic part of the inner variation (3.5): `|∇u|² div ξ − 2 ∇u · Dξ ∇u`. -/
-def gradVariation (u : Rn n → ℝ) (ξ : Rn n → Rn n) (y : Rn n) : ℝ :=
-  ‖gradient u y‖ ^ 2 * divergence ξ y - 2 * ⟪gradient u y, fderiv ℝ ξ y (gradient u y)⟫
-
-theorem measurable_divergence (ξ : Rn n → Rn n) : Measurable (divergence ξ) := by
-  set T : (Rn n →L[ℝ] Rn n) →ₗ[ℝ] ℝ :=
-    (LinearMap.trace ℝ (Rn n)).comp (ContinuousLinearMap.coeLM ℝ)
-  have hT : Continuous T := T.continuous_of_finiteDimensional
-  have e : divergence ξ = fun y => T (fderiv ℝ ξ y) := rfl
-  rw [e]
-  exact hT.measurable.comp (measurable_fderiv ℝ ξ)
-
-/-- `|div ξ| ≤ n L` for an `L`-Lipschitz field `ξ`. -/
-theorem abs_divergence_le {ξ : Rn n → Rn n} {D : ℝ≥0} (hξ : LipschitzWith D ξ) (y : Rn n) :
-    |divergence ξ y| ≤ n * D := by
-  by_cases hy : DifferentiableAt ℝ ξ y
-  · rw [divergence_eq_sum_fderiv hy]
-    refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
-    have hcomp : ∀ i, LipschitzWith D (fun z => ξ z i) :=
-      fun i a b => (PiLp.edist_apply_le _ _ i).trans (hξ a b)
-    calc ∑ i, |fderiv ℝ (fun z => ξ z i) y (EuclideanSpace.single i 1)|
-        ≤ ∑ _i : Fin n, (D : ℝ) := Finset.sum_le_sum fun i _ => by
-          rw [← Real.norm_eq_abs]
-          refine ((fderiv ℝ (fun z => ξ z i) y).le_opNorm _).trans ?_
-          rw [PiLp.norm_single, norm_one, mul_one]
-          exact norm_fderiv_le_of_lipschitz ℝ (hcomp i)
-      _ = n * D := by simp
-  · rw [show divergence ξ y = 0 by simp [divergence, fderiv_zero_of_not_differentiableAt hy],
-      abs_zero]
-    positivity
-
-theorem integrable_divergence {ξ : Rn n → Rn n} {D : ℝ≥0} (hξ : LipschitzWith D ξ)
-    (hc : HasCompactSupport ξ) : Integrable (divergence ξ) :=
-  integrable_of_bound_of_isCompact (K := tsupport ξ) hc
-    (measurable_divergence ξ).aestronglyMeasurable (M := n * D)
-    (fun y _ => by rw [Real.norm_eq_abs]; exact abs_divergence_le hξ y)
-    (fun _ hy => divergence_eq_zero_of_notMem_tsupport hy)
-
-/-- `∫ div ξ = 0` for a Lipschitz test field (Lipschitz integration by parts with `f = 1`). -/
-theorem integral_divergence_eq_zero {U : Set (Rn n)} (hU : IsOpen U) {ξ : Rn n → Rn n}
-    (hξ : IsLipTestField U ξ) : ∫ y, divergence ξ y = 0 := by
-  have := Registry.integral_mul_divergence_eq_neg hU (f := fun _ => (1 : ℝ))
-    (fun _ _ => ⟨0, univ, univ_mem, (LipschitzWith.const (1 : ℝ)).lipschitzOnWith⟩) hξ
-  simpa [gradient] using this
-
-theorem measurable_gradVariation (u : Rn n → ℝ) (ξ : Rn n → Rn n) :
-    Measurable (gradVariation u ξ) := by
-  have h1 : Measurable fun y => fderiv ℝ ξ y (gradient u y) :=
-    Continuous.measurable2 (c := fun (L : Rn n →L[ℝ] Rn n) (v : Rn n) => L v)
-      isBoundedBilinearMap_apply.continuous (measurable_fderiv ℝ ξ) (measurable_gradient u)
-  exact (((measurable_gradient u).norm.pow_const 2).mul (measurable_divergence ξ)).sub
-    (((measurable_gradient u).inner h1).const_mul 2)
-
-theorem gradVariation_eq_zero_of_notMem_tsupport {u : Rn n → ℝ} {ξ : Rn n → Rn n} {y : Rn n}
-    (hy : y ∉ tsupport ξ) : gradVariation u ξ y = 0 := by
-  simp [gradVariation, divergence_eq_zero_of_notMem_tsupport hy,
-    fderiv_of_notMem_tsupport (𝕜 := ℝ) hy]
-
-theorem gradVariation_eq_zero_of_gradient_eq_zero {u : Rn n → ℝ} {ξ : Rn n → Rn n} {y : Rn n}
-    (hy : gradient u y = 0) : gradVariation u ξ y = 0 := by
-  simp [gradVariation, hy]
-
-theorem abs_gradVariation_le {u : Rn n → ℝ} {ξ : Rn n → Rn n} {D : ℝ≥0}
-    (hξ : LipschitzWith D ξ) {Cg : ℝ} {y : Rn n} (hy : ‖gradient u y‖ ≤ Cg) :
-    |gradVariation u ξ y| ≤ Cg ^ 2 * (n * D) + 2 * (Cg ^ 2 * D) := by
-  have hsq : ‖gradient u y‖ ^ 2 ≤ Cg ^ 2 := pow_le_pow_left₀ (norm_nonneg _) hy 2
-  have hdiv := abs_divergence_le hξ y
-  have hD : ‖fderiv ℝ ξ y‖ ≤ D := norm_fderiv_le_of_lipschitz ℝ hξ
-  have hq : |⟪gradient u y, fderiv ℝ ξ y (gradient u y)⟫| ≤ Cg ^ 2 * D := by
-    rw [← Real.norm_eq_abs]
-    refine (norm_inner_le_norm _ _).trans ?_
-    have h1 : ‖fderiv ℝ ξ y (gradient u y)‖ ≤ D * ‖gradient u y‖ :=
-      ((fderiv ℝ ξ y).le_opNorm _).trans (mul_le_mul_of_nonneg_right hD (norm_nonneg _))
-    calc ‖gradient u y‖ * ‖fderiv ℝ ξ y (gradient u y)‖
-        ≤ ‖gradient u y‖ * (D * ‖gradient u y‖) := mul_le_mul_of_nonneg_left h1 (norm_nonneg _)
-      _ = ‖gradient u y‖ ^ 2 * D := by ring
-      _ ≤ Cg ^ 2 * D := mul_le_mul_of_nonneg_right hsq D.2
-  unfold gradVariation
-  refine (abs_sub _ _).trans (add_le_add ?_ ?_)
-  · rw [abs_mul, abs_of_nonneg (sq_nonneg ‖gradient u y‖)]
-    exact mul_le_mul hsq hdiv (abs_nonneg _) (sq_nonneg _)
-  · rw [abs_mul, abs_two]
-    exact mul_le_mul_of_nonneg_left hq zero_le_two
-
-theorem integrable_gradVariation {U : Set (Rn n)} {u : Rn n → ℝ} {ξ : Rn n → Rn n}
-    (hξ : IsLipTestField U ξ) {Cg : ℝ} (hCg : ∀ y ∈ U, ‖gradient u y‖ ≤ Cg) :
-    Integrable (gradVariation u ξ) := by
-  obtain ⟨⟨D, hD⟩, hc, hU⟩ := hξ
-  exact integrable_of_bound_of_isCompact (K := tsupport ξ) hc
-    (measurable_gradVariation u ξ).aestronglyMeasurable
-    (M := Cg ^ 2 * (n * D) + 2 * (Cg ^ 2 * D))
-    (fun y hy => by rw [Real.norm_eq_abs]; exact abs_gradVariation_le hD (hCg y (hU hy)))
-    (fun _ hy => gradVariation_eq_zero_of_notMem_tsupport hy)
-
-/-- The product rule for the quadratic part of the inner variation. If `f` has derivative `f'`
-at `y` and `ξ` is differentiable at `y`, then at `y`,
-`|∇u|² div(fξ) − 2 ∇u·D(fξ)∇u = f (|∇u|² div ξ − 2 ∇u·Dξ∇u) + f'(ξ) |∇u|² − 2 f'(∇u) (∇u·ξ)`. -/
-theorem gradVariation_smul_eq {u f : Rn n → ℝ} {ξ : Rn n → Rn n} {f' : Rn n →L[ℝ] ℝ}
-    {y : Rn n} (hf : HasFDerivAt f f' y) (hξ : DifferentiableAt ℝ ξ y) :
-    gradVariation u (fun z => f z • ξ z) y = f y * gradVariation u ξ y +
-      f' (ξ y) * ‖gradient u y‖ ^ 2 - 2 * (f' (gradient u y) * ⟪gradient u y, ξ y⟫) := by
-  have hd : HasFDerivAt (fun z => f z • ξ z) (f y • fderiv ℝ ξ y + f'.smulRight (ξ y)) y :=
-    hf.smul hξ.hasFDerivAt
-  have hdiv : divergence (fun z => f z • ξ z) y = f y * divergence ξ y + f' (ξ y) := by
-    rw [divergence, divergence, hd.fderiv, ContinuousLinearMap.coe_add,
-      ContinuousLinearMap.coe_smul, map_add, map_smul, ContinuousLinearMap.coe_smulRight,
-      LinearMap.trace_smulRight, smul_eq_mul]
-    rfl
-  have hquad : ⟪gradient u y, fderiv ℝ (fun z => f z • ξ z) y (gradient u y)⟫ =
-      f y * ⟪gradient u y, fderiv ℝ ξ y (gradient u y)⟫ +
-        f' (gradient u y) * ⟪gradient u y, ξ y⟫ := by
-    rw [hd.fderiv, ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
-      ContinuousLinearMap.smulRight_apply, inner_add_right, inner_smul_right, inner_smul_right]
-  rw [gradVariation, gradVariation, hdiv, hquad]
-  ring
-
-/-! ### Products with a function Lipschitz on the support -/
-
-/-- If `g` is `Lg`-Lipschitz with `‖g‖ ≤ M` and `g = 0` off `K`, and `f` is `Lf`-Lipschitz with
-`|f| ≤ A` on `K`, then `f • g` is `(A Lg + M Lf)`-Lipschitz. `f` is only controlled on `K`. -/
-theorem lipschitzWith_smul_of_support' {f : Rn n → ℝ} {g : Rn n → Rn n} {K : Set (Rn n)}
-    {Lf Lg : ℝ≥0} {A M : ℝ} (hf : LipschitzOnWith Lf f K) (hfA : ∀ y ∈ K, |f y| ≤ A)
-    (hg : LipschitzWith Lg g) (hg0 : ∀ y ∉ K, g y = 0) (hgM : ∀ y, ‖g y‖ ≤ M) :
-    LipschitzWith (Real.toNNReal (A * Lg + M * Lf)) (fun y => f y • g y) := by
-  have hM : 0 ≤ M := (norm_nonneg _).trans (hgM 0)
-  have key : ∀ a ∈ K, ∀ b, ‖f a • g a - f b • g b‖ ≤ (A * Lg + M * Lf) * dist a b := by
-    intro a ha b
-    have hA : 0 ≤ A := (abs_nonneg _).trans (hfA a ha)
-    have hgd : ‖g a - g b‖ ≤ Lg * dist a b := by
-      rw [← dist_eq_norm]; exact hg.dist_le_mul a b
-    have hML : 0 ≤ M * Lf * dist a b := mul_nonneg (mul_nonneg hM Lf.2) dist_nonneg
-    by_cases hb : b ∈ K
-    · have e : f a • g a - f b • g b = (f a - f b) • g a + f b • (g a - g b) := by
-        rw [sub_smul, smul_sub]; abel
-      rw [e]
-      refine (norm_add_le _ _).trans ?_
-      rw [norm_smul, norm_smul]
-      have h1 : ‖f a - f b‖ * ‖g a‖ ≤ Lf * dist a b * M := by
-        rw [← dist_eq_norm]
-        exact mul_le_mul (hf.dist_le_mul a ha b hb) (hgM a) (norm_nonneg _)
-          (mul_nonneg Lf.2 dist_nonneg)
-      have h2 : ‖f b‖ * ‖g a - g b‖ ≤ A * (Lg * dist a b) := by
-        rw [Real.norm_eq_abs]
-        exact mul_le_mul (hfA b hb) hgd (norm_nonneg _) hA
-      nlinarith
-    · have e : f a • g a - f b • g b = f a • (g a - g b) := by
-        rw [hg0 b hb]; simp
-      rw [e, norm_smul, Real.norm_eq_abs]
-      have h2 : |f a| * ‖g a - g b‖ ≤ A * (Lg * dist a b) :=
-        mul_le_mul (hfA a ha) hgd (norm_nonneg _) hA
-      nlinarith
-  refine LipschitzWith.of_dist_le_mul fun a b => ?_
-  rw [dist_eq_norm]
-  have hK : (A * Lg + M * Lf) ≤ (Real.toNNReal (A * Lg + M * Lf) : ℝ) := Real.le_coe_toNNReal _
-  by_cases ha : a ∈ K
-  · exact (key a ha b).trans (mul_le_mul_of_nonneg_right hK dist_nonneg)
-  · by_cases hb : b ∈ K
-    · rw [norm_sub_rev, dist_comm]
-      exact (key b hb a).trans (mul_le_mul_of_nonneg_right hK dist_nonneg)
-    · simp only [hg0 a ha, hg0 b hb, smul_zero, sub_zero, norm_zero]
-      exact mul_nonneg (NNReal.coe_nonneg _) dist_nonneg
 
 /-! ### The smooth steps `F_k` -/
 
@@ -315,54 +159,20 @@ theorem exists_lipschitzWith_smoothStep (k : ℕ) : ∃ L, LipschitzWith L (smoo
 
 end Kernel
 
-namespace IsVariationalSolution
+namespace IsVariationalSolutionQ
 
-variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ}
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {Q u χ : Rn n → ℝ} {L : ℝ≥0} {c C' : ℝ}
 
 open Kernel
 
-/-- `|∇u| ≤ C_V` on `Ω`. -/
-theorem norm_gradient_le (h : IsVariationalSolution Ω C u χ) {y : Rn n} (hy : y ∈ Ω) :
-    ‖gradient u y‖ ≤ C := by
-  obtain ⟨r, hr, hrΩ⟩ := Metric.isOpen_iff.1 h.isOpen y hy
-  rw [Kernel.norm_gradient_eq]
-  exact norm_fderiv_le_of_lipschitzOn ℝ (ball_mem_nhds y hr) (h.lipschitzOnWith y r hrΩ)
-
-/-- The inner variation splits: `∫ χ div ξ = −∫ (|∇u|² div ξ − 2 ∇u · Dξ ∇u)` (proof of
-Lemma 3.3). -/
-theorem integral_chi_mul_divergence_eq (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
-    (hξ : IsLipTestField Ω ξ) :
-    ∫ y, χ y * divergence ξ y = -∫ y, gradVariation u ξ y := by
-  have hIV := h.innerVariation_eq_zero ξ hξ
-  have hJ := integrable_gradVariation hξ fun y hy => h.norm_gradient_le hy
-  obtain ⟨⟨D, hD⟩, hc, hU⟩ := hξ
-  have hχ : Integrable fun y => χ y * divergence ξ y := by
-    have e : (fun y => χ y * divergence ξ y) = fun y => Ω.indicator χ y * divergence ξ y := by
-      funext y
-      by_cases hy : y ∈ Ω
-      · rw [indicator_of_mem hy]
-      · rw [divergence_eq_zero_of_notMem_tsupport (fun h' => hy (hU h')), mul_zero, mul_zero]
-    rw [e]
-    refine integrable_of_bound_of_isCompact (K := tsupport ξ) hc
-      (h.measurable_chi.mul (measurable_divergence ξ)).aestronglyMeasurable (M := 1 * (n * D))
-      (fun y hy => ?_) (fun y hy => by rw [divergence_eq_zero_of_notMem_tsupport hy, mul_zero])
-    rw [Real.norm_eq_abs, abs_mul, indicator_of_mem (hU hy)]
-    exact mul_le_mul (h.abs_chi_le_one (hU hy)) (abs_divergence_le hD y) (abs_nonneg _)
-      zero_le_one
-  have e2 : (fun y => (‖gradient u y‖ ^ 2 + χ y) * divergence ξ y -
-      2 * ⟪gradient u y, fderiv ℝ ξ y (gradient u y)⟫) =
-      fun y => gradVariation u ξ y + χ y * divergence ξ y := by
-    funext y; simp only [gradVariation]; ring
-  rw [innerVariation, e2, integral_add hJ hχ] at hIV
-  linarith
-
 /-- **Step 1 of Lemma 3.3.** Testing the inner variation with `ζ_k = F_k(u) ξ`:
 `∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) = ∫ F_k'(u) (∇u · ξ) |∇u|²`. -/
-theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u χ)
+theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C')
     {ξ : Rn n → Rn n} (hξ : IsLipTestField Ω ξ) (k : ℕ) :
     ∫ y, smoothStep k (u y) * gradVariation u ξ y =
       ∫ y, smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2) := by
-  have hH := h.isLipHarmonicPos
+  have hH := h.isLipHarmonicPos hQ
   obtain ⟨⟨D, hD⟩, hξc, hξΩ⟩ := hξ
   have hK : IsCompact (tsupport ξ) := hξc
   have hξ0 : ∀ y ∉ tsupport ξ, ξ y = 0 := fun y hy => image_eq_zero_of_notMem_tsupport hy
@@ -395,17 +205,9 @@ theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u 
     ⟨hζL, hξc.mono' (hsupp.trans inter_subset_left),
       hts.trans (hK'V.trans inter_subset_left)⟩
   -- `∫ (|∇u|² div ζ − 2 ∇u·Dζ∇u) = 0`
-  have hζ0 : ∫ y, gradVariation u ζ y = 0 := by
-    have h1 := h.integral_chi_mul_divergence_eq hζ
-    have h2 : ∫ y, χ y * divergence ζ y = ∫ y, divergence ζ y := by
-      refine integral_congr_ae ?_
-      filter_upwards [h.ae_chi_eq_one] with y hy
-      by_cases hyζ : y ∈ tsupport ζ
-      · have := hK'V (hts hyζ)
-        rw [hy this.1 this.2, one_mul]
-      · rw [divergence_eq_zero_of_notMem_tsupport hyζ, mul_zero]
-    rw [h2, integral_divergence_eq_zero h.isOpen hζ] at h1
-    linarith
+  have hζ0 : ∫ y, gradVariation u ζ y = 0 :=
+    h.integral_gradVariation_eq_zero_of_pos hQ ⟨hζL, hξc.mono' (hsupp.trans inter_subset_left),
+      hts.trans hK'V⟩
   -- the chain rule, a.e.
   have hpt : ∀ᵐ y, gradVariation u ζ y = smoothStep k (u y) * gradVariation u ξ y -
       smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2) := by
@@ -469,13 +271,14 @@ theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u 
 `Ω` and `η = 1` on `spt ξ`: `|∫ F_k'(u) (∇u · ξ) |∇u|²| ≤ C_V M ∫ |∇u · ∇η|`. This is the
 paper's bound on the Laplacian measure, `Δu(B_{3r/2}(x)) ≤ −∫ ∇u·∇η` (first display in the proof
 of Lemma 3.3). -/
-theorem abs_integral_smoothStep'_le (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
+theorem abs_integral_smoothStep'_le (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {ξ : Rn n → Rn n}
     (hξ : IsLipTestField Ω ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) {η : Rn n → ℝ}
     (hη : ∃ L, LipschitzWith L η) (hηc : HasCompactSupport η) (hηΩ : tsupport η ⊆ Ω)
     (hη0 : ∀ y, 0 ≤ η y) (hη1 : ∀ y ∈ tsupport ξ, η y = 1) (k : ℕ) :
     |∫ y, smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2)| ≤
       C * M * ∫ y, |⟪gradient u y, gradient η y⟫| := by
-  have hH := h.isLipHarmonicPos
+  have hH := h.isLipHarmonicPos hQ
   obtain ⟨-, -, hξΩ⟩ := hξ
   obtain ⟨Lη, hLη⟩ := hη
   have hKη : IsCompact (tsupport η) := hηc
@@ -536,11 +339,12 @@ theorem abs_integral_smoothStep'_le (h : IsVariationalSolution Ω C u χ) {ξ : 
 
 /-- **Step 3 of Lemma 3.3.** `∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) → ∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)`
 by dominated convergence, since `F_k(u) → 1` on `{u > 0}` and `∇u = 0` on `{u = 0}`. -/
-theorem tendsto_integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u χ)
+theorem tendsto_integral_smoothStep_mul_gradVariation (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C')
     {ξ : Rn n → Rn n} (hξ : IsLipTestField Ω ξ) :
     Tendsto (fun k : ℕ => ∫ y, smoothStep k (u y) * gradVariation u ξ y) atTop
       (𝓝 (∫ y, gradVariation u ξ y)) := by
-  have hH := h.isLipHarmonicPos
+  have hH := h.isLipHarmonicPos hQ
   obtain ⟨⟨D, hD⟩, hξc, hξΩ⟩ := hξ
   have hK : IsCompact (tsupport ξ) := hξc
   have huK : ContinuousOn u (tsupport ξ) := h.continuousOn.mono hξΩ
@@ -564,27 +368,25 @@ theorem tendsto_integral_smoothStep_mul_gradVariation (h : IsVariationalSolution
 /-- **The key estimate of Lemma 3.3.** Let `ξ ∈ C^{0,1}_c(Ω; ℝⁿ)` with `|ξ| ≤ M`, and let `η ≥ 0`
 be Lipschitz with compact support in `Ω` and `η = 1` on `spt ξ`. Then
 `|∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)| ≤ C_V M ∫ |∇u · ∇η|`. -/
-theorem abs_integral_gradVariation_le (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
+theorem abs_integral_gradVariation_le (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {ξ : Rn n → Rn n}
     (hξ : IsLipTestField Ω ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) {η : Rn n → ℝ}
     (hη : ∃ L, LipschitzWith L η) (hηc : HasCompactSupport η) (hηΩ : tsupport η ⊆ Ω)
     (hη0 : ∀ y, 0 ≤ η y) (hη1 : ∀ y ∈ tsupport ξ, η y = 1) :
     |∫ y, gradVariation u ξ y| ≤ C * M * ∫ y, |⟪gradient u y, gradient η y⟫| := by
-  refine le_of_tendsto (h.tendsto_integral_smoothStep_mul_gradVariation hξ).abs
+  refine le_of_tendsto (h.tendsto_integral_smoothStep_mul_gradVariation hQ hξ).abs
     (.of_forall fun k => ?_)
-  rw [h.integral_smoothStep_mul_gradVariation hξ k]
-  exact h.abs_integral_smoothStep'_le hξ hM hη hηc hηΩ hη0 hη1 k
+  rw [h.integral_smoothStep_mul_gradVariation hQ hξ k]
+  exact h.abs_integral_smoothStep'_le hQ hξ hM hη hηc hηΩ hη0 hη1 k
 
-/-- **Lemma 3.3**, the estimate that the paper proves. If `B̄_{2r}(x) ⊆ Ω` and
+/-- **Lemma 3.3 for the field `Q² ξ`.** If `B̄_{2r}(x) ⊆ Ω` and
 `ξ ∈ C^{0,1}_c(B_{3r/2}(x); ℝⁿ)` with `|ξ| ≤ M`, then
-`|∫ χ div ξ| ≤ 2^{n+1} |B_1| C_V² M r^{n-1}`.
-
-The constant depends only on `C_V` and `n`, as in the paper. The paper then concludes
-`χ ∈ BV(B_r(x))` with `∫_{B_r(x)} |∇χ| ≤ C r^{n-1}`. That step is the BV structure theorem
-(`Registry.exists_isGaussGreenPair_of_integral_divergence_le`). -/
-theorem chi_divergence_bound [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n} {r : ℝ}
+`|∫ χ div (Q² ξ)| ≤ 2^{n+1} |B_1| C_V² M r^{n-1}`. The constant does not depend on `Q`. -/
+theorem abs_integral_chi_mul_divergence_sq_smul_le [NeZero n]
+    (h : IsVariationalSolutionQ Ω C Q u χ) (hQ : QBounds Ω Q L c C') {x : Rn n} {r : ℝ}
     (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {ξ : Rn n → Rn n}
     (hξ : IsLipTestField (ball x (3 * r / 2)) ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) :
-    |∫ y, χ y * divergence ξ y| ≤
+    |∫ y, χ y * divergence (fun z => Q z ^ 2 • ξ z) y| ≤
       2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * M * r ^ (n - 1) := by
   have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0)
   have hδ : 0 < r / 2 := by positivity
@@ -594,12 +396,12 @@ theorem chi_divergence_bound [NeZero n] (h : IsVariationalSolution Ω C u χ) {x
     rw [← h2r]; exact tsupport_radialCutoff_subset hδ
   have hξΩ : IsLipTestField Ω ξ :=
     hξ.mono ((ball_subset_closedBall.trans (closedBall_subset_closedBall (by linarith))).trans hΩ)
-  have hmain := h.abs_integral_gradVariation_le hξΩ hM ⟨_, lipschitzWith_radialCutoff hδ⟩
+  have hmain := h.abs_integral_gradVariation_le hQ hξΩ hM ⟨_, lipschitzWith_radialCutoff hδ⟩
     (hasCompactSupport_radialCutoff hδ) (hηt.trans hΩ) radialCutoff_nonneg (fun y hy => by
       have := hξ.2.2 hy
       rw [mem_ball, dist_eq_norm] at this
       exact radialCutoff_eq_one hδ this.le)
-  rw [h.integral_chi_mul_divergence_eq hξΩ, abs_neg]
+  rw [h.integral_chi_mul_divergence_sq_smul_eq hQ hξΩ, abs_neg]
   refine hmain.trans ?_
   -- `∫ |∇u·∇η| ≤ C_V (2/r) |B_{2r}|`
   have hgη : ∀ y, ‖gradient η y‖ ≤ 2 / r := fun y => by
@@ -632,37 +434,62 @@ theorem chi_divergence_bound [NeZero n] (h : IsVariationalSolution Ω C u χ) {x
         field_simp
         ring
 
+/-- **Lemma 3.3**, the estimate that the paper proves, with a Lipschitz coefficient. If
+`B̄_{2r}(x) ⊆ Ω` and `ξ ∈ C^{0,1}_c(B_{3r/2}(x); ℝⁿ)` with `|ξ| ≤ M`, then
+`|∫ χ div ξ| ≤ 2^{n+1} |B_1| C_V² M r^{n-1} / c²`, where `c > 0` is the lower bound of `Q`.
+
+The proof applies `abs_integral_chi_mul_divergence_sq_smul_le` to the test field `Q⁻² ξ`. For
+`Q ≡ 1` the constant `2^{n+1} |B_1| C_V²` depends only on `C_V` and `n`, as in the paper. The
+paper then concludes `χ ∈ BV(B_r(x))` with `∫_{B_r(x)} |∇χ| ≤ C r^{n-1}`. That step is the BV
+structure theorem (`Registry.exists_isGaussGreenPair_of_integral_divergence_le`). -/
+theorem chi_divergence_bound [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {x : Rn n} {r : ℝ} (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω)
+    {ξ : Rn n → Rn n} (hξ : IsLipTestField (ball x (3 * r / 2)) ξ) {M : ℝ}
+    (hM : ∀ y, ‖ξ y‖ ≤ M) :
+    |∫ y, χ y * divergence ξ y| ≤
+      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * M * r ^ (n - 1) / c ^ 2 := by
+  have hbΩ : ball x (3 * r / 2) ⊆ Ω :=
+    (ball_subset_closedBall.trans (closedBall_subset_closedBall (by linarith))).trans hΩ
+  have hc2 : 0 < c ^ 2 := pow_pos hQ.pos 2
+  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0)
+  have hξ' := (hQ.mono hbΩ).isLipTestField_inv_sq_smul hξ
+  have hM' : ∀ y, ‖(Q y ^ 2)⁻¹ • ξ y‖ ≤ M / c ^ 2 := by
+    intro y
+    by_cases hy : y ∈ tsupport ξ
+    · have hq := hQ.sq_le_sq (hbΩ (hξ.2.2 hy))
+      rw [norm_smul, Real.norm_eq_abs, abs_of_pos (inv_pos.2 (hc2.trans_le hq)), div_eq_inv_mul]
+      exact mul_le_mul (inv_anti₀ hc2 hq) (hM y) (norm_nonneg _) (inv_nonneg.2 hc2.le)
+    · rw [image_eq_zero_of_notMem_tsupport hy, smul_zero, norm_zero]
+      positivity
+  have hbound := h.abs_integral_chi_mul_divergence_sq_smul_le hQ hr hΩ hξ' hM'
+  rw [(hQ.mono hbΩ).sq_smul_inv_sq_smul hξ.2.2] at hbound
+  refine hbound.trans_eq ?_
+  ring
+
 /-- **Lemma 3.3** with `sup |ξ|` written as `⨆ y, ‖ξ y‖`, the form used with the BV structure
-theorem. -/
-theorem chi_divergence_bound_iSup [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
+theorem, with a Lipschitz coefficient. -/
+theorem chi_divergence_bound_iSup [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {x : Rn n}
     {r : ℝ} (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {ξ : Rn n → Rn n}
     (hξ : IsLipTestField (ball x (3 * r / 2)) ξ) :
     |∫ y, χ y * divergence ξ y| ≤
-      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖ξ y‖) * r ^ (n - 1) := by
+      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖ξ y‖) * r ^ (n - 1) /
+        c ^ 2 := by
   obtain ⟨D, hD⟩ := hξ.1
-  exact h.chi_divergence_bound hr hΩ hξ fun y =>
+  exact h.chi_divergence_bound hQ hr hΩ hξ fun y =>
     le_ciSup (hD.continuous.norm.bddAbove_range_of_hasCompactSupport hξ.2.1.norm) y
 
-/-- The set `{χ = 1}` in `Ω` is measurable. -/
-theorem measurableSet_chi_eq_one (h : IsVariationalSolution Ω C u χ) :
-    MeasurableSet (Ω ∩ {y | χ y = 1}) := by
-  have e : Ω ∩ {y | χ y = 1} = Ω ∩ Ω.indicator χ ⁻¹' {1} := by
-    ext y
-    simp only [mem_inter_iff, mem_setOf_eq, mem_preimage, mem_singleton_iff]
-    constructor
-    · rintro ⟨hy, h1⟩; exact ⟨hy, by rw [indicator_of_mem hy, h1]⟩
-    · rintro ⟨hy, h1⟩; exact ⟨hy, by rwa [indicator_of_mem hy] at h1⟩
-  rw [e]
-  exact h.isOpen.measurableSet.inter (h.measurable_chi (measurableSet_singleton 1))
-
-/-- **Lemma 3.3**, set form: with `E = Ω ∩ {χ = 1}` and `φ ∈ C^∞_c(B_{3r/2}(x); ℝⁿ)`,
-`|∫_E div φ| ≤ 2^{n+1} |B_1| C_V² sup|φ| r^{n-1}`. This is the hypothesis of the BV structure
-theorem (`Registry.exists_isGaussGreenPair_of_integral_divergence_le`) on `U = B_{3r/2}(x)`. -/
-theorem abs_setIntegral_divergence_le [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
+/-- **Lemma 3.3**, set form, with a Lipschitz coefficient: with `E = Ω ∩ {χ = 1}` and
+`φ ∈ C^∞_c(B_{3r/2}(x); ℝⁿ)`, `|∫_E div φ| ≤ 2^{n+1} |B_1| C_V² sup|φ| r^{n-1} / c²`. This is
+the hypothesis of the BV structure theorem
+(`Registry.exists_isGaussGreenPair_of_integral_divergence_le`) on `U = B_{3r/2}(x)`. -/
+theorem abs_setIntegral_divergence_le [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
+    (hQ : QBounds Ω Q L c C') {x : Rn n}
     {r : ℝ} (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {φ : Rn n → Rn n}
     (hφ : IsSmoothTestField (ball x (3 * r / 2)) φ) :
     |∫ y in Ω ∩ {y | χ y = 1}, divergence φ y| ≤
-      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖φ y‖) * r ^ (n - 1) := by
+      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖φ y‖) * r ^ (n - 1) /
+        c ^ 2 := by
   have hbΩ : ball x (3 * r / 2) ⊆ Ω :=
     (ball_subset_closedBall.trans (closedBall_subset_closedBall (by linarith))).trans hΩ
   have e : ∫ y in Ω ∩ {y | χ y = 1}, divergence φ y = ∫ y, χ y * divergence φ y := by
@@ -677,7 +504,101 @@ theorem abs_setIntegral_divergence_le [NeZero n] (h : IsVariationalSolution Ω C
     · rw [indicator_of_notMem (fun h' => hy h'.1),
         divergence_eq_zero_of_notMem_tsupport (fun h' => hy (hbΩ (hφ.2.2 h'))), mul_zero]
   rw [e]
-  exact h.chi_divergence_bound_iSup hr hΩ hφ.isLipTestField
+  exact h.chi_divergence_bound_iSup hQ hr hΩ hφ.isLipTestField
+
+end IsVariationalSolutionQ
+
+namespace IsVariationalSolution
+
+variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ}
+
+open Kernel
+
+/-- `|∇u| ≤ C_V` on `Ω`. -/
+theorem norm_gradient_le (h : IsVariationalSolution Ω C u χ) {y : Rn n} (hy : y ∈ Ω) :
+    ‖gradient u y‖ ≤ C :=
+  h.toQ.norm_gradient_le hy
+
+/-- The inner variation splits: `∫ χ div ξ = −∫ (|∇u|² div ξ − 2 ∇u · Dξ ∇u)` (proof of
+Lemma 3.3). -/
+theorem integral_chi_mul_divergence_eq (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
+    (hξ : IsLipTestField Ω ξ) :
+    ∫ y, χ y * divergence ξ y = -∫ y, gradVariation u ξ y := by
+  simpa using h.toQ.integral_chi_mul_divergence_sq_smul_eq (QBounds.one Ω) hξ
+
+/-- **Step 1 of Lemma 3.3.** Testing the inner variation with `ζ_k = F_k(u) ξ`:
+`∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) = ∫ F_k'(u) (∇u · ξ) |∇u|²`. -/
+theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u χ)
+    {ξ : Rn n → Rn n} (hξ : IsLipTestField Ω ξ) (k : ℕ) :
+    ∫ y, smoothStep k (u y) * gradVariation u ξ y =
+      ∫ y, smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2) :=
+  h.toQ.integral_smoothStep_mul_gradVariation (QBounds.one Ω) hξ k
+
+/-- **Step 2 of Lemma 3.3.** With `|ξ| ≤ M`, `η ≥ 0` a Lipschitz cutoff with compact support in
+`Ω` and `η = 1` on `spt ξ`: `|∫ F_k'(u) (∇u · ξ) |∇u|²| ≤ C_V M ∫ |∇u · ∇η|`. -/
+theorem abs_integral_smoothStep'_le (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
+    (hξ : IsLipTestField Ω ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) {η : Rn n → ℝ}
+    (hη : ∃ L, LipschitzWith L η) (hηc : HasCompactSupport η) (hηΩ : tsupport η ⊆ Ω)
+    (hη0 : ∀ y, 0 ≤ η y) (hη1 : ∀ y ∈ tsupport ξ, η y = 1) (k : ℕ) :
+    |∫ y, smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2)| ≤
+      C * M * ∫ y, |⟪gradient u y, gradient η y⟫| :=
+  h.toQ.abs_integral_smoothStep'_le (QBounds.one Ω) hξ hM hη hηc hηΩ hη0 hη1 k
+
+/-- **Step 3 of Lemma 3.3.**
+`∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) → ∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)`. -/
+theorem tendsto_integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u χ)
+    {ξ : Rn n → Rn n} (hξ : IsLipTestField Ω ξ) :
+    Tendsto (fun k : ℕ => ∫ y, smoothStep k (u y) * gradVariation u ξ y) atTop
+      (𝓝 (∫ y, gradVariation u ξ y)) :=
+  h.toQ.tendsto_integral_smoothStep_mul_gradVariation (QBounds.one Ω) hξ
+
+/-- **The key estimate of Lemma 3.3.** Let `ξ ∈ C^{0,1}_c(Ω; ℝⁿ)` with `|ξ| ≤ M`, and let `η ≥ 0`
+be Lipschitz with compact support in `Ω` and `η = 1` on `spt ξ`. Then
+`|∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)| ≤ C_V M ∫ |∇u · ∇η|`. -/
+theorem abs_integral_gradVariation_le (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
+    (hξ : IsLipTestField Ω ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) {η : Rn n → ℝ}
+    (hη : ∃ L, LipschitzWith L η) (hηc : HasCompactSupport η) (hηΩ : tsupport η ⊆ Ω)
+    (hη0 : ∀ y, 0 ≤ η y) (hη1 : ∀ y ∈ tsupport ξ, η y = 1) :
+    |∫ y, gradVariation u ξ y| ≤ C * M * ∫ y, |⟪gradient u y, gradient η y⟫| :=
+  h.toQ.abs_integral_gradVariation_le (QBounds.one Ω) hξ hM hη hηc hηΩ hη0 hη1
+
+/-- **Lemma 3.3**, the estimate that the paper proves. If `B̄_{2r}(x) ⊆ Ω` and
+`ξ ∈ C^{0,1}_c(B_{3r/2}(x); ℝⁿ)` with `|ξ| ≤ M`, then
+`|∫ χ div ξ| ≤ 2^{n+1} |B_1| C_V² M r^{n-1}`.
+
+The constant depends only on `C_V` and `n`, as in the paper. The paper then concludes
+`χ ∈ BV(B_r(x))` with `∫_{B_r(x)} |∇χ| ≤ C r^{n-1}`. That step is the BV structure theorem
+(`Registry.exists_isGaussGreenPair_of_integral_divergence_le`). -/
+theorem chi_divergence_bound [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n} {r : ℝ}
+    (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {ξ : Rn n → Rn n}
+    (hξ : IsLipTestField (ball x (3 * r / 2)) ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) :
+    |∫ y, χ y * divergence ξ y| ≤
+      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * M * r ^ (n - 1) := by
+  simpa using h.toQ.chi_divergence_bound (QBounds.one Ω) hr hΩ hξ hM
+
+/-- **Lemma 3.3** with `sup |ξ|` written as `⨆ y, ‖ξ y‖`, the form used with the BV structure
+theorem. -/
+theorem chi_divergence_bound_iSup [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
+    {r : ℝ} (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {ξ : Rn n → Rn n}
+    (hξ : IsLipTestField (ball x (3 * r / 2)) ξ) :
+    |∫ y, χ y * divergence ξ y| ≤
+      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖ξ y‖) * r ^ (n - 1) := by
+  simpa using h.toQ.chi_divergence_bound_iSup (QBounds.one Ω) hr hΩ hξ
+
+/-- The set `{χ = 1}` in `Ω` is measurable. -/
+theorem measurableSet_chi_eq_one (h : IsVariationalSolution Ω C u χ) :
+    MeasurableSet (Ω ∩ {y | χ y = 1}) :=
+  h.toQ.measurableSet_chi_eq_one
+
+/-- **Lemma 3.3**, set form: with `E = Ω ∩ {χ = 1}` and `φ ∈ C^∞_c(B_{3r/2}(x); ℝⁿ)`,
+`|∫_E div φ| ≤ 2^{n+1} |B_1| C_V² sup|φ| r^{n-1}`. This is the hypothesis of the BV structure
+theorem (`Registry.exists_isGaussGreenPair_of_integral_divergence_le`) on `U = B_{3r/2}(x)`. -/
+theorem abs_setIntegral_divergence_le [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
+    {r : ℝ} (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {φ : Rn n → Rn n}
+    (hφ : IsSmoothTestField (ball x (3 * r / 2)) φ) :
+    |∫ y in Ω ∩ {y | χ y = 1}, divergence φ y| ≤
+      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖φ y‖) * r ^ (n - 1) := by
+  simpa using h.toQ.abs_setIntegral_divergence_le (QBounds.one Ω) hr hΩ hφ
 
 end IsVariationalSolution
 

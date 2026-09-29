@@ -181,19 +181,21 @@ theorem alphaN_pos [NeZero n] : 0 < alphaN n := by
 
 /-! ### Lemma 8.5 (2) from Lemma 8.5 (1) -/
 
-/-- **(1) ⇒ (2) at a point** (proof of Lemma 8.5). If `x ∈ Σ^H` and, for a unit vector `ν`,
+/-- **(1) ⇒ (2) at a point** (proof of Lemma 8.5). Let `u` be continuous on an open set `Ω`, and
+let `x ∈ Ω` with `H_x(u; r) > 0` whenever `B̄_r(x) ⊆ Ω` (as on `Σ^H`). If, for a unit vector `ν`,
 `(r^{n+2} H_x(r))⁻¹ ∫_{B_r(x)} (u − √(H_x(r)) α(n) |(y−x)·ν|)² → 0`, then `{u > 0}` has density
 `1` at `x`. Chebyshev's inequality on `B_r(x) \ {u > 0}` (where the integrand is
 `≥ H_x(r) α(n)² |(y−x)·ν|²`) plus the slab bound replaces the paper's Fatou argument. -/
-theorem hasDensity_pos_of_tendsto [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
-    (hx : x ∈ sigmaH Ω u χ) {ν : Rn n} (hν : ‖ν‖ = 1)
+theorem hasDensity_pos_of_tendsto' [NeZero n] (hΩ : IsOpen Ω) (hu : ContinuousOn u Ω)
+    {x : Rn n} (hxΩ : x ∈ Ω) (hHpos : ∀ r, 0 < r → closedBall x r ⊆ Ω → 0 < heightH u x r)
+    {ν : Rn n} (hν : ‖ν‖ = 1)
     (hL : Tendsto (fun r => (∫ y in ball x r,
         (u y - √(heightH u x r) * alphaN n * absProfile ν x y) ^ 2) /
         (r ^ (n + 2) * heightH u x r)) (𝓝[>] 0) (𝓝 0)) :
     HasDensity {y | 0 < u y} x 1 := by
   obtain ⟨F, hFdef⟩ : ∃ F : Set (Rn n), F = Ω ∩ {y | 0 < u y} := ⟨_, rfl⟩
-  have hFo : IsOpen F := hFdef ▸ h.continuousOn.isOpen_inter_preimage h.isOpen isOpen_Ioi
-  rw [← hasDensity_inter_iff (h.isOpen.mem_nhds hx.1), ← hFdef]
+  have hFo : IsOpen F := hFdef ▸ hu.isOpen_inter_preimage hΩ isOpen_Ioi
+  rw [← hasDensity_inter_iff (hΩ.mem_nhds hxΩ), ← hFdef]
   set α := alphaN n with hαdef
   have hα : 0 < α := alphaN_pos
   have hB1 := unitBallVolume_pos n
@@ -203,18 +205,18 @@ theorem hasDensity_pos_of_tendsto [NeZero n] (h : IsVariationalSolution Ω C u �
     with hIdef
   set ρ : ℝ → ℝ := fun r => (volume (ball x r \ F)).toReal / (volume (ball x r)).toReal
     with hρdef
-  obtain ⟨δ, hδ, hδΩ⟩ := Metric.isOpen_iff.1 h.isOpen x hx.1
+  obtain ⟨δ, hδ, hδΩ⟩ := Metric.isOpen_iff.1 hΩ x hxΩ
   -- the key bound `ρ(r) ≤ (|S_ε| + I(r)/(α² ε²)) / |B_1|`
   have hbound : ∀ r ∈ Ioo 0 δ, ∀ ε > 0,
       ρ r ≤ ((volume (slab ν ε)).toReal + I r / (α ^ 2 * ε ^ 2)) / unitBallVolume n := by
     intro r hr ε hε
     have hrΩ : closedBall x r ⊆ Ω := (closedBall_subset_ball hr.2).trans hδΩ
-    have hH : 0 < heightH u x r := h.heightH_pos hx.2.1 hr.1 hrΩ
+    have hH : 0 < heightH u x r := hHpos r hr.1 hrΩ
     set H := heightH u x r with hHdef
     set g : Rn n → ℝ := fun y => (u y - √H * α * absProfile ν x y) ^ 2 with hgdef
     have hgc : ContinuousOn g (closedBall x r) := by
       have hp : Continuous (absProfile ν x) := by unfold absProfile; fun_prop
-      exact ((h.continuousOn.mono hrΩ).sub (continuousOn_const.mul hp.continuousOn)).pow 2
+      exact ((hu.mono hrΩ).sub (continuousOn_const.mul hp.continuousOn)).pow 2
     have hgi : IntegrableOn g (ball x r) :=
       (hgc.integrableOn_compact (isCompact_closedBall x r)).mono_set ball_subset_closedBall
     set t : ℝ := H * α ^ 2 * (ε * r) ^ 2 with htdef
@@ -309,6 +311,17 @@ theorem hasDensity_pos_of_tendsto [NeZero n] (h : IsVariationalSolution Ω C u �
   simp only [hρdef]
   rw [inter_comm F, eq_div_iff hB.ne', sub_mul, div_mul_cancel₀ _ hB.ne', one_mul]
   linarith
+
+/-- **(1) ⇒ (2) at a point** (proof of Lemma 8.5), for a variational solution: see
+`hasDensity_pos_of_tendsto'`. -/
+theorem hasDensity_pos_of_tendsto [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
+    (hx : x ∈ sigmaH Ω u χ) {ν : Rn n} (hν : ‖ν‖ = 1)
+    (hL : Tendsto (fun r => (∫ y in ball x r,
+        (u y - √(heightH u x r) * alphaN n * absProfile ν x y) ^ 2) /
+        (r ^ (n + 2) * heightH u x r)) (𝓝[>] 0) (𝓝 0)) :
+    HasDensity {y | 0 < u y} x 1 :=
+  hasDensity_pos_of_tendsto' h.isOpen h.continuousOn hx.1
+    (fun _ hr hrΩ => h.heightH_pos hx.2.1 hr hrΩ) hν hL
 
 /-- **Lemma 8.5 (2)**. Let `(u, χ)` be a variational
 solution on `Ω`. At `ℋ^{n-1}`-a.e. `x ∈ Σ^H` the Lebesgue density of `{u > 0}` exists and

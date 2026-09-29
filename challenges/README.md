@@ -17,8 +17,9 @@ Every workspace has:
   claims use (normalized Hausdorff measure, divergence, variational and classical solutions, the
   quantities `D`, `H`, `M`, `N`, the set of highest density `Σ^H`, `H_x(u; 0+)`, `α(n)`,
   countable rectifiability, Gauss–Green pairs and the reduced boundary, the Laplacian measure,
-  distributional Laplacians) is defined in this file from Mathlib, so a reader can check the
-  meaning of each claim without reading the library;
+  distributional Laplacians, and in `lipschitz-q` their versions with a Lipschitz coefficient and
+  viscosity solutions) is defined in this file from Mathlib, so a reader can check the meaning of
+  each claim without reading the library;
 - `Challenge.lean`: the trusted wrapper, importing `Statement` only and stating each claim with
   `sorry`;
 - `Solution.lean`: the untrusted proof, importing `Statement` and the library and proving the
@@ -39,14 +40,45 @@ statement surface; Comparator is still the authority on statement equality.
 | `classical-compactness` | Theorem 9.3 (= Theorem 1.3) | `challenge_classical_compactness` | `InnerVariational.Statements.classical_compactness` | 299 |
 | `sperner` | Sperner's inequality, used in Lemmas 8.1 and 8.3 | `challenge_sperner_half_volume` | `Sperner.sperner_half_volume` | 66 |
 | `model-cases` | sanity check, §3.1 and §8.2 | `challenge_model_cases` | (proved in the solution from library lemmas) | 171 |
+| `lipschitz-q` | Lipschitz coefficient: §6 (`Σ^H`), Proposition 3.4, Lemma 8.3, Theorem 8.6, blow-up limits | `challenge_sigmaHQ_density`, `challenge_sigmaHQ_closed`, `challenge_viscosityQ`, `challenge_blowup_limitQ`, `challenge_blowup_homogeneousQ`, `challenge_chi_eq_indicatorQ` | `InnerVariational.IsVariationalSolutionQ.mem_sigmaHQ_iff_frontier_inter`, `.closure_sigmaHQ_inter_subset`, `.isViscositySolutionQ_diff_sigmaHQ`, `.exists_blowup_limit`, `.blowup_homogeneous`, `InnerVariational.Singular.chi_eq_indicator_of_localQ` | 299 |
 
 "Trusted lines" counts `Statement.lean` and `Challenge.lean`. The shared vocabulary (variational
 solutions, `Σ^H`, the Laplacian measure) is repeated in each workspace that needs it, since the
 workspaces are standalone; the copies are identical.
 
-Coverage: the first four workspaces certify the release theorems (eight challenge theorems).
-`model-cases` is a sanity check (non-vacuity of the definitions) and is not counted as theorem
-coverage. Theorem 1.4 (= Theorem 10.1, singular perturbation limits) is not part of this release.
+Coverage: `main-theorem`, `sigma-h`, `classical-compactness` and `sperner` certify the theorems
+of the paper, for the constant coefficient `Q ≡ 1` (eight challenge theorems). `lipschitz-q`
+certifies the results that are also proved for a Lipschitz coefficient (six challenge theorems;
+see the next section). `model-cases` is a sanity check (non-vacuity of the definitions) and is not
+counted as theorem coverage. Theorem 1.4 (= Theorem 10.1, singular perturbation limits) is not
+part of this release.
+
+## Lipschitz coefficient
+
+The paper studies the functional `∫ (|∇u|² + χ)`. The library also treats
+`∫ (|∇u|² + Q² χ)` for a coefficient `Q` that is Lipschitz with `0 < c ≤ Q ≤ C'` on `Ω`, in
+dimension `n ≥ 2`. A variational solution for `Q` satisfies the domain-variation identity of this
+functional, which has the extra term `∇(Q²) · ξ χ`. The following results are proved for such
+`Q`, and `lipschitz-q` certifies them:
+
+- the identification of `χ` (Theorem 8.6): either `u ≡ 0` and `χ = 1` a.e., or `χ = χ_{u>0}` a.e.;
+- `Σ^H` is relatively closed in `Ω` (Section 6);
+- `u` is a viscosity solution of `|∇u| = Q` on `Ω \ Σ^H` (Lemma 8.3);
+- blow-up limits exist along subsequences and are variational solutions on `ℝⁿ` for the constant
+  coefficient `Q(x₀)`, with `L¹_loc` convergence of `χ`, and they are homogeneous of degree one
+  (Proposition 3.4);
+- the density characterization of `Σ^H`: `x ∈ Σ^H` if and only if `x` is a free boundary point at
+  which `{χ = 1}` has density one.
+
+Here `Σ^H` is defined with the coefficient frozen at the point:
+`M^{Q(x)}_x(u; 0+) ≥ Q(x)² |B₁|`, where `M^q` is the Weiss energy with `χ` replaced by `q² χ`.
+For `Q ≡ 1` all of these reduce to the statements for the paper's functional.
+
+The following results are certified for `Q ≡ 1` only: the rectifiability and the local
+finiteness of the `ℋ^{n-1}`-measure of the free boundary (Theorems 1.2 (ii) and 7.2), the
+identification of the Laplacian measure (Theorem 8.7 and Theorem 1.2 (iii)–(iv)), and the
+compactness of classical solutions (Theorem 9.3 = Theorem 1.3). (The library proves a
+Lipschitz-coefficient form of Theorem 7.2 as a supporting result, not as a challenge.)
 
 ## What ordinary CI establishes
 
@@ -112,11 +144,11 @@ the exact release commit, require it to pass, and attach the artifact to the Git
 
 No Comparator run has been recorded yet. The first release run will be summarized here:
 
-| Date | Commit | Workflow run | Tool revisions | `main-theorem` | `sigma-h` | `classical-compactness` | `sperner` | `model-cases` |
-|---|---|---|---|---|---|---|---|---|
-| _pending_ | | | | | | | | |
+| Date | Commit | Workflow run | Tool revisions | `main-theorem` | `sigma-h` | `classical-compactness` | `sperner` | `model-cases` | `lipschitz-q` |
+|---|---|---|---|---|---|---|---|---|---|
+| _pending_ | | | | | | | | | |
 
-Local checks at the time of writing: all five workspaces build `Statement`, `Challenge` and
+Local checks at the time of writing: all six workspaces build `Statement`, `Challenge` and
 `Solution`, and `#print axioms` on every solution theorem gives exactly `propext`,
 `Classical.choice` and `Quot.sound`.
 
@@ -149,6 +181,11 @@ from the library's in three places, and there the solution uses real theorems:
 - `Σ^H` is defined, as in the paper, by `M_x(u; 0+) ≥ |B₁|`, while the library asks
   `M_x(u; r) ≥ |B₁|` for every admissible `r`; the solution uses the monotonicity formula and the
   existence of `M_x(u; 0+)` (Propositions 3.4 and 3.5).
+
+In `lipschitz-q`, `Σ^H` is defined by "`M^{Q(x)}_x(u; r)` converges to a real number
+`m ≥ Q(x)² |B₁|`", while the library compares the limit `M^{Q(x)}_x(u; 0+)`, taken in
+`[−∞, ∞]`, with `Q(x)² |B₁|`; the solution uses the existence of this limit (almost-monotonicity)
+and the fact that it is a real number where `u(x) = 0`.
 
 **The Gauss–Green pair.** The reduced boundary `∂*E` is defined from a Gauss–Green pair `(μ, ν)`
 (a Radon measure and a unit vector field with `∫_E div φ = ∫ φ·ν dμ`), which is how the library
@@ -226,3 +263,28 @@ integrals. It is labelled a sanity check: it is not a theorem of the paper.
 **Not covered.** There is no negative test of the domain-variation identity (a pair such as
 `(2(y_n)⁺, χ_{u>0})`, which violates the free boundary condition and is not a variational
 solution), and no model computation of a reduced boundary or of a Laplacian measure.
+
+### `lipschitz-q`
+
+The results listed under "Lipschitz coefficient" above, as six challenge theorems (the blow-up
+item is split into the existence of the limit and its homogeneity), for a variational solution for a
+coefficient `Q` with `QBounds Ω Q L c C'` (`Q` is `L`-Lipschitz on `Ω` and `0 < c ≤ Q ≤ C'`
+there). The paper states these results for `Q ≡ 1` only; each challenge is the Lipschitz-coefficient
+form of the corresponding statement, and the `Statement.lean` docstring names the result of the
+paper that it extends. The domain-variation identity carries the term `D(Q²)(x) ξ(x) χ(x)`, with
+Mathlib's `fderiv`; `Q²` is differentiable a.e. on `Ω` (Rademacher) and the term vanishes outside
+the support of `ξ`. The bounds `L`, `c`, `C'` and the constant `C_V` are universally quantified.
+Variants, all stated in the docstring:
+
+- `Σ^H` uses the coefficient frozen at the point, `M^{Q(x)}_x(u; 0+) ≥ Q(x)² |B₁|`;
+- the density characterization uses the relative free boundary `frontier {y ∈ Ω : u(y) > 0}`;
+- the blow-up claims are stated along a sequence `r_k → 0+` with `u_{x,r_k} → u₀` locally
+  uniformly; the limit `(u₀, χ₀)` is a variational solution on `ℝⁿ` for the constant coefficient
+  `Q(x)` with the same `C_V`, and `χ_{x,r_k} → χ₀` in `L¹(K)` for every compact `K` along a
+  subsequence;
+- the identification of `χ` is stated for a connected set on which `(u, χ)` is a solution near
+  every point, and adds `χ = 1` a.e. in the case `u ≡ 0`.
+
+For `Q ≡ 1` the definitions reduce to those of the other workspaces (in the library:
+`isVariationalSolutionQ_one_iff`, `isViscositySolutionQ_one_iff`,
+`IsVariationalSolution.sigmaHQ_one`).

@@ -18,6 +18,7 @@ import InnerVariational.Basic.Polar
 public import InnerVariational.Frequency.Abstract
 import InnerVariational.Basic.LipschitzFTC
 public import InnerVariational.Frequency.Concrete.Basic
+public import InnerVariational.Frequency.ConcreteQ.ChangeOfPoint
 
 /-!
 # The frequency formula for a variational solution: Lemma 4.6 (change of point)
@@ -78,33 +79,15 @@ include h
 /-- `∫_{B_r(x)} u² ≤ r^{n+2} H_x(u; r)` when `B̄_r(x) ⊆ Ω`, since the spherical means of `u²` are
 nondecreasing. -/
 theorem integral_ball_sq_le {r : ℝ} (hr : 0 < r) (hΩ : closedBall x r ⊆ Ω) :
-    ∫ y in ball x r, u y ^ 2 ≤ r ^ (n + 2) * heightH u x r := by
-  have hint := h.integrableOn_sq_of_closedBall hΩ
-  rw [integral_ball_eq hr.le hint, intervalIntegral.integral_of_le hr.le]
-  have hII := (intervalIntegrable_sphereIntegral hr.le hint).1
-  calc ∫ s in Ioc 0 r, sphereIntegral (fun y => u y ^ 2) x s
-      ≤ ∫ _ in Ioc 0 r, r ^ (n + 1) * heightH u x r := by
-        refine setIntegral_mono_on hII (integrableOn_const measure_Ioc_lt_top.ne)
-          measurableSet_Ioc fun s hs => ?_
-        rw [sphereIntegral_sq_eq u x hs.1.ne', pow_succ_eq_pow_pred_mul_sq,
-          pow_succ_eq_pow_pred_mul_sq (n := n) r, mul_assoc, mul_assoc]
-        exact mul_le_mul (pow_le_pow_left₀ hs.1.le hs.2 _) (h.sq_mul_heightH_le hs.1 hs.2 hΩ)
-          (by have := heightH_nonneg u x hs.1.le; positivity) (by positivity)
-    _ = r ^ (n + 2) * heightH u x r := by
-        rw [setIntegral_const, smul_eq_mul, Real.volume_real_Ioc_of_le hr.le]; ring
+    ∫ y in ball x r, u y ^ 2 ≤ r ^ (n + 2) * heightH u x r :=
+  IsVariationalSolutionQ.integral_ball_sq_le (QBounds.one Ω) h.toQ hr hΩ
 
 /-- If `c ≤ ∫_{∂B_s(x)} u²` for every `s ∈ [ρ, ρ']`, then
 `(ρ' − ρ) c ≤ ∫_{B_{ρ'}(x) ∖ B_ρ(x)} u²`. -/
 theorem mul_le_integral_annulus_sq {ρ ρ' c : ℝ} (hρ : 0 ≤ ρ) (hρρ' : ρ ≤ ρ')
     (hΩ : closedBall x ρ' ⊆ Ω) (hc : ∀ s ∈ Icc ρ ρ', c ≤ sphereIntegral (fun y => u y ^ 2) x s) :
-    (ρ' - ρ) * c ≤ ∫ y in ball x ρ' \ ball x ρ, u y ^ 2 := by
-  have hint := h.integrableOn_sq_of_closedBall hΩ
-  rw [integral_ball_diff_ball hρ hρρ' hint]
-  have hII : IntervalIntegrable (sphereIntegral (fun y => u y ^ 2) x) volume ρ ρ' :=
-    (intervalIntegrable_sphereIntegral (hρ.trans hρρ') hint).mono_set (by
-      rw [uIcc_of_le hρρ', uIcc_of_le (hρ.trans hρρ')]; exact Icc_subset_Icc hρ le_rfl)
-  calc (ρ' - ρ) * c = ∫ _ in ρ..ρ', c := by rw [intervalIntegral.integral_const, smul_eq_mul]
-    _ ≤ _ := intervalIntegral.integral_mono_on hρρ' intervalIntegrable_const hII hc
+    (ρ' - ρ) * c ≤ ∫ y in ball x ρ' \ ball x ρ, u y ^ 2 :=
+  h.toQ.mul_le_integral_annulus_sq hρ hρρ' hΩ hc
 
 /-- **Lemma 4.6, upper bound on `H`**: if `0 < r`, `B̄_r(x) ⊆ Ω` and
 `y ∈ B_{r/4}(x)`, then `H_y(u; 5r/8) ≤ 8 (8/5)^{n+1} H_x(u; r)`. The constant depends only on
@@ -114,46 +97,8 @@ means of `u²`. (The proof of Lemma 4.6 as written ends with the reverse inequal
 `heightH_le_change_of_point`.) -/
 theorem heightH_change_of_point_le {r : ℝ} (hr : 0 < r) (hΩ : closedBall x r ⊆ Ω) {y : Rn n}
     (hy : y ∈ ball x (r / 4)) :
-    heightH u y (5 / 8 * r) ≤ heightHChangeConst n * heightH u x r := by
-  have hyx : dist y x < r / 4 := hy
-  have hsub1 : closedBall y (3 / 4 * r) ⊆ closedBall x r := fun z hz => by
-    rw [mem_closedBall] at hz ⊢; linarith [dist_triangle z y x]
-  have hsub2 : ball y (3 / 4 * r) ⊆ ball x r := fun z hz => by
-    rw [mem_ball] at hz ⊢; linarith [dist_triangle z y x]
-  have hρ : 0 < 5 / 8 * r := by positivity
-  have hHy0 := heightH_nonneg u y hρ.le
-  have hlow : (3 / 4 * r - 5 / 8 * r) * ((5 / 8 * r) ^ (n + 1) * heightH u y (5 / 8 * r)) ≤
-      ∫ z in ball y (3 / 4 * r) \ ball y (5 / 8 * r), u z ^ 2 := by
-    refine h.mul_le_integral_annulus_sq hρ.le (by linarith) (hsub1.trans hΩ) fun s hs => ?_
-    have hs0 : 0 < s := hρ.trans_le hs.1
-    rw [sphereIntegral_sq_eq u y hs0.ne', pow_succ_eq_pow_pred_mul_sq,
-      pow_succ_eq_pow_pred_mul_sq (n := n) s, mul_assoc, mul_assoc]
-    exact mul_le_mul (pow_le_pow_left₀ hρ.le hs.1 _)
-      (h.sq_mul_heightH_le hρ hs.1 ((closedBall_subset_closedBall hs.2).trans (hsub1.trans hΩ)))
-      (by positivity) (by positivity)
-  have hup : ∫ z in ball y (3 / 4 * r) \ ball y (5 / 8 * r), u z ^ 2 ≤
-      ∫ z in ball x r, u z ^ 2 :=
-    setIntegral_mono_set (h.integrableOn_sq_of_closedBall hΩ)
-      (.of_forall fun z => sq_nonneg (u z)) (diff_subset.trans hsub2).eventuallyLE
-  have hball := h.integral_ball_sq_le hr hΩ
-  have key : r ^ (n + 2) * (1 / 8 * (5 / 8) ^ (n + 1) * heightH u y (5 / 8 * r)) ≤
-      r ^ (n + 2) * heightH u x r := by
-    have e : (3 / 4 * r - 5 / 8 * r) * ((5 / 8 * r) ^ (n + 1) * heightH u y (5 / 8 * r)) =
-        r ^ (n + 2) * (1 / 8 * (5 / 8) ^ (n + 1) * heightH u y (5 / 8 * r)) := by
-      rw [mul_pow]; ring
-    linarith
-  have key2 := le_of_mul_le_mul_left key (by positivity)
-  have hK : heightHChangeConst n * (1 / 8 * (5 / 8) ^ (n + 1)) = 1 := by
-    rw [heightHChangeConst,
-      show (8 : ℝ) * (8 / 5) ^ (n + 1) * (1 / 8 * (5 / 8) ^ (n + 1)) = (8 / 5 * (5 / 8)) ^ (n + 1)
-        by rw [mul_pow]; ring]
-    norm_num
-  calc heightH u y (5 / 8 * r)
-      = heightHChangeConst n * (1 / 8 * (5 / 8) ^ (n + 1)) * heightH u y (5 / 8 * r) := by
-        rw [hK, one_mul]
-    _ = heightHChangeConst n * (1 / 8 * (5 / 8) ^ (n + 1) * heightH u y (5 / 8 * r)) := by ring
-    _ ≤ heightHChangeConst n * heightH u x r :=
-        mul_le_mul_of_nonneg_left key2 (heightHChangeConst_pos n).le
+    heightH u y (5 / 8 * r) ≤ heightHChangeConst n * heightH u x r :=
+  IsVariationalSolutionQ.heightH_change_of_point_le (QBounds.one Ω) h.toQ hr hΩ hy
 
 /-- **Lemma 4.6, lower bound on `H`**: if `x ∈ closure {u > 0}`,
 `0 < r`, `B̄_r(x) ⊆ Ω`, `M_x(u; r/4) ≥ |B_1|` and `N_x(u; r) ≤ N₊`, then
@@ -165,68 +110,13 @@ theorem heightH_le_change_of_point (hx : x ∈ closure {y | 0 < u y}) {r : ℝ} 
     (hΩ : closedBall x r ⊆ Ω) (hM : unitBallVolume n ≤ monotonicityM u χ x (r / 4)) {Np : ℝ}
     (hN : frequencyN u χ x r ≤ Np) {y : Rn n} (hy : y ∈ ball x (r / 4)) :
     heightH u x r ≤ heightHChangeConst' n Np * heightH u y (5 / 8 * r) := by
-  have hyx : dist y x < r / 4 := hy
-  set Np' := max Np 1 + 1 with hNp'def
-  set Cd := Abstract.RadialData.doublingConst Np' with hCd
-  have hCd0 : 0 < Cd := Abstract.RadialData.doublingConst_pos Np'
-  have hNp' : 1 < Np' := by linarith [le_max_right Np 1]
-  have hNr : frequencyN u χ x r ≤ Np' := hN.trans (by linarith [le_max_left Np 1])
-  have hr2 : closedBall x (r / 2) ⊆ Ω := (closedBall_subset_closedBall (by linarith)).trans hΩ
-  have hM2 : unitBallVolume n ≤ monotonicityM u χ x (r / 2) :=
-    hM.trans (h.monotonicityM_le (by positivity) (by linarith) hr2)
-  have hN2 : frequencyN u χ x (r / 2) ≤ Np' :=
-    (h.monotoneOn_frequencyN hx (t := r / 4) (by positivity) hM hΩ ⟨by linarith, by linarith⟩
-      ⟨by linarith, le_rfl⟩ (by linarith)).trans hNr
-  have hdoub : ∀ s ∈ Icc (r / 4) (3 / 8 * r), heightH u x r ≤ Cd ^ 2 * heightH u x s := by
-    intro s hs
-    have h1 := (h.heightH_doubling hx (t := r / 2) (r := r) (by positivity) (by linarith)
-      (by linarith) hM2 hΩ hNp' hNr (s := r / 2) ⟨le_rfl, by linarith⟩).2
-    have h2 := (h.heightH_doubling hx (t := r / 4) (r := r / 2) (by positivity) (by linarith)
-      (by linarith) hM hr2 hNp' hN2 (s := s) ⟨hs.1, by linarith [hs.2]⟩).2
-    calc heightH u x r ≤ Cd * heightH u x (r / 2) := h1
-      _ ≤ Cd * (Cd * heightH u x s) := mul_le_mul_of_nonneg_left h2 hCd0.le
-      _ = Cd ^ 2 * heightH u x s := by ring
-  have hlow : (3 / 8 * r - r / 4) * ((r / 4) ^ (n + 1) * heightH u x r / Cd ^ 2) ≤
-      ∫ z in ball x (3 / 8 * r) \ ball x (r / 4), u z ^ 2 := by
-    refine h.mul_le_integral_annulus_sq (by positivity) (by linarith)
-      ((closedBall_subset_closedBall (by linarith)).trans hΩ) fun s hs => ?_
-    have hs0 : 0 < s := by linarith [hs.1]
-    rw [sphereIntegral_sq_eq u x hs0.ne']
-    have hH0 := heightH_nonneg u x hs0.le
-    have hd := hdoub s hs
-    calc (r / 4) ^ (n + 1) * heightH u x r / Cd ^ 2 ≤ (r / 4) ^ (n + 1) * heightH u x s := by
-          rw [div_le_iff₀ (by positivity)]
-          have := mul_le_mul_of_nonneg_left hd
-            (pow_nonneg (by positivity : (0 : ℝ) ≤ r / 4) (n + 1))
-          linarith
-      _ ≤ s ^ (n + 1) * heightH u x s :=
-          mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (by positivity) hs.1 _) hH0
-  have hρ : 0 < 5 / 8 * r := by positivity
-  have hcl : closedBall y (5 / 8 * r) ⊆ Ω := fun z hz => hΩ (by
-    rw [mem_closedBall] at hz ⊢; linarith [dist_triangle z y x])
-  have hsub : ball x (3 / 8 * r) ⊆ ball y (5 / 8 * r) := fun z hz => by
-    rw [mem_ball] at hz ⊢; linarith [dist_triangle z x y, dist_comm x y]
-  have hup : ∫ z in ball x (3 / 8 * r) \ ball x (r / 4), u z ^ 2 ≤
-      ∫ z in ball y (5 / 8 * r), u z ^ 2 :=
-    setIntegral_mono_set (h.integrableOn_sq_of_closedBall hcl)
-      (.of_forall fun z => sq_nonneg (u z)) (diff_subset.trans hsub).eventuallyLE
-  have hball := h.integral_ball_sq_le (x := y) hρ hcl
-  have hHy0 := heightH_nonneg u y hρ.le
-  have hK := heightHChangeConst'_pos n Np
-  have e1 : (3 / 8 * r - r / 4) * ((r / 4) ^ (n + 1) * heightH u x r / Cd ^ 2) =
-      r ^ (n + 2) * (heightH u x r / heightHChangeConst' n Np) := by
-    rw [heightHChangeConst', ← hNp'def, ← hCd, div_pow]
-    field_simp
-    ring
-  have e2 : (5 / 8 * r) ^ (n + 2) * heightH u y (5 / 8 * r) ≤
-      r ^ (n + 2) * heightH u y (5 / 8 * r) := by
-    rw [mul_pow]
-    refine mul_le_mul_of_nonneg_right (mul_le_of_le_one_left (by positivity) ?_) hHy0
-    exact pow_le_one₀ (by norm_num) (by norm_num)
-  have key : r ^ (n + 2) * (heightH u x r / heightHChangeConst' n Np) ≤
-      r ^ (n + 2) * heightH u y (5 / 8 * r) := by linarith
-  have := le_of_mul_le_mul_left key (by positivity)
-  rwa [div_le_iff₀ hK, mul_comm] at this
+  have hr4 : 0 < r / 4 := by positivity
+  refine IsVariationalSolutionQ.heightH_le_change_of_point (QBounds.one Ω) h.toQ hx hr hΩ ?_
+    (by simp [weissKappa_zero]) ?_ hy
+  · rw [weissKappa_zero, h.modMonotonicityM_one hr4
+      (ball_subset_closedBall.trans ((closedBall_subset_closedBall (by linarith)).trans hΩ))]
+    linarith
+  · rwa [weissKappa_zero, h.modFrequencyN_one hr (ball_subset_closedBall.trans hΩ)]
 
 /-- **Lemma 4.6, bound on `N`**: if
 `x ∈ closure {u > 0}`, `0 < r`, `B̄_r(x) ⊆ Ω`, `M_x(u; r/4) ≥ |B_1|` and `N_x(u; r) ≤ N₊`, then
@@ -427,12 +317,8 @@ theorem continuousAt_energyD [NeZero n] (h : IsVariationalSolution Ω C u χ) {r
 
 /-- `y ↦ H_y(u; r)` is continuous at `x` when `B̄_r(x) ⊆ Ω`. -/
 theorem continuousAt_heightH (h : IsVariationalSolution Ω C u χ) {r : ℝ} (hr : 0 < r)
-    (hx : closedBall x r ⊆ Ω) : ContinuousAt (fun y => heightH u y r) x := by
-  have hS := continuousAt_sphereIntegral h.isOpen (h.continuousOn.pow 2) (x := x) (s := r)
-    (by rwa [abs_of_pos hr])
-  have h2 : ContinuousAt (fun y => sphereIntegral (fun z => u z ^ 2) y r) x :=
-    hS.comp (f := fun y => (y, r)) (continuousAt_id.prodMk continuousAt_const)
-  exact continuousAt_const.mul h2
+    (hx : closedBall x r ⊆ Ω) : ContinuousAt (fun y => heightH u y r) x :=
+  h.toQ.continuousAt_heightH hr hx
 
 /-- `y ↦ M_y(u; r)` is continuous at `x` when `B̄_r(x) ⊆ Ω`. -/
 theorem continuousAt_monotonicityM [NeZero n] (h : IsVariationalSolution Ω C u χ) {r : ℝ}

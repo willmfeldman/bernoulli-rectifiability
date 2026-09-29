@@ -11,9 +11,10 @@ Alt–Caffarelli energy with respect to domain variations, not necessarily minim
 proves that the free boundary `∂{u > 0}` is countably `ℋ^{n-1}`-rectifiable with locally finite
 `ℋ^{n-1}`-measure, identifies `χ` and the measure `Δu` explicitly, and deduces that limits of
 classical solutions are variational solutions with the same structure. This repository formalizes
-those results in all dimensions `n ≥ 2`.
+those results in all dimensions `n ≥ 2`. It also proves part of the theory for the functional
+`∫ (|∇u|² + Q² χ)` with a Lipschitz coefficient `Q` (see [Lipschitz coefficient](#lipschitz-coefficient)).
 
-The project has about 45,000 lines of Lean in two libraries: `InnerVariational` (the paper) and
+The project has over 50,000 lines of Lean in two libraries: `InnerVariational` (the paper) and
 `Sperner` (a standalone, Mathlib-only proof of Sperner's inequality for homogeneous harmonic
 functions, used in Section 8). It is sorry-free, and each headline theorem below depends only on
 the axioms `propext`, `Classical.choice` and `Quot.sound` (`#print axioms`, checked in CI).
@@ -33,6 +34,8 @@ All in namespace `InnerVariational.Statements`, file `InnerVariational/Statement
 | Compactness of classical solutions | `classical_compactness` | Theorem 9.3 = Theorem 1.3 |
 | Sperner's inequality with the equality case | `Sperner.sperner_half_volume` | E. Sperner, Jr., Math. Z. 134 (1973), 317–327; used in Lemmas 8.1, 8.3 |
 
+The Lipschitz-coefficient results are listed in the next section.
+
 `formalization.yaml` states each theorem in words. For example, Theorem 8.6, quoted from
 `InnerVariational/Statements/Main.lean`:
 
@@ -47,6 +50,39 @@ definition (Section 3.2): `u ≥ 0` is continuous on the open set `Ω`, `C²` on
 `|∇u| ≤ C_V`; `χ` is Borel with values in `{0, 1}` and `χ_{u>0} ≤ χ` a.e.; and the first domain
 variation of `∫ (|∇u|² + χ)` vanishes for every Lipschitz compactly supported vector field. The
 definitions are in `InnerVariational/Defs/`.
+
+## Lipschitz coefficient
+
+The paper studies the functional `∫ (|∇u|² + χ)`. The library also treats
+`∫ (|∇u|² + Q² χ)` for a coefficient `Q` that is Lipschitz with `0 < c ≤ Q ≤ C'` on `Ω`, in
+dimension `n ≥ 2`. The definitions are in `InnerVariational/Defs/VariationalSolutionQ.lean`:
+`IsVariationalSolutionQ Ω C_V Q u χ` (the domain-variation identity of this functional, which
+has the extra term `∇(Q²) · ξ χ`), the bounds `QBounds Ω Q L c C'`, the Weiss energy with a frozen
+coefficient, the set `sigmaHQ` of highest density, and viscosity solutions of `|∇u| = Q`
+(`IsViscositySolutionQ`). For `Q ≡ 1` each reduces to the corresponding notion for the paper's
+functional.
+
+The following results are proved for such `Q`, in `InnerVariational/Statements/LipschitzQ.lean`
+(namespace `InnerVariational.IsVariationalSolutionQ`, except the last):
+
+| Result | Lean name | Constant-coefficient form |
+|---|---|---|
+| Density characterization of `Σ^H`: `x ∈ Σ^H` if and only if `x` is a free boundary point where `{χ = 1}` has density one | `mem_sigmaHQ_iff_frontier_inter` | Section 6, Proposition 3.5 |
+| `Σ^H` is relatively closed in `Ω` | `closure_sigmaHQ_inter_subset` | Section 6 |
+| `u` is a viscosity solution of `\|∇u\| = Q` on `Ω \ Σ^H` | `isViscositySolutionQ_diff_sigmaHQ` | Lemma 8.3 |
+| Blow-up limits exist and are variational solutions on `ℝⁿ` for the constant coefficient `Q(x₀)` | `exists_blowup_limit` | proof of Theorem 9.3 |
+| Blow-up limits are homogeneous of degree one | `blowup_homogeneous` | Proposition 3.4 |
+| Identification of `χ`: `u ≡ 0` and `χ = 1` a.e., or `χ = χ_{u>0}` a.e. | `Singular.chi_eq_indicator_of_localQ` | Theorem 8.6 |
+
+The following results still assume `Q ≡ 1`: the rectifiability and the local finiteness of the
+`ℋ^{n-1}`-measure of the free boundary (Theorems 1.2 (ii) and 8.7), the identification of the
+Laplacian measure (Theorems 1.2 (iii)–(iv) and 8.7), and the compactness of classical solutions
+(Theorem 9.3 = Theorem 1.3). For a Lipschitz coefficient, the library also proves the
+corresponding form of Theorem 7.2 for `Σ^H` (local finiteness of `ℋ^{n-1}`, countable
+rectifiability, and frequency one `ℋ^{n-1}`-a.e.: `NaberValtorta.sigmaHQ_main`,
+`NaberValtorta.sigmaHQ_inter_ball_structure`,
+`NaberValtorta.hausdorffN_not_tendsto_weightedFrequencyN_eq_zero`) as supporting results; these
+are not among the certified headline theorems.
 
 ## Status
 
@@ -111,10 +147,11 @@ and elaborates every challenge workspace.
 statements), the pinned toolchain, the expected axioms, the AI-assistance disclosure and the
 comparator challenge inventory.
 
-`challenges/` contains five standalone [Comparator](https://github.com/leanprover/comparator)
+`challenges/` contains six standalone [Comparator](https://github.com/leanprover/comparator)
 workspaces: `main-theorem` (Theorems 1.2, 8.6, 8.7), `sigma-h` (Theorem 7.2),
-`classical-compactness` (Theorem 9.3 = 1.3), `sperner`, and `model-cases` (a sanity check that
-the explicit solutions `(x_n)⁺` and `|x_n|` satisfy the definitions and are separated by `Σ^H`).
+`classical-compactness` (Theorem 9.3 = 1.3), `sperner`, `model-cases` (a sanity check that
+the explicit solutions `(x_n)⁺` and `|x_n|` satisfy the definitions and are separated by `Σ^H`),
+and `lipschitz-q` (the six results for a Lipschitz coefficient listed above).
 In each, `Statement.lean` imports Mathlib only and states the theorems with every notion,
 including variational solutions, written out inline; `Challenge.lean` states them with `sorry`;
 and `Solution.lean` proves them from the library. Ordinary CI only elaborates these files. Exact
@@ -125,8 +162,11 @@ uploads an attestation. See `challenges/README.md`, which also records a review 
 ## Layout
 
 - `InnerVariational/Defs/`: variational and classical solutions, the monotonicity and frequency
-  quantities, `Σ^H`, the reduced boundary and the Laplacian measure.
-- `InnerVariational/Statements/`: the headline theorems.
+  quantities, `Σ^H`, the reduced boundary and the Laplacian measure, and their versions with a
+  Lipschitz coefficient.
+- `InnerVariational/Statements/`: the headline theorems, and in `LipschitzQ.lean` those for a
+  Lipschitz coefficient. Files whose name ends in `Q` hold the Lipschitz-coefficient versions of
+  the corresponding files; the constant-coefficient theorems are derived from them.
 - `InnerVariational/Basic/`, `Sobolev/`, `Kernel/`: calculus in polar coordinates, weak gradients,
   and the integral identities (integration by parts, Rellich–Pohozaev, energy identities).
 - `InnerVariational/Monotonicity/`, `Frequency/`, `Homogeneity/`: Sections 3–4 and the

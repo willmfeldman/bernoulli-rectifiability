@@ -6,6 +6,7 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Frequency.Concrete
+public import InnerVariational.Blowup.RenormalizationQ
 public import InnerVariational.Kernel.BV
 import Mathlib.Data.Real.StarOrdered
 import Mathlib.Algebra.Ring.IsFormallyReal
@@ -58,26 +59,6 @@ open scoped NNReal ENNReal RealInnerProductSpace
 namespace InnerVariational
 
 variable {n : ℕ}
-
-/-- `∇(c f) = c ∇f`, with no differentiability hypothesis. -/
-theorem gradient_const_mul (c : ℝ) (f : Rn n → ℝ) (y : Rn n) :
-    gradient (fun z => c * f z) y = c • gradient f y := by
-  have e : (fun z => c * f z) = c • f := rfl
-  rw [e, gradient, gradient, fderiv_const_smul_field, Pi.smul_apply, map_smulₛₗ]
-  simp
-
-theorem closedBall_one_subset_of_two {Ω : Set (Rn n)} (hΩ : closedBall (0 : Rn n) 2 ⊆ Ω) :
-    closedBall (0 : Rn n) 1 ⊆ Ω :=
-  (closedBall_subset_closedBall (by norm_num)).trans hΩ
-
-/-- `B_1 \ B̄_{1/2}` and `B_1 \ B_{1/2}` differ by the null sphere `∂B_{1/2}`. -/
-theorem setIntegral_annulus_closedBall_eq (f : Rn n → ℝ) :
-    ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), f y =
-      ∫ y in ball (0 : Rn n) 1 \ ball 0 (1 / 2), f y := by
-  refine setIntegral_congr_set ((ae_eq_refl _).diff ?_)
-  refine ae_eq_set.2 ⟨?_, by simp [diff_eq_empty.2 ball_subset_closedBall]⟩
-  rw [closedBall_diff_ball]
-  exact Measure.addHaar_sphere_of_ne_zero volume 0 (by norm_num)
 
 namespace IsVariationalSolution
 
@@ -163,30 +144,13 @@ theorem mul_heightH_le_integral_annulus_sq {Np : ℝ} (hNp : 1 < Np)
     (hN : frequencyN u χ 0 1 ≤ Np) :
     1 / 4 * ((3 / 4) ^ (n + 1) * heightH u 0 1 / Abstract.RadialData.doublingConst Np) ≤
       ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), u y ^ 2 := by
-  have hΩ1 := closedBall_one_subset_of_two hΩ
-  have hK := Abstract.RadialData.doublingConst_pos Np
-  have key := h.mul_le_integral_annulus_sq (x := 0) (ρ := 3 / 4) (ρ' := 1)
-    (c := (3 / 4) ^ (n + 1) * heightH u 0 1 / Abstract.RadialData.doublingConst Np)
-    (by norm_num) (by norm_num) hΩ1 (fun s hs => by
-      have hs0 : 0 < s := by linarith [hs.1]
-      have hd := (h.heightH_doubling hcl (t := 1 / 2) (r := 1) (by norm_num) (by norm_num)
-        (by norm_num) hM hΩ1 hNp hN (s := s) ⟨by linarith [hs.1], hs.2⟩).2
-      have e : sphereIntegral (fun y => u y ^ 2) 0 s = s ^ (n + 1) * heightH u 0 s := by
-        rw [heightH, ← mul_assoc, mul_inv_cancel₀ (pow_ne_zero _ hs0.ne'), one_mul]
-      rw [e, div_le_iff₀ hK]
-      have hH0 : 0 ≤ heightH u 0 s := heightH_nonneg u 0 hs0.le
-      calc (3 / 4) ^ (n + 1) * heightH u 0 1
-          ≤ s ^ (n + 1) * (Abstract.RadialData.doublingConst Np * heightH u 0 s) :=
-            mul_le_mul (pow_le_pow_left₀ (by norm_num) hs.1 _) hd
-              (heightH_nonneg u 0 zero_le_one) (by positivity)
-        _ = s ^ (n + 1) * heightH u 0 s * Abstract.RadialData.doublingConst Np := by ring)
-  norm_num at key ⊢
-  refine key.trans (setIntegral_mono_set ?_ (Eventually.of_forall fun y => sq_nonneg _) ?_)
-  · exact (h.integrableOn_sq_of_closedBall hΩ1).mono_set diff_subset
-  · refine (diff_subset_diff_right fun y hy => ?_).eventuallyLE
-    rw [mem_closedBall_zero_iff] at hy
-    rw [mem_ball_zero_iff]
+  refine IsVariationalSolutionQ.mul_heightH_le_integral_annulus_sq (QBounds.one Ω) h.toQ hΩ
+    (by simp [weissKappa_zero]) hcl ?_ hNp ?_
+  · rw [weissKappa_zero, h.modMonotonicityM_one (by norm_num) (ball_subset_closedBall.trans
+      ((closedBall_subset_closedBall (by norm_num)).trans hΩ))]
     linarith
+  · rwa [weissKappa_zero, h.modFrequencyN_one one_pos
+      (ball_subset_closedBall.trans (closedBall_one_subset_of_two hΩ))]
 
 /-- **Radial mass bounds on `A = B_1 \ B̄_{1/2}`** (Lemma 4.3): if `N_0(u; 1) ≤ N₊` with `N₊ > 1`,
 then `H_0(u; 1) m / C(N₊) ≤ ∫_A u² ≤ H_0(u; 1) m`, where `m = ∫_{1/2}^1 s^{n+1} ds`. Since
@@ -197,55 +161,14 @@ theorem integral_annulus_sq_mem_Icc {Np : ℝ} (hNp : 1 < Np) (hN : frequencyN u
       ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), u y ^ 2 ∧
     ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), u y ^ 2 ≤
       heightH u 0 1 * ∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1) := by
-  have hΩ1 := closedBall_one_subset_of_two hΩ
-  have hK := Abstract.RadialData.doublingConst_pos Np
-  have hint := h.integrableOn_sq_of_closedBall hΩ1
-  have hI := integral_ball_diff_ball (x := (0 : Rn n)) (by norm_num : (0 : ℝ) ≤ 1 / 2)
-    (by norm_num : (1 / 2 : ℝ) ≤ 1) hint
-  have hJ : ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), u y ^ 2 =
-      ∫ s in (1 / 2 : ℝ)..1, sphereIntegral (fun y => u y ^ 2) 0 s :=
-    (setIntegral_annulus_closedBall_eq _).trans hI
-  rw [hJ]
-  have hII : IntervalIntegrable (sphereIntegral (fun y => u y ^ 2) 0) volume (1 / 2) 1 :=
-    (intervalIntegrable_sphereIntegral zero_le_one hint).mono_set (by
-      rw [uIcc_of_le (by norm_num), uIcc_of_le zero_le_one]
-      exact Icc_subset_Icc (by norm_num) le_rfl)
-  have hpow : IntervalIntegrable (fun s : ℝ => s ^ (n + 1)) volume (1 / 2) 1 :=
-    (continuous_pow _).intervalIntegrable _ _
-  have he : ∀ s ∈ Icc (1 / 2 : ℝ) 1,
-      sphereIntegral (fun y => u y ^ 2) 0 s = s ^ (n + 1) * heightH u 0 s := fun s hs => by
-    have hs0 : 0 < s := by linarith [hs.1]
-    rw [heightH, ← mul_assoc, mul_inv_cancel₀ (pow_ne_zero _ hs0.ne'), one_mul]
-  have hd : ∀ s ∈ Icc (1 / 2 : ℝ) 1, heightH u 0 s ≤ heightH u 0 1 ∧
-      heightH u 0 1 ≤ Abstract.RadialData.doublingConst Np * heightH u 0 s := fun s hs =>
-    h.heightH_doubling hcl (t := 1 / 2) (r := 1) (by norm_num) (by norm_num) (by norm_num) hM
-      hΩ1 hNp hN hs
-  constructor
-  · calc heightH u 0 1 * (∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1)) /
-          Abstract.RadialData.doublingConst Np
-        = ∫ s in (1 / 2 : ℝ)..1,
-            heightH u 0 1 / Abstract.RadialData.doublingConst Np * s ^ (n + 1) := by
-          rw [intervalIntegral.integral_const_mul]
-          ring
-      _ ≤ ∫ s in (1 / 2 : ℝ)..1, sphereIntegral (fun y => u y ^ 2) 0 s := by
-          refine intervalIntegral.integral_mono_on (by norm_num) (hpow.const_mul _) hII
-            fun s hs => ?_
-          rw [he s hs]
-          have hs0 : 0 ≤ s ^ (n + 1) := pow_nonneg (by linarith [hs.1]) _
-          have h1 : heightH u 0 1 / Abstract.RadialData.doublingConst Np ≤ heightH u 0 s := by
-            rw [div_le_iff₀ hK, mul_comm]
-            exact (hd s hs).2
-          calc heightH u 0 1 / Abstract.RadialData.doublingConst Np * s ^ (n + 1)
-              ≤ heightH u 0 s * s ^ (n + 1) := mul_le_mul_of_nonneg_right h1 hs0
-            _ = s ^ (n + 1) * heightH u 0 s := mul_comm _ _
-  · calc ∫ s in (1 / 2 : ℝ)..1, sphereIntegral (fun y => u y ^ 2) 0 s
-        ≤ ∫ s in (1 / 2 : ℝ)..1, heightH u 0 1 * s ^ (n + 1) := by
-          refine intervalIntegral.integral_mono_on (by norm_num) hII (hpow.const_mul _)
-            fun s hs => ?_
-          rw [he s hs, mul_comm]
-          exact mul_le_mul_of_nonneg_right (hd s hs).1 (pow_nonneg (by linarith [hs.1]) _)
-      _ = heightH u 0 1 * ∫ s in (1 / 2 : ℝ)..1, s ^ (n + 1) :=
-          intervalIntegral.integral_const_mul _ _
+  have := IsVariationalSolutionQ.integral_annulus_sq_mem_Icc (QBounds.one Ω) h.toQ hΩ
+    (by simp [weissKappa_zero]) hcl ?_ hNp ?_
+  · simpa [weissKappa_zero] using this
+  · rw [weissKappa_zero, h.modMonotonicityM_one (by norm_num) (ball_subset_closedBall.trans
+      ((closedBall_subset_closedBall (by norm_num)).trans hΩ))]
+    linarith
+  · rwa [weissKappa_zero, h.modFrequencyN_one one_pos
+      (ball_subset_closedBall.trans (closedBall_one_subset_of_two hΩ))]
 
 omit [NeZero n] hcl hM in
 /-- **The domain-variation defect is controlled by `V`** (the step "using that

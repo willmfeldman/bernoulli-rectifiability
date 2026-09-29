@@ -192,15 +192,16 @@ theorem integral_hyperplane_pos (hn : 2 ≤ n) {ν p : Rn n} (hν : ‖ν‖ = 1
   · rw [sub_self, norm_zero, sub_zero, max_eq_right hτ.le]
     exact hτ.ne'
 
-/-- **Approximate tangent plane ⇒ flatness** (proof of Lemma 8.5). If `S ⊆ Σ^H` and the
-blow-ups of `ℋ^{n-1}⌊S` at `x` converge to `ℋ^{n-1}⌊ν^⊥` (as in
-`Registry.hausdorffN_not_approxTangent_eq_zero`), then `Σ^H` is flat at `x` in direction `ν`. -/
-theorem isFlatAt_of_tendsto (hn : 2 ≤ n) {S : Set (Rn n)} (hS : S ⊆ sigmaH Ω u χ) {x ν : Rn n}
-    (hν : ‖ν‖ = 1)
+/-- **Approximate tangent plane ⇒ flatness** (proof of Lemma 8.5), for any set `T ⊇ S`. If the
+blow-ups of `ℋ^{n-1}⌊S` at `x` converge to `ℋ^{n-1}⌊ν^⊥`, then for every `p ⊥ ν` and `τ > 0` the
+ball `B_{τr}(x + r p)` meets `T` for all small `r > 0`. -/
+theorem eventually_nonempty_inter_ball_of_tendsto (hn : 2 ≤ n) {S T : Set (Rn n)} (hS : S ⊆ T)
+    {x ν : Rn n} (hν : ‖ν‖ = 1)
     (hT : ∀ φ : Rn n → ℝ, Continuous φ → HasCompactSupport φ →
       Tendsto (fun r => (r ^ (n - 1))⁻¹ * ∫ y in S, φ (r⁻¹ • (y - x)) ∂hausdorffN n (n - 1))
         (𝓝[>] 0) (𝓝 (∫ y in {y | ⟪y, ν⟫ = 0}, φ y ∂hausdorffN n (n - 1)))) :
-    IsFlatAt Ω u χ x ν := by
+    ∀ p : Rn n, ⟪p, ν⟫ = 0 → ∀ τ : ℝ, 0 < τ → ∀ᶠ r in 𝓝[>] (0 : ℝ),
+      (T ∩ ball (x + r • p) (τ * r)).Nonempty := by
   intro p hp τ hτ
   set φ : Rn n → ℝ := fun y => max 0 (τ - ‖y - p‖) with hφ
   have hφc : Continuous φ := by rw [hφ]; fun_prop
@@ -225,11 +226,22 @@ theorem isFlatAt_of_tendsto (hn : 2 ≤ n) {S : Set (Rn n)} (hS : S ⊆ sigmaH �
         rw [smul_sub, smul_smul, mul_inv_cancel₀ hr0.ne', one_smul]; abel
       rw [e, norm_smul, Real.norm_of_nonneg hr0.le, mul_comm τ r]
       exact mul_lt_mul_of_pos_left hlt hr0
-    have : y ∈ sigmaH Ω u χ ∩ ball (x + r • p) (τ * r) := ⟨hS hy, hyB⟩
+    have : y ∈ T ∩ ball (x + r • p) (τ * r) := ⟨hS hy, hyB⟩
     rw [hne] at this
     exact this
   rw [hzero, mul_zero] at hr
   exact lt_irrefl _ hr
+
+/-- **Approximate tangent plane ⇒ flatness** (proof of Lemma 8.5). If `S ⊆ Σ^H` and the
+blow-ups of `ℋ^{n-1}⌊S` at `x` converge to `ℋ^{n-1}⌊ν^⊥` (as in
+`Registry.hausdorffN_not_approxTangent_eq_zero`), then `Σ^H` is flat at `x` in direction `ν`. -/
+theorem isFlatAt_of_tendsto (hn : 2 ≤ n) {S : Set (Rn n)} (hS : S ⊆ sigmaH Ω u χ) {x ν : Rn n}
+    (hν : ‖ν‖ = 1)
+    (hT : ∀ φ : Rn n → ℝ, Continuous φ → HasCompactSupport φ →
+      Tendsto (fun r => (r ^ (n - 1))⁻¹ * ∫ y in S, φ (r⁻¹ • (y - x)) ∂hausdorffN n (n - 1))
+        (𝓝[>] 0) (𝓝 (∫ y in {y | ⟪y, ν⟫ = 0}, φ y ∂hausdorffN n (n - 1)))) :
+    IsFlatAt Ω u χ x ν :=
+  eventually_nonempty_inter_ball_of_tendsto hn hS hν hT
 
 /-- **`Σ^H` is flat at `ℋ^{n-1}`-a.e. of its points** (proof of Lemma 8.5), from the localized
 Theorem 7.2 and the existence of approximate tangent planes a.e. on rectifiable sets. -/

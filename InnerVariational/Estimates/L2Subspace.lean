@@ -6,6 +6,7 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Estimates.Jones
+public import InnerVariational.Estimates.L2SubspaceQ
 public import InnerVariational.Frequency.SigmaH
 public import InnerVariational.Homogeneity.TwoPoint
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
@@ -77,19 +78,6 @@ variable {n : ℕ}
 
 /-! ### Constants -/
 
-/-- The constant `C_H(n, N₊)` with `H_y(20r) ≤ C_H H_{x₀}(10r)` for `y, x₀ ∈ B̄_r(x)`: the
-product of the two constants of Lemma 4.6 and the constant of Lemma 4.3. -/
-def l2SubspaceHeightConst (n : ℕ) (Np : ℝ) : ℝ :=
-  heightHChangeConst n * Abstract.RadialData.doublingConst (max Np 1 + 1) *
-    heightHChangeConst' n Np
-
-theorem l2SubspaceHeightConst_pos (n : ℕ) (Np : ℝ) : 0 < l2SubspaceHeightConst n Np := by
-  have h1 := heightHChangeConst_pos n
-  have h2 := Abstract.RadialData.doublingConst_pos (max Np 1 + 1)
-  have h3 := heightHChangeConst'_pos n Np
-  unfold l2SubspaceHeightConst
-  positivity
-
 /-- The threshold `δ₀(n, N₊) = 1 / (8 · 4ⁿ C(K + 1)²)` of the proof of Theorem 6.1, where
 `K = frequencyNChangeConst n N₊` and `C` is the constant of Lemma 4.3. It makes the bound of
 Lemma 4.5 on `V` at most `1/2`. -/
@@ -118,19 +106,6 @@ theorem l2SubspaceFubiniConst_nonneg (n : ℕ) (Np : ℝ) : 0 ≤ l2SubspaceFubi
 /-- The constant `C(N₊, n)` of Theorem 6.1. -/
 def l2SubspaceConst (n : ℕ) (Np : ℝ) : ℝ :=
   max (l2SubspaceDelta n Np)⁻¹ (4 * l2SubspaceFubiniConst n Np / 10 ^ n)
-
-/-! ### Elementary helpers -/
-
-theorem closedBall_subset_of_dist_le {Ω : Set (Rn n)} {x y : Rn n} {r s t : ℝ}
-    (hy : dist y x ≤ r) (hst : s + r ≤ t) (hΩ : closedBall x t ⊆ Ω) : closedBall y s ⊆ Ω :=
-  (closedBall_subset_closedBall' (by linarith)).trans hΩ
-
-/-- `ofReal c * I / ofReal (r^{n-1}) ≤ ofReal (C / r^{n-1}) * I` for `c ≤ C` and `r > 0`. -/
-theorem ofReal_mul_div_le_ofReal_div_mul {c C' r : ℝ} (hcC : c ≤ C') (hr : 0 < r) (I : ℝ≥0∞) :
-    ENNReal.ofReal c * I / ENNReal.ofReal (r ^ (n - 1)) ≤
-      ENNReal.ofReal (C' / r ^ (n - 1)) * I := by
-  rw [ENNReal.ofReal_div_of_pos (pow_pos hr _), div_eq_mul_inv, div_eq_mul_inv, mul_right_comm]
-  gcongr
 
 namespace IsVariationalSolution
 
@@ -165,37 +140,10 @@ theorem heightH_twenty_le (h : IsVariationalSolution Ω C u χ) (hr : 0 < r)
     (hN : frequencyN u χ x (50 * r) ≤ Np) {y x₀ : Rn n} (hy : y ∈ closedBall x r)
     (hx₀ : x₀ ∈ closedBall x r) :
     heightH u y (20 * r) ≤ l2SubspaceHeightConst n Np * heightH u x₀ (10 * r) := by
-  rw [mem_closedBall] at hy hx₀
-  have hmono := h.monotoneOn_frequencyN_of_mem_sigmaHr hr hx hΩ
-  have hN32 : frequencyN u χ x (32 * r) ≤ Np :=
-    (hmono ⟨by linarith, by linarith⟩ ⟨by linarith, le_rfl⟩ (by linarith)).trans hN
-  have hN16 : frequencyN u χ x (16 * r) ≤ Np :=
-    (hmono ⟨by linarith, by linarith⟩ ⟨by linarith, le_rfl⟩ (by linarith)).trans hN
-  have hΩ32 : closedBall x (32 * r) ⊆ Ω := (closedBall_subset_closedBall (by linarith)).trans hΩ
-  have hΩ16 : closedBall x (16 * r) ⊆ Ω := (closedBall_subset_closedBall (by linarith)).trans hΩ
-  have h1 := h.heightH_change_of_point_le (y := y) (by positivity : (0 : ℝ) < 32 * r) hΩ32
-    (by rw [mem_ball]; linarith)
-  rw [show 5 / 8 * (32 * r) = 20 * r by ring] at h1
-  have h2 := (h.heightH_doubling hx.2.2.1 (t := 16 * r) (r := 32 * r) (by positivity)
-    (by linarith) (by linarith)
-    (h.unitBallVolume_le_monotonicityM_of_mem_sigmaHr hr hx (by linarith) hΩ16) hΩ32
-    (Np := max Np 1 + 1) (by linarith [le_max_right Np 1])
-    (hN32.trans (by linarith [le_max_left Np 1])) ⟨le_rfl, by linarith⟩).2
-  have h3 := h.heightH_le_change_of_point hx.2.2.1 (r := 16 * r) (y := x₀) (by positivity) hΩ16
-    (h.unitBallVolume_le_monotonicityM_of_mem_sigmaHr hr hx (by linarith)
-      ((closedBall_subset_closedBall (by linarith)).trans hΩ16)) hN16
-    (by rw [mem_ball]; linarith)
-  rw [show 5 / 8 * (16 * r) = 10 * r by ring] at h3
-  have hc := heightHChangeConst_pos n
-  have hd := Abstract.RadialData.doublingConst_pos (max Np 1 + 1)
-  calc heightH u y (20 * r) ≤ heightHChangeConst n * heightH u x (32 * r) := h1
-    _ ≤ heightHChangeConst n * (Abstract.RadialData.doublingConst (max Np 1 + 1) *
-          heightH u x (16 * r)) := mul_le_mul_of_nonneg_left h2 hc.le
-    _ ≤ heightHChangeConst n * (Abstract.RadialData.doublingConst (max Np 1 + 1) *
-          (heightHChangeConst' n Np * heightH u x₀ (10 * r))) :=
-        mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left h3 hd.le) hc.le
-    _ = l2SubspaceHeightConst n Np * heightH u x₀ (10 * r) := by
-        unfold l2SubspaceHeightConst; ring
+  have hb : ball x (50 * r) ⊆ Ω := ball_subset_closedBall.trans hΩ
+  refine IsVariationalSolutionQ.heightH_twenty_le (QBounds.one Ω) h.toQ hr
+    (by simp [weissKappa_zero]) hΩ (by rwa [weissKappa_zero, h.sigmaHQr_one hr]) ?_ hy hx₀
+  rwa [weissKappa_zero, h.modFrequencyN_one (by positivity) hb]
 
 /-! ### Step 4: the estimate (6.23) -/
 

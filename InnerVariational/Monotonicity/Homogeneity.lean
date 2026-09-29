@@ -185,6 +185,151 @@ theorem homogeneous_of_inner_gradient_eq {f : Rn n → ℝ} (hc : Continuous f)
     rw [smul_smul, inv_mul_cancel₀ ht.ne', one_smul, ← hy] at this
     exact absurd this (ne_of_lt (mul_pos (inv_pos.2 ht) hpos))
 
+/-! ### Euler's identity from the annulus integrals -/
+
+/-- **Euler's identity for limits** (proof of Proposition 3.5), in the form used for both
+constant and Lipschitz coefficients. Let `w_k` be Lipschitz on the balls of `B_ρ` with a common
+constant and harmonic on `{w_k > 0}`, `w_k → w₀` locally uniformly on `B_ρ`, and
+`∫_{B_t ∖ B_s} (w_k − ∇w_k·y)² → 0` for all `0 < s ≤ t < ρ`. Then `∇w₀(y)·y = w₀(y)` at every
+`y ∈ B_ρ ∖ {0}` with `w₀(y) > 0`. -/
+theorem inner_gradient_eq_of_tendsto_integral_annulus [NeZero n] {C : ℝ≥0} {w : ℕ → Rn n → ℝ}
+    {w₀ : Rn n → ℝ} {ρ : ℝ} (hwL : ∀ k, IsLipHarmonicPos (ball 0 ρ) (w k))
+    (hL : ∀ k x r, ball x r ⊆ ball 0 ρ → LipschitzOnWith C (w k) (ball x r))
+    (hconv : TendstoLocallyUniformlyOn w w₀ atTop (ball 0 ρ))
+    (hA : ∀ s t, 0 < s → s ≤ t → t < ρ → Tendsto (fun k =>
+      ∫ z in ball (0 : Rn n) t \ ball 0 s, (w k z - ⟪gradient (w k) z, z⟫) ^ 2) atTop (𝓝 0))
+    {y : Rn n} (hy : y ∈ ball 0 ρ) (hy0 : y ≠ 0) (hpos : 0 < w₀ y) :
+    ⟪gradient w₀ y, y⟫ = w₀ y := by
+  have h0 := IsLipHarmonicPos.of_tendstoLocallyUniformlyOn hwL hL hconv
+  set a := ‖y‖
+  have ha : 0 < a := norm_pos_iff.2 hy0
+  have haρ : a < ρ := mem_ball_zero_iff.1 hy
+  set s := a / 2
+  set t := (a + ρ) / 2
+  have hs : 0 < s := by positivity
+  have hsa : s < a := by simp only [s]; linarith
+  have hat : a < t := by simp only [t]; linarith
+  have htρ : t < ρ := by simp only [t]; linarith
+  have hst : s ≤ t := (hsa.trans hat).le
+  set A := ball (0 : Rn n) t \ ball 0 s
+  set K := closedBall (0 : Rn n) t
+  have hK : IsCompact K := isCompact_closedBall _ _
+  have hKρ : K ⊆ ball 0 ρ := closedBall_subset_ball htρ
+  have hAK : A ⊆ K := diff_subset.trans ball_subset_closedBall
+  have hAm : MeasurableSet A := measurableSet_ball.diff measurableSet_ball
+  have hnormK : ∀ z ∈ K, ‖z‖ ≤ t := fun z hz => mem_closedBall_zero_iff.1 hz
+  set F₀ : Rn n → ℝ := fun z => w₀ z - ⟪gradient w₀ z, z⟫ with hF₀def
+  set F : ℕ → Rn n → ℝ := fun k z => w k z - ⟪gradient (w k) z, z⟫ with hFdef
+  have hg0 : ∀ z ∈ ball (0 : Rn n) ρ, ‖gradient w₀ z‖ ≤ C := fun z hz =>
+    norm_gradient_le_of_tendstoLocallyUniformlyOn hwL hL hconv hz
+  have hgk : ∀ k, ∀ z ∈ ball (0 : Rn n) ρ, ‖gradient (w k) z‖ ≤ C := fun k z hz =>
+    norm_gradient_le_of_lipschitzOnWith_ball isOpen_ball (hL k) hz
+  -- Integrability.
+  have hI₀ : IntegrableOn (fun z => F₀ z ^ 2) K := by
+    simpa [hF₀def] using integrableOn_sub_inner_sq hK (h0.continuousOn.mono hKρ)
+      (fun z hz => hg0 z (hKρ hz)) 0
+  have hIk : ∀ k, IntegrableOn (fun z => F k z ^ 2) K := fun k => by
+    simpa [hFdef] using integrableOn_sub_inner_sq hK ((hwL k).continuousOn.mono hKρ)
+      (fun z hz => hgk k z (hKρ hz)) 0
+  have hIu : ∀ k, IntegrableOn (fun z => (w₀ z - w k z) ^ 2) K := fun k =>
+    ((h0.continuousOn.sub (hwL k).continuousOn).pow 2).mono hKρ |>.integrableOn_compact hK
+  have hIg : ∀ k, IntegrableOn (fun z => ‖gradient (w k) z - gradient w₀ z‖ ^ 2) K := fun k =>
+    integrableOn_of_abs_le hK
+      (((measurable_gradient _).sub (measurable_gradient _)).norm.pow_const 2).aestronglyMeasurable
+      (M := (2 * C) ^ 2) fun z hz => by
+        rw [abs_of_nonneg (sq_nonneg _)]
+        refine pow_le_pow_left₀ (norm_nonneg _) ((norm_sub_le _ _).trans ?_) 2
+        linarith [hgk k z (hKρ hz), hg0 z (hKρ hz)]
+  -- The pointwise bound.
+  have hpt : ∀ k, ∀ z ∈ K, F₀ z ^ 2 ≤ 2 * F k z ^ 2 + 4 * (w₀ z - w k z) ^ 2 +
+      4 * t ^ 2 * ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
+    intro k z hz
+    set c := ⟪gradient (w k) z - gradient w₀ z, z⟫
+    have hsplit : F₀ z = F k z + (w₀ z - w k z) + c := by
+      simp only [hF₀def, hFdef, c, inner_sub_left]; ring
+    have hc : c ^ 2 ≤ t ^ 2 * ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
+      have h1 : |c| ≤ ‖gradient (w k) z - gradient w₀ z‖ * t :=
+        (abs_real_inner_le_norm _ _).trans
+          (mul_le_mul_of_nonneg_left (hnormK z hz) (norm_nonneg _))
+      rw [← sq_abs]
+      calc |c| ^ 2 ≤ (‖gradient (w k) z - gradient w₀ z‖ * t) ^ 2 :=
+            pow_le_pow_left₀ (abs_nonneg _) h1 2
+        _ = _ := by ring
+    rw [hsplit]
+    nlinarith [sq_nonneg (F k z - (w₀ z - w k z) - c), sq_nonneg (w₀ z - w k z - c)]
+  -- The bound on `∫_A F₀²`.
+  have hbound : ∀ k, ∫ z in A, F₀ z ^ 2 ≤
+      2 * (∫ z in A, F k z ^ 2)
+        + 4 * (∫ z in A, (w₀ z - w k z) ^ 2)
+        + 4 * t ^ 2 * ∫ z in K, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
+    intro k
+    have hA2 : ∫ z in A, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 ≤
+        ∫ z in K, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 :=
+      setIntegral_mono_set (hIg k) (.of_forall fun _ => sq_nonneg _) (.of_forall hAK)
+    calc ∫ z in A, F₀ z ^ 2
+        ≤ ∫ z in A, (2 * F k z ^ 2 + 4 * (w₀ z - w k z) ^ 2 +
+            4 * t ^ 2 * ‖gradient (w k) z - gradient w₀ z‖ ^ 2) :=
+          setIntegral_mono_on (hI₀.mono_set hAK)
+            (((((hIk k).mono_set hAK).const_mul 2).fun_add
+              (((hIu k).mono_set hAK).const_mul 4)).fun_add
+              (((hIg k).mono_set hAK).const_mul _)) hAm fun z hz => hpt k z (hAK hz)
+      _ = 2 * (∫ z in A, F k z ^ 2) + 4 * (∫ z in A, (w₀ z - w k z) ^ 2) +
+            4 * t ^ 2 * ∫ z in A, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
+          rw [integral_add ((((hIk k).mono_set hAK).const_mul 2).fun_add
+              (((hIu k).mono_set hAK).const_mul 4)) (((hIg k).mono_set hAK).const_mul _),
+            integral_add (((hIk k).mono_set hAK).const_mul 2)
+              (((hIu k).mono_set hAK).const_mul 4),
+            integral_const_mul, integral_const_mul, integral_const_mul]
+      _ ≤ _ := by gcongr
+  -- The bound tends to zero.
+  have hlim1 := (hA s t hs hst htρ).const_mul 2
+  have hlim2 : Tendsto (fun k => ∫ z in A, (w₀ z - w k z) ^ 2) atTop (𝓝 0) := by
+    have hunif := (tendstoLocallyUniformlyOn_iff_forall_isCompact isOpen_ball).1 hconv K hKρ hK
+    have h := tendsto_integral_filter_of_dominated_convergence (μ := volume.restrict A)
+      (F := fun k z => (w₀ z - w k z) ^ 2) (f := fun _ => (0 : ℝ)) (fun _ => 1)
+      (.of_forall fun k => ((hIu k).mono_set hAK).aestronglyMeasurable)
+      ((Metric.tendstoUniformlyOn_iff.1 hunif 1 one_pos).mono fun k hk =>
+        (ae_restrict_iff' hAm).2 (.of_forall fun z hz => by
+          have h1 := hk z (hAK hz)
+          rw [Real.dist_eq] at h1
+          have key : (w₀ z - w k z) ^ 2 ≤ 1 := by
+            rw [← sq_abs]; nlinarith [abs_nonneg (w₀ z - w k z)]
+          change ‖(w₀ z - w k z) ^ 2‖ ≤ 1
+          rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
+          exact key))
+      (integrableOn_const ((measure_mono hAK).trans_lt hK.measure_lt_top).ne)
+      ((ae_restrict_iff' hAm).2 (.of_forall fun z hz => by
+        have := ((hconv.tendsto_at (hKρ (hAK hz))).const_sub (w₀ z)).pow 2
+        simpa using this))
+    simpa using h
+  have hlim3 := (tendsto_setIntegral_norm_gradient_sub_sq hwL hL hconv hK hKρ).const_mul
+    (4 * t ^ 2)
+  have hlim := (hlim1.add (hlim2.const_mul 4)).add hlim3
+  simp only [mul_zero, add_zero] at hlim
+  have hzero : ∫ z in A, F₀ z ^ 2 = 0 :=
+    le_antisymm (ge_of_tendsto' hlim hbound)
+      (setIntegral_nonneg hAm fun _ _ => sq_nonneg _)
+  -- `F₀ = 0` a.e. on `A`, hence everywhere on the open set `A° ∩ {w₀ > 0}`.
+  have hae : F₀ =ᵐ[volume.restrict A] 0 := by
+    have := (setIntegral_eq_zero_iff_of_nonneg_ae (.of_forall fun _ => sq_nonneg _)
+      (hI₀.mono_set hAK)).1 hzero
+    filter_upwards [this] with z hz
+    simpa using hz
+  set P := (ball (0 : Rn n) ρ ∩ {z | 0 < w₀ z}) ∩ (ball 0 t \ closedBall 0 s)
+  have hPo : IsOpen P := h0.isOpen_pos.inter (isOpen_ball.sdiff isClosed_closedBall)
+  have hPA : P ⊆ A := fun z hz => ⟨hz.2.1, fun h' => hz.2.2 (ball_subset_closedBall h')⟩
+  have hyP : y ∈ P := ⟨⟨hy, hpos⟩, mem_ball_zero_iff.2 hat,
+    fun h' => absurd (mem_closedBall_zero_iff.1 h') (not_le.2 hsa)⟩
+  have hcont : ContinuousOn F₀ P := by
+    have hgrad : ContinuousOn (gradient w₀) (ball (0 : Rn n) ρ ∩ {z | 0 < w₀ z}) :=
+      Kernel.continuousOn_gradient h0.isOpen_pos (h0.contDiffOn.of_le (by norm_num))
+    exact (h0.continuousOn.mono fun z hz => hz.1.1).sub
+      ((hgrad.mono fun z hz => hz.1).inner continuousOn_id)
+  have heq := Measure.eqOn_open_of_ae_eq (ae_restrict_of_ae_restrict_of_subset hPA hae) hPo
+    hcont continuousOn_const hyP
+  simp only [hF₀def, Pi.zero_apply, sub_eq_zero] at heq
+  exact heq.symm
+
 namespace IsVariationalSolution
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n} {R : ℝ}
@@ -237,142 +382,13 @@ theorem inner_gradient_eq_of_tendsto_monotonicityM_sub [NeZero n] {w χw : ℕ �
       monotonicityM (w k) (χw k) 0 t - monotonicityM (w k) (χw k) 0 s) atTop (𝓝 0))
     {y : Rn n} (hy : y ∈ ball 0 ρ) (hy0 : y ≠ 0) (hpos : 0 < w₀ y) :
     ⟪gradient w₀ y, y⟫ = w₀ y := by
-  have hwL : ∀ k, IsLipHarmonicPos (ball 0 ρ) (w k) := fun k => (hw k).isLipHarmonicPos
-  have hL : ∀ k x r, ball x r ⊆ ball 0 ρ → LipschitzOnWith C (w k) (ball x r) :=
-    fun k => (hw k).lipschitzOnWith
-  have h0 := IsLipHarmonicPos.of_tendstoLocallyUniformlyOn hwL hL hconv
-  set a := ‖y‖
-  have ha : 0 < a := norm_pos_iff.2 hy0
-  have haρ : a < ρ := mem_ball_zero_iff.1 hy
-  set s := a / 2
-  set t := (a + ρ) / 2
-  have hs : 0 < s := by positivity
-  have hsa : s < a := by simp only [s]; linarith
-  have hat : a < t := by simp only [t]; linarith
-  have htρ : t < ρ := by simp only [t]; linarith
-  have hst : s ≤ t := (hsa.trans hat).le
-  set A := ball (0 : Rn n) t \ ball 0 s
-  set K := closedBall (0 : Rn n) t
-  have hK : IsCompact K := isCompact_closedBall _ _
-  have hKρ : K ⊆ ball 0 ρ := closedBall_subset_ball htρ
-  have hAK : A ⊆ K := diff_subset.trans ball_subset_closedBall
-  have hAm : MeasurableSet A := measurableSet_ball.diff measurableSet_ball
-  have hnormK : ∀ z ∈ K, ‖z‖ ≤ t := fun z hz => mem_closedBall_zero_iff.1 hz
-  set F₀ : Rn n → ℝ := fun z => w₀ z - ⟪gradient w₀ z, z⟫ with hF₀def
-  set F : ℕ → Rn n → ℝ := fun k z => w k z - ⟪gradient (w k) z, z⟫ with hFdef
-  have hg0 : ∀ z ∈ ball (0 : Rn n) ρ, ‖gradient w₀ z‖ ≤ C := fun z hz =>
-    norm_gradient_le_of_tendstoLocallyUniformlyOn hwL hL hconv hz
-  have hgk : ∀ k, ∀ z ∈ ball (0 : Rn n) ρ, ‖gradient (w k) z‖ ≤ C := fun k z hz =>
-    (hw k).norm_gradient_le hz
-  -- Integrability.
-  have hI₀ : IntegrableOn (fun z => F₀ z ^ 2) K := by
-    simpa [hF₀def] using integrableOn_sub_inner_sq hK (h0.continuousOn.mono hKρ)
-      (fun z hz => hg0 z (hKρ hz)) 0
-  have hIk : ∀ k, IntegrableOn (fun z => F k z ^ 2) K := fun k => by
-    simpa [hFdef] using integrableOn_sub_inner_sq hK ((hw k).continuousOn.mono hKρ)
-      (fun z hz => hgk k z (hKρ hz)) 0
-  have hIu : ∀ k, IntegrableOn (fun z => (w₀ z - w k z) ^ 2) K := fun k =>
-    ((h0.continuousOn.sub (hw k).continuousOn).pow 2).mono hKρ |>.integrableOn_compact hK
-  have hIg : ∀ k, IntegrableOn (fun z => ‖gradient (w k) z - gradient w₀ z‖ ^ 2) K := fun k =>
-    integrableOn_of_abs_le hK
-      (((measurable_gradient _).sub (measurable_gradient _)).norm.pow_const 2).aestronglyMeasurable
-      (M := (2 * C) ^ 2) fun z hz => by
-        rw [abs_of_nonneg (sq_nonneg _)]
-        refine pow_le_pow_left₀ (norm_nonneg _) ((norm_sub_le _ _).trans ?_) 2
-        linarith [hgk k z (hKρ hz), hg0 z (hKρ hz)]
-  -- The pointwise bound.
-  have hpt : ∀ k, ∀ z ∈ K, F₀ z ^ 2 ≤ 2 * F k z ^ 2 + 4 * (w₀ z - w k z) ^ 2 +
-      4 * t ^ 2 * ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
-    intro k z hz
-    set c := ⟪gradient (w k) z - gradient w₀ z, z⟫
-    have hsplit : F₀ z = F k z + (w₀ z - w k z) + c := by
-      simp only [hF₀def, hFdef, c, inner_sub_left]; ring
-    have hc : c ^ 2 ≤ t ^ 2 * ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
-      have h1 : |c| ≤ ‖gradient (w k) z - gradient w₀ z‖ * t :=
-        (abs_real_inner_le_norm _ _).trans
-          (mul_le_mul_of_nonneg_left (hnormK z hz) (norm_nonneg _))
-      rw [← sq_abs]
-      calc |c| ^ 2 ≤ (‖gradient (w k) z - gradient w₀ z‖ * t) ^ 2 :=
-            pow_le_pow_left₀ (abs_nonneg _) h1 2
-        _ = _ := by ring
-    rw [hsplit]
-    nlinarith [sq_nonneg (F k z - (w₀ z - w k z) - c), sq_nonneg (w₀ z - w k z - c)]
-  -- The bound on `∫_A F₀²`.
-  have hbound : ∀ k, ∫ z in A, F₀ z ^ 2 ≤
-      2 * (t ^ (n + 2) / 2 * (monotonicityM (w k) (χw k) 0 t - monotonicityM (w k) (χw k) 0 s))
-        + 4 * (∫ z in A, (w₀ z - w k z) ^ 2)
-        + 4 * t ^ 2 * ∫ z in K, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
-    intro k
-    have hA1 : ∫ z in A, F k z ^ 2 ≤
-        t ^ (n + 2) / 2 * (monotonicityM (w k) (χw k) 0 t - monotonicityM (w k) (χw k) 0 s) := by
-      have := (hw k).integral_annulus_sub_inner_sq_le (subset_refl _) hs hst htρ
-      simpa [hFdef, sub_zero] using this
-    have hA2 : ∫ z in A, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 ≤
-        ∫ z in K, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 :=
-      setIntegral_mono_set (hIg k) (.of_forall fun _ => sq_nonneg _) (.of_forall hAK)
-    calc ∫ z in A, F₀ z ^ 2
-        ≤ ∫ z in A, (2 * F k z ^ 2 + 4 * (w₀ z - w k z) ^ 2 +
-            4 * t ^ 2 * ‖gradient (w k) z - gradient w₀ z‖ ^ 2) :=
-          setIntegral_mono_on (hI₀.mono_set hAK)
-            (((((hIk k).mono_set hAK).const_mul 2).fun_add
-              (((hIu k).mono_set hAK).const_mul 4)).fun_add
-              (((hIg k).mono_set hAK).const_mul _)) hAm fun z hz => hpt k z (hAK hz)
-      _ = 2 * (∫ z in A, F k z ^ 2) + 4 * (∫ z in A, (w₀ z - w k z) ^ 2) +
-            4 * t ^ 2 * ∫ z in A, ‖gradient (w k) z - gradient w₀ z‖ ^ 2 := by
-          rw [integral_add ((((hIk k).mono_set hAK).const_mul 2).fun_add
-              (((hIu k).mono_set hAK).const_mul 4)) (((hIg k).mono_set hAK).const_mul _),
-            integral_add (((hIk k).mono_set hAK).const_mul 2)
-              (((hIu k).mono_set hAK).const_mul 4),
-            integral_const_mul, integral_const_mul, integral_const_mul]
-      _ ≤ _ := by gcongr
-  -- The bound tends to zero.
-  have hlim1 := (hM s t hs hst htρ).const_mul (t ^ (n + 2) / 2) |>.const_mul 2
-  have hlim2 : Tendsto (fun k => ∫ z in A, (w₀ z - w k z) ^ 2) atTop (𝓝 0) := by
-    have hunif := (tendstoLocallyUniformlyOn_iff_forall_isCompact isOpen_ball).1 hconv K hKρ hK
-    have h := tendsto_integral_filter_of_dominated_convergence (μ := volume.restrict A)
-      (F := fun k z => (w₀ z - w k z) ^ 2) (f := fun _ => (0 : ℝ)) (fun _ => 1)
-      (.of_forall fun k => ((hIu k).mono_set hAK).aestronglyMeasurable)
-      ((Metric.tendstoUniformlyOn_iff.1 hunif 1 one_pos).mono fun k hk =>
-        (ae_restrict_iff' hAm).2 (.of_forall fun z hz => by
-          have h1 := hk z (hAK hz)
-          rw [Real.dist_eq] at h1
-          have key : (w₀ z - w k z) ^ 2 ≤ 1 := by
-            rw [← sq_abs]; nlinarith [abs_nonneg (w₀ z - w k z)]
-          change ‖(w₀ z - w k z) ^ 2‖ ≤ 1
-          rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]
-          exact key))
-      (integrableOn_const ((measure_mono hAK).trans_lt hK.measure_lt_top).ne)
-      ((ae_restrict_iff' hAm).2 (.of_forall fun z hz => by
-        have := ((hconv.tendsto_at (hKρ (hAK hz))).const_sub (w₀ z)).pow 2
-        simpa using this))
-    simpa using h
-  have hlim3 := (tendsto_setIntegral_norm_gradient_sub_sq hwL hL hconv hK hKρ).const_mul
-    (4 * t ^ 2)
-  have hlim := (hlim1.add (hlim2.const_mul 4)).add hlim3
-  simp only [mul_zero, add_zero] at hlim
-  have hzero : ∫ z in A, F₀ z ^ 2 = 0 :=
-    le_antisymm (ge_of_tendsto' hlim hbound)
-      (setIntegral_nonneg hAm fun _ _ => sq_nonneg _)
-  -- `F₀ = 0` a.e. on `A`, hence everywhere on the open set `A° ∩ {w₀ > 0}`.
-  have hae : F₀ =ᵐ[volume.restrict A] 0 := by
-    have := (setIntegral_eq_zero_iff_of_nonneg_ae (.of_forall fun _ => sq_nonneg _)
-      (hI₀.mono_set hAK)).1 hzero
-    filter_upwards [this] with z hz
-    simpa using hz
-  set P := (ball (0 : Rn n) ρ ∩ {z | 0 < w₀ z}) ∩ (ball 0 t \ closedBall 0 s)
-  have hPo : IsOpen P := h0.isOpen_pos.inter (isOpen_ball.sdiff isClosed_closedBall)
-  have hPA : P ⊆ A := fun z hz => ⟨hz.2.1, fun h' => hz.2.2 (ball_subset_closedBall h')⟩
-  have hyP : y ∈ P := ⟨⟨hy, hpos⟩, mem_ball_zero_iff.2 hat,
-    fun h' => absurd (mem_closedBall_zero_iff.1 h') (not_le.2 hsa)⟩
-  have hcont : ContinuousOn F₀ P := by
-    have hgrad : ContinuousOn (gradient w₀) (ball (0 : Rn n) ρ ∩ {z | 0 < w₀ z}) :=
-      Kernel.continuousOn_gradient h0.isOpen_pos (h0.contDiffOn.of_le (by norm_num))
-    exact (h0.continuousOn.mono fun z hz => hz.1.1).sub
-      ((hgrad.mono fun z hz => hz.1).inner continuousOn_id)
-  have heq := Measure.eqOn_open_of_ae_eq (ae_restrict_of_ae_restrict_of_subset hPA hae) hPo
-    hcont continuousOn_const hyP
-  simp only [hF₀def, Pi.zero_apply, sub_eq_zero] at heq
-  exact heq.symm
+  refine inner_gradient_eq_of_tendsto_integral_annulus (fun k => (hw k).isLipHarmonicPos)
+    (fun k => (hw k).lipschitzOnWith) hconv (fun s t hs hst htρ => ?_) hy hy0 hpos
+  have hlim := (hM s t hs hst htρ).const_mul (t ^ (n + 2) / 2)
+  rw [mul_zero] at hlim
+  refine squeeze_zero (fun k => setIntegral_nonneg (measurableSet_ball.diff measurableSet_ball)
+    fun _ _ => sq_nonneg _) (fun k => ?_) hlim
+  simpa [sub_zero] using (hw k).integral_annulus_sub_inner_sq_le (subset_refl _) hs hst htρ
 
 end IsVariationalSolution
 
