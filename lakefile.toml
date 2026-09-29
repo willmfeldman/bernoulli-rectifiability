@@ -1,0 +1,39 @@
+name = "inner_variational"
+version = "0.1.0"
+description = "Lean 4 formalization of D. Kriventsov and G. S. Weiss, Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries (Comm. Pure Appl. Math. 2025, arXiv:2306.10131)"
+keywords = ["math", "free-boundary", "bernoulli-problem", "rectifiability", "geometric-measure-theory", "calculus-of-variations"]
+defaultTargets = ["InnerVariational", "Sperner"]
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.30.0"
+
+[[lean_lib]]
+name = "InnerVariational"
+
+# Foundations of the elliptic one-phase problem (the Lipschitz regularity of classical solutions
+# and the passage from classical to variational solutions), used in `InnerVariational/Foundations/`.
+[[require]]
+name = "elliptic_bernoulli_foundations"
+git = "https://github.com/willmfeldman/elliptic-bernoulli-foundations"
+rev = "v0.1.0"
+
+# Sperner's inequality as a self-contained, Mathlib-only library. It can be reused by copying
+# `Sperner/`, `Sperner.lean` and this stanza. Build alone: `lake build Sperner`.
+[[lean_lib]]
+name = "Sperner"
+
+# Geometric measure theory and Sobolev foundations (sets of finite perimeter, the Reifenberg
+# theorems, Rellich compactness with traces, Hausdorff measure on spheres), used through
+# `InnerVariational/Registry/` and `InnerVariational/Basic/`.
+[[require]]
+name = "gmt_foundations"
+git = "https://github.com/willmfeldman/gmt-foundations"
+rev = "v0.1.0"

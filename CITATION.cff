@@ -1,0 +1,60 @@
+cff-version: 1.2.0
+message: "If you use this Lean formalization, please cite it using this metadata."
+title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries, in Lean"
+version: "0.1.0"
+license: "Apache-2.0"
+repository-code: "https://github.com/willmfeldman/bernoulli-rectifiability"
+authors:
+  - family-names: Feldman
+    given-names: "William M."
+abstract: >-
+  Lean 4 / Mathlib formalization of the main results of D. Kriventsov and G. S. Weiss,
+  "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free
+  boundaries" (Comm. Pure Appl. Math., 2025): for variational solutions of the Bernoulli free
+  boundary problem, the topological free boundary is countably rectifiable with locally finite
+  Hausdorff measure, the Laplacian of the solution is identified as an explicit measure on the
+  free boundary, and limits of classical solutions are variational solutions. It includes a
+  standalone formalization of Sperner's inequality for homogeneous harmonic functions.
+keywords:
+  - Lean
+  - Mathlib
+  - formalized mathematics
+  - free boundary problems
+  - Bernoulli problem
+  - rectifiability
+  - geometric measure theory
+  - calculus of variations
+preferred-citation:
+  type: software
+  title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries, in Lean"
+  authors:
+    - family-names: Feldman
+      given-names: "William M."
+  version: "0.1.0"
+  repository-code: "https://github.com/willmfeldman/bernoulli-rectifiability"
+references:
+  - type: article
+    authors:
+      - family-names: Kriventsov
+        given-names: Dennis
+      - family-names: Weiss
+        given-names: "Georg S."
+    title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries"
+    journal: "Communications on Pure and Applied Mathematics"
+    volume: "78"
+    issue: "3"
+    year: 2025
+    doi: "10.1002/cpa.22226"
+    identifiers:
+      - type: url
+        value: "https://arxiv.org/abs/2306.10131"
+  - type: article
+    authors:
+      - family-names: Sperner
+        given-names: "Emanuel, Jr."
+    title: "Zur Symmetrisierung von Funktionen auf Sphären"
+    journal: "Mathematische Zeitschrift"
+    volume: "134"
+    start: 317
+    end: 327
+    year: 1973
