@@ -68,7 +68,7 @@ set `Ω \ Σ^H`, whose `Σ^H` is empty). -/
 theorem frontier_pos_diff_sigmaH_subset_essentialBoundary (hn : 2 ≤ n)
     (h : IsVariationalSolution Ω C u χ) :
     (Ω ∩ frontier {y | 0 < u y}) \ sigmaH Ω u χ ⊆ essentialBoundary (Ω ∩ {y | χ y = 1}) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   rintro x ⟨⟨hxΩ, hxf⟩, hxS⟩
   have hx' : x ∈ Ω \ sigmaH Ω u χ := ⟨hxΩ, hxS⟩
   have hU : Ω \ sigmaH Ω u χ ∈ 𝓝 x := h.isOpen_diff_sigmaH.mem_nhds hx'
@@ -76,7 +76,7 @@ theorem frontier_pos_diff_sigmaH_subset_essentialBoundary (hn : 2 ≤ n)
     h.sigmaH_diff_sigmaH_eq_empty ⟨hx', hxf⟩
   have e : (Ω \ sigmaH Ω u χ) ∩ {y | χ y = 1} =
       (Ω \ sigmaH Ω u χ) ∩ (Ω ∩ {y | χ y = 1}) := by
-    rw [← inter_assoc, inter_eq_left.2 diff_subset]
+    rw [← inter_assoc, inter_eq_left.2 sdiff_subset]
   rw [e] at hmem
   exact ⟨fun h0 => hmem.1 ((Singular.hasDensity_inter_iff hU).2 h0),
     fun h1 => hmem.2 ((Singular.hasDensity_inter_iff hU).2 h1)⟩
@@ -100,7 +100,7 @@ theorem hausdorffN_essentialBoundary_chi_inter_ball_le (hn : 2 ≤ n)
     (hball : closedBall x (2 * r) ⊆ Ω) :
     hausdorffN n (n - 1) (essentialBoundary (Ω ∩ {y | χ y = 1}) ∩ ball x r) ≤
       ENNReal.ofReal (2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * r ^ (n - 1)) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨μ, ν, hpair, hμ⟩ := h.exists_isGaussGreenPair_chi hn hr hball
   have hμeq := Registry.IsGaussGreenPair.eq_hausdorffN_restrict hn isOpen_ball
     h.measurableSet_chi_eq_one hpair
@@ -121,7 +121,7 @@ theorem isCountablyRectifiable_essentialBoundary_chi_inter_ball (hn : 2 ≤ n)
     (h : IsVariationalSolution Ω C u χ) {x : Rn n} {r : ℝ} (hr : 0 < r)
     (hball : closedBall x (2 * r) ⊆ Ω) :
     IsCountablyRectifiable n (n - 1) (essentialBoundary (Ω ∩ {y | χ y = 1}) ∩ ball x r) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨μ, ν, hpair, -⟩ := h.exists_isGaussGreenPair_chi hn hr hball
   have hrect := (Registry.HasLocallyFinitePerimeter.rectifiable_essentialBoundary hn isOpen_ball
     h.measurableSet_chi_eq_one ⟨μ, ν, hpair⟩).1
@@ -221,7 +221,7 @@ theorem reducedBoundary_subset_of_ae_eq {Ω E E' : Set (Rn n)} (hΩ : Measurable
 theorem essentialBoundary_subset_frontier (E : Set (Rn n)) : essentialBoundary E ⊆ frontier E := by
   intro y hy
   by_contra hf
-  rw [frontier, mem_diff, not_and_or, not_not] at hf
+  rw [frontier, Set.mem_sdiff, not_and_or, not_not] at hf
   rcases hf with hc | hi
   · exact hy.1 (Singular.hasDensity_zero_of_notMem_closure hc)
   · exact hy.2 (Singular.hasDensity_one_of_mem_nhds (mem_interior_iff_mem_nhds.1 hi))
@@ -249,7 +249,7 @@ theorem reducedBoundary_pos_subset (hn : 2 ≤ n) (h : IsVariationalSolution Ω 
 /-- `Σ^H` is Borel: it is relatively closed in the open set `Ω` (Proposition 3.5). -/
 theorem measurableSet_sigmaH (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
     MeasurableSet (sigmaH Ω u χ) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have e : sigmaH Ω u χ = closure (sigmaH Ω u χ) ∩ Ω :=
     Subset.antisymm (fun x hx => ⟨subset_closure hx, hx.1⟩) h.closure_sigmaH_inter_subset
   rw [e]

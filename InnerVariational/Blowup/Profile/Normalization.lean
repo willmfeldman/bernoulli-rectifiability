@@ -10,9 +10,9 @@ public import InnerVariational.Blowup.Renormalization
 public import InnerVariational.Kernel.Harmonic
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.Hom
 import InnerVariational.Blowup.ExplicitForm
 import InnerVariational.Blowup.DomainVariation
 public import InnerVariational.Blowup.Sobolev
@@ -133,7 +133,7 @@ theorem exists_subseq_tendsto_profile (hn : 2 ≤ n) (v : ℕ → Rn n → ℝ) 
   set α := alphaN n with hα
   have hAo : IsOpen A := isOpen_ball.sdiff isClosed_closedBall
   have hAm : MeasurableSet A := hAo.measurableSet
-  have hAB : A ⊆ B := diff_subset
+  have hAB : A ⊆ B := sdiff_subset
   have hA'm : MeasurableSet A' := (isOpen_ball.sdiff isClosed_closedBall).measurableSet
   have hA'A : A' ⊆ A := fun y hy => ⟨ball_subset_ball (by norm_num) hy.1, fun h => hy.2
     (closedBall_subset_closedBall (by norm_num) h)⟩
@@ -142,9 +142,9 @@ theorem exists_subseq_tendsto_profile (hn : 2 ≤ n) (v : ℕ → Rn n → ℝ) 
     Measure.restrict_mono h le_rfl
   have hμA : (volume.restrict B).restrict A = volume.restrict A :=
     Measure.restrict_restrict_of_subset hAB
-  haveI : IsFiniteMeasure (volume.restrict A) :=
+  have : IsFiniteMeasure (volume.restrict A) :=
     isFiniteMeasure_restrict.2 ((measure_mono hAB).trans_lt measure_ball_lt_top).ne
-  haveI : IsFiniteMeasure (volume.restrict A') :=
+  have : IsFiniteMeasure (volume.restrict A') :=
     isFiniteMeasure_restrict.2 ((measure_mono hA'B).trans_lt measure_ball_lt_top).ne
   obtain ⟨θ, hθt, ν₀, hν₀, hνθ, F, G, hFB, hGB, hWB, hconv, hweak, hFnn, heuler, htanG, -⟩ :=
     exists_subseq_limit_data v (N := 1) hν hLip hbd hnn (by simpa only [one_mul] using hE) htan
@@ -210,7 +210,7 @@ theorem exists_subseq_tendsto_profile (hn : 2 ≤ n) (v : ℕ → Rn n → ℝ) 
   have hex : ∀ S : Set (Rn n), IsOpen S → S.Nonempty → ∀ {p : Rn n → Prop},
       (∀ᵐ y ∂(volume.restrict S), p y) → ∃ y, p y := by
     intro S hS hne p h
-    haveI : (ae (volume.restrict S)).NeBot := ae_neBot.2 (by
+    have : (ae (volume.restrict S)).NeBot := ae_neBot.2 (by
       rw [Ne, Measure.restrict_eq_zero]
       exact (hS.measure_pos volume hne).ne')
     exact h.exists
@@ -267,7 +267,7 @@ theorem exists_subseq_tendsto_profile (hn : 2 ≤ n) (v : ℕ → Rn n → ℝ) 
   have hgηout : ∀ y ∉ A, gradient η y = 0 := fun y hy =>
     Kernel.gradient_eq_zero_of_notMem_tsupport fun h => hy (hηA h)
   have hηG : MemLp (fun y => η y • G y) 2 (volume.restrict A) := by
-    refine hGA.of_le (hηm.smul hGA.1) ?_
+    refine hGA.of_le (hηm.smul hGA.aestronglyMeasurable) ?_
     filter_upwards [hηb] with y hy
     rw [norm_smul]
     exact mul_le_of_le_one_left (norm_nonneg _) hy
@@ -361,7 +361,7 @@ theorem exists_subseq_tendsto_profile (hn : 2 ≤ n) (v : ℕ → Rn n → ℝ) 
       (G := F) (fun k => hvA _) hFA (a := fun _ => 1) (A := fun _ => 0) (M := 1) zero_le_one
       aestronglyMeasurable_const aestronglyMeasurable_const (fun _ => by simp) (fun _ => by simp)
       (by simpa only [Real.norm_eq_abs, sq_abs] using hconvA)
-    simp only [mul_one, ContinuousLinearMap.zero_apply, inner_zero_right, mul_zero, sub_zero,
+    simp only [mul_one, zero_apply, inner_zero_right, mul_zero, sub_zero,
       Real.norm_eq_abs, sq_abs] at hq
     exact tendsto_nhds_unique hq (hmass.comp hθt)
   have hFsq : ∀ᵐ y ∂(volume.restrict A), F y ^ 2 = βp ^ 2 * ⟪ν₀, y⟫ ^ 2 := by

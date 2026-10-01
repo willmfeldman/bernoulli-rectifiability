@@ -9,7 +9,8 @@ public import InnerVariational.Kernel.Harmonic
 public import InnerVariational.Basic.SphereIntegral
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.InnerProductSpace.Calculus
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Kernel.IBP
@@ -139,7 +140,7 @@ theorem hasFDerivAt_norm_sub {y : Rn n} (hy : y ≠ x) :
   rw [e] at h2
   convert h2 using 1
   ext v
-  simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul,
+  simp only [smul_apply, innerSL_apply_apply, smul_eq_mul,
     ContinuousLinearMap.comp_apply, id, ContinuousLinearMap.id_apply,
     Real.sqrt_sq (norm_nonneg _)]
   field_simp
@@ -163,8 +164,8 @@ theorem hasFDerivAt_radialCutoff (hδ : 0 < δ) (hs0 : 0 ≤ s) {y : Rn n} (h1 :
     rw [e]
     convert this using 1
     ext v
-    simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul,
-      ContinuousLinearMap.neg_apply]
+    simp only [smul_apply, innerSL_apply_apply, smul_eq_mul,
+      neg_apply]
     ring
   refine hg.congr_of_eventuallyEq ?_
   have hU : IsOpen {z : Rn n | s < ‖z - x‖ ∧ ‖z - x‖ < s + δ} :=
@@ -234,7 +235,7 @@ theorem inner_gradient_radialCutoff (hδ : 0 < δ) (hs0 : 0 ≤ s) {y : Rn n}
       refine ⟨by rw [mem_ball, dist_eq_norm]; exact h2, ?_⟩
       rw [mem_ball, dist_eq_norm, not_lt]; exact h1.le
     rw [(hasFDerivAt_radialCutoff hδ hs0 h1 h2).fderiv, indicator_of_mem hmem]
-    simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul, inner_smul_right]
+    simp only [smul_apply, innerSL_apply_apply, smul_eq_mul, inner_smul_right]
     rw [real_inner_comm]
     ring
   · have : y ∉ ball x (s + δ) \ ball x s := fun h => by

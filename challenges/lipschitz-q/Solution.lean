@@ -106,7 +106,7 @@ open KWChallenge KWChallenge.Bridge
 
 theorem challenge_sigmaHQ_density (n : ℕ) : SigmaHQDensityClaim n := by
   intro hn Ω C_V Q u χ L c C' hQ hKW x
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hQ' := qBounds_iff.1 hQ
   have h := isVariationalSolutionQ_iff.1 hKW
   rw [sigmaHQ_eq hQ' h]
@@ -114,7 +114,7 @@ theorem challenge_sigmaHQ_density (n : ℕ) : SigmaHQDensityClaim n := by
 
 theorem challenge_sigmaHQ_closed (n : ℕ) : SigmaHQClosedClaim n := by
   intro hn Ω C_V Q u χ L c C' hQ hKW
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hQ' := qBounds_iff.1 hQ
   have h := isVariationalSolutionQ_iff.1 hKW
   rw [sigmaHQ_eq hQ' h]
@@ -122,7 +122,7 @@ theorem challenge_sigmaHQ_closed (n : ℕ) : SigmaHQClosedClaim n := by
 
 theorem challenge_viscosityQ (n : ℕ) : ViscosityQClaim n := by
   intro hn Ω C_V Q u χ L c C' hQ hKW
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hQ' := qBounds_iff.1 hQ
   have h := isVariationalSolutionQ_iff.1 hKW
   rw [sigmaHQ_eq hQ' h]
@@ -137,7 +137,7 @@ theorem challenge_blowup_limitQ (n : ℕ) : BlowupLimitQClaim n := by
 
 theorem challenge_blowup_homogeneousQ (n : ℕ) : BlowupHomogeneousQClaim n := by
   intro hn Ω C_V Q u χ L c C' hQ hKW x hx r hr hr0 u₀ hconv
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   exact InnerVariational.IsVariationalSolutionQ.blowup_homogeneous
     (qBounds_iff.1 hQ) (isVariationalSolutionQ_iff.1 hKW) hx hr hr0 hconv
 

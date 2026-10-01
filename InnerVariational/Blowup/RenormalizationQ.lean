@@ -7,10 +7,10 @@ module
 
 public import InnerVariational.Frequency.ConcreteQ.ChangeOfPoint
 public import InnerVariational.Kernel.BV
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 import InnerVariational.Defs.Calculus
 public import InnerVariational.Kernel.VariationalQ
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import InnerVariational.Basic.Polar
@@ -74,9 +74,9 @@ theorem closedBall_one_subset_of_two {Ω : Set (Rn n)} (hΩ : closedBall (0 : Rn
 theorem setIntegral_annulus_closedBall_eq (f : Rn n → ℝ) :
     ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2), f y =
       ∫ y in ball (0 : Rn n) 1 \ ball 0 (1 / 2), f y := by
-  refine setIntegral_congr_set ((ae_eq_refl _).diff ?_)
-  refine ae_eq_set.2 ⟨?_, by simp [diff_eq_empty.2 ball_subset_closedBall]⟩
-  rw [closedBall_diff_ball]
+  refine setIntegral_congr_set ((EventuallyEqSet.refl _ _).diff ?_)
+  refine ae_eq_set.2 ⟨?_, by simp [sdiff_eq_empty.2 ball_subset_closedBall]⟩
+  rw [closedBall_sdiff_ball]
   exact Measure.addHaar_sphere_of_ne_zero volume 0 (by norm_num)
 
 namespace IsVariationalSolutionQ
@@ -180,9 +180,9 @@ theorem integral_annulus_euler_le (l : ℝ) :
   refine le_trans ?_ key
   have hint := (h.integrableOn_ball_inner_gradient (x := 0) hΩ1).2.2 l
   simp only [sub_zero] at hint
-  refine setIntegral_mono_set (hint.mono_set diff_subset)
+  refine setIntegral_mono_set (hint.mono_set sdiff_subset)
     (Eventually.of_forall fun y => sq_nonneg _) ?_
-  exact (diff_subset_diff_right ball_subset_closedBall).eventuallyLE
+  exact (sdiff_subset_sdiff_right ball_subset_closedBall).eventuallyLE
 
 /-- **Mass lower bound on `A`** (from Lemma 4.3): if `Ñ_0(u; 1) ≤ N₊` with `N₊ > 1`, then
 `(1/4) (3/4)^{n+1} H_0(u; 1) / C(N₊) ≤ ∫_A u²`. -/
@@ -210,8 +210,8 @@ theorem mul_heightH_le_integral_annulus_sq {Np : ℝ} (hNp : 1 < Np)
         _ = s ^ (n + 1) * heightH u 0 s * Abstract.RadialData.doublingConst Np := by ring)
   norm_num at key ⊢
   refine key.trans (setIntegral_mono_set ?_ (Eventually.of_forall fun y => sq_nonneg _) ?_)
-  · exact (h.integrableOn_sq_of_closedBall hΩ1).mono_set diff_subset
-  · refine (diff_subset_diff_right fun y hy => ?_).eventuallyLE
+  · exact (h.integrableOn_sq_of_closedBall hΩ1).mono_set sdiff_subset
+  · refine (sdiff_subset_sdiff_right fun y hy => ?_).eventuallyLE
     rw [mem_closedBall_zero_iff] at hy
     rw [mem_ball_zero_iff]
     linarith

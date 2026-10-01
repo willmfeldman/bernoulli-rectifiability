@@ -9,7 +9,8 @@ public import InnerVariational.Applications.FreeBoundaryLimit
 public import InnerVariational.Singular.Density
 public import InnerVariational.Singular.HeightLimit
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Singular.FlatPoint
 import InnerVariational.Blowup.Profile
 import InnerVariational.Frequency.Concrete
@@ -122,13 +123,12 @@ theorem mono (h : IsClassicalSolution Ω u) {V : Set (Rn n)} (hV : IsOpen V) (hV
 solution on `{y : a + ρ y ∈ Ω}`, for `ρ > 0`. -/
 theorem comp_affine (h : IsClassicalSolution Ω u) (a : Rn n) {ρ : ℝ} (hρ : 0 < ρ) :
     IsClassicalSolution ((fun y => a + ρ • y) ⁻¹' Ω) (fun y => u (a + ρ • y) / ρ) := by
-  have hAc : Continuous fun y : Rn n => a + ρ • y :=
-    continuous_const.add (continuous_const.smul continuous_id)
+  have hAc : Continuous fun y : Rn n => a + ρ • y := by fun_prop
   set Ah : Rn n ≃ₜ Rn n := (Homeomorph.smulOfNeZero ρ hρ.ne').trans (Homeomorph.addLeft a)
     with hAhdef
   have hpos : {y | 0 < u (a + ρ • y) / ρ} = (fun y => a + ρ • y) ⁻¹' {z | 0 < u z} := by
     ext y
-    simp only [mem_setOf_eq, mem_preimage, div_pos_iff_of_pos_right hρ]
+    simp only [mem_ofPred_eq, mem_preimage, div_pos_iff_of_pos_right hρ]
   have hfr : frontier {y | 0 < u (a + ρ • y) / ρ} =
       (fun y => a + ρ • y) ⁻¹' frontier {z | 0 < u z} := by
     rw [hpos]
@@ -150,7 +150,7 @@ theorem comp_affine (h : IsClassicalSolution Ω u) (a : Rn n) {ρ : ℝ} (hρ : 
     rw [hfr] at hyfr
     obtain ⟨r, hr, F, hF, hFne, hFeq, hFn⟩ := h.free_boundary (a + ρ • y) ⟨hy, hyfr⟩
     have hgF : gradient (fun z => F (a + ρ • z) / ρ) y = gradient F (a + ρ • y) := by
-      simpa using Kernel.gradient_comp_similarity F a hρ (LinearIsometryEquiv.refl ℝ (Rn n)) y
+      exact Kernel.gradient_comp_similarity F a hρ (LinearIsometryEquiv.refl ℝ (Rn n)) y
     have hball : ∀ z, z ∈ ball y (r / ρ) ↔ a + ρ • z ∈ ball (a + ρ • y) r := fun z => by
       rw [mem_ball, mem_ball, dist_affine a hρ, lt_div_iff₀ hρ, mul_comm]
     refine ⟨r / ρ, div_pos hr hρ, fun z => F (a + ρ • z) / ρ,
@@ -158,7 +158,7 @@ theorem comp_affine (h : IsClassicalSolution Ω u) (a : Rn n) {ρ : ℝ} (hρ : 
       by rwa [hgF], ?_, ?_⟩
     · ext z
       have hz := Set.ext_iff.1 hFeq (a + ρ • z)
-      simp only [mem_inter_iff, mem_setOf_eq] at hz ⊢
+      simp only [mem_inter_iff, mem_ofPred_eq] at hz ⊢
       rw [hfr, mem_preimage, hball z, div_eq_zero_iff, or_iff_left hρ.ne']
       exact hz
     · intro s hs hev
@@ -227,7 +227,6 @@ theorem lipschitzOnWith_ball_of_mem_frontier {w : ℝ → ℝ}
   have h1 := hK.dist_le_mul _ (hB z₁ hz₁) _ (hB z₂ hz₂)
   have h2 := hdist (ρ⁻¹ • (z₁ - x₀)) (ρ⁻¹ • (z₂ - x₀))
   have h3 := dist_affine x₀ hρ (ρ⁻¹ • (z₁ - x₀)) (ρ⁻¹ • (z₂ - x₀))
-  simp only at h1
   rw [hinv, hinv] at h1 h2 h3
   rw [h2, h3]
   calc ρ * dist (f z₁ / ρ) (f z₂ / ρ)
@@ -306,7 +305,7 @@ theorem ae_inner_sub_ne_zero {ν : Rn n} (hν : ν ≠ 0) (x : Rn n) :
   have h1 : {y : Rn n | ⟪y - x, ν⟫ = 0} =
       (fun y => y + -x) ⁻¹' (((ℝ ∙ ν)ᗮ : Submodule ℝ (Rn n)) : Set (Rn n)) := by
     ext y
-    rw [mem_setOf_eq, mem_preimage, SetLike.mem_coe,
+    rw [mem_ofPred_eq, mem_preimage, SetLike.mem_coe,
       Submodule.mem_orthogonal_singleton_iff_inner_right, real_inner_comm, sub_eq_add_neg]
   have h0 : volume {y : Rn n | ⟪y - x, ν⟫ = 0} = 0 := by
     rw [h1, measure_preimage_add_right]

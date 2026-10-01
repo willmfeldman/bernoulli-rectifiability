@@ -6,7 +6,8 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Defs.Quantities
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 public import GMTFoundations.Defs.Setup
 
@@ -81,7 +82,7 @@ theorem setIntegral_ball_eq_add_sum {F : Rn n → ℝ} {x : Rn n} {t θ : ℝ} (
       exact mul_le_of_le_one_right (pow_nonneg hθ0 _) hθ1
     have hJ : ball x (t * θ ^ J) ⊆ ball x t :=
       ball_subset_ball (mul_le_of_le_one_right ht (pow_le_one₀ hθ0 hθ1))
-    rw [setIntegral_diff measurableSet_ball (hF.mono_set hJ) hsub]
+    rw [setIntegral_sdiff measurableSet_ball (hF.mono_set hJ) hsub]
     ring
 
 variable {x : Rn n} {f q : Rn n → E} {m : ℕ} {H : ℝ → ℝ} {α r₀ K M : ℝ}
@@ -120,7 +121,9 @@ theorem tendsto_annulus_mul (hr₀ : 0 < r₀) (hHpos : ∀ s ∈ Ioo 0 r₀, 0 
     have h1 : Tendsto (fun r => X (c * r) * c ^ m * (H (c * r) / H r)) (𝓝[>] 0)
         (𝓝 (0 * c ^ m * 1)) := ((hcons.comp hcr).mul_const _).mul hrat
     have hs : Tendsto (fun r => √(H (c * r) / H r)) (𝓝[>] 0) (𝓝 1) := by
-      simpa using (Real.continuous_sqrt.tendsto 1).comp hrat
+      have h' := (Real.continuous_sqrt.tendsto 1).comp hrat
+      rw [Real.sqrt_one] at h'
+      exact h'
     have h2 : Tendsto (fun r => α ^ 2 * (√(H (c * r) / H r) - 1) ^ 2 * (M * c ^ m))
         (𝓝[>] 0) (𝓝 (α ^ 2 * (1 - 1) ^ 2 * (M * c ^ m))) :=
       (((hs.sub_const 1).pow 2).const_mul _).mul_const _
@@ -145,8 +148,8 @@ theorem tendsto_annulus_mul (hr₀ : 0 < r₀) (hHpos : ∀ s ∈ Ioo 0 r₀, 0 
     have hρ0 : 0 < ρ := mul_pos hc hr0
     set A := annulusAt x ρ with hA
     have hAm : MeasurableSet A := measurableSet_ball.diff measurableSet_ball
-    have hAB : A ⊆ ball x r₀ := diff_subset.trans (ball_subset_ball (by nlinarith))
-    have hAρ : A ⊆ ball x ρ := diff_subset.trans (ball_subset_ball (by nlinarith))
+    have hAB : A ⊆ ball x r₀ := sdiff_subset.trans (ball_subset_ball (by nlinarith))
+    have hAρ : A ⊆ ball x ρ := sdiff_subset.trans (ball_subset_ball (by nlinarith))
     set k := √(H r) * α
     set k' := √(H ρ) * α
     -- pointwise and integrated bound

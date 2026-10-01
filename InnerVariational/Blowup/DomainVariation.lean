@@ -8,8 +8,8 @@ module
 public import InnerVariational.Blowup.Tangential
 public import InnerVariational.Kernel.BV
 public import InnerVariational.Regular.ZeroGradient
-import Mathlib.Data.Real.StarOrdered
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
 # Theorem 5.3, steps (b)–(c): strong convergence off `{⟪ν, x⟫ = 0}` and the limit domain variation
@@ -132,7 +132,8 @@ theorem tendsto_setIntegral_norm_sub_sq_of_tangentialPart {μ : Measure (Rn n)}
     have e : (fun y => ⟪F k y, y⟫ - ⟪G y, y⟫) = fun y => ⟪F k y - G y, y⟫ := by
       funext y; rw [inner_sub_left]
     rw [e]
-    refine ((hF k).sub hG).of_le (((hF k).sub hG).1.inner aestronglyMeasurable_id) ?_
+    refine ((hF k).sub hG).of_le
+      (((hF k).sub hG).aestronglyMeasurable.inner aestronglyMeasurable_id) ?_
     filter_upwards [hball] with y hy
     calc ‖⟪F k y - G y, y⟫‖ ≤ ‖F k y - G y‖ * ‖y‖ := norm_inner_le_norm _ _
       _ ≤ ‖F k y - G y‖ * 1 := by gcongr
@@ -231,9 +232,9 @@ theorem tendsto_integral_quadratic {F : ℕ → α → E} {G : α → E} (hF : �
     have hm : AEStronglyMeasurable (q H) μ := by
       have h1 : AEStronglyMeasurable (fun x => A x (H x)) μ :=
         Continuous.comp_aestronglyMeasurable₂ (g := fun (L : E →L[ℝ] E) (w : E) => L w)
-          isBoundedBilinearMap_apply.continuous hAm hH.1
-      exact ((hH.1.norm.aemeasurable.pow_const 2).aestronglyMeasurable.mul ham).sub
-        ((hH.1.inner h1).const_mul 2)
+          isBoundedBilinearMap_apply.continuous hAm hH.aestronglyMeasurable
+      exact ((hH.aestronglyMeasurable.norm.aemeasurable.pow_const 2).aestronglyMeasurable.mul
+        ham).sub ((hH.aestronglyMeasurable.inner h1).const_mul 2)
     refine ((MemLp.integrable_norm_sq hH).const_mul (3 * M)).mono' hm
       (Eventually.of_forall fun x => ?_)
     have := abs_quadratic_sub_le (ha x) (hA x) 0 (H x)
@@ -273,7 +274,9 @@ theorem tendsto_integral_quadratic {F : ℕ → α → E} {G : α → E} (hF : �
             integral_const_mul, integral_const_mul]
       _ ≤ 3 * M * s k + 6 * M * (√g * √(s k)) := by gcongr
   have hsq : Tendsto (fun k => √(s k)) atTop (𝓝 0) := by
-    simpa using (Real.continuous_sqrt.tendsto 0).comp h
+    have h' := (Real.continuous_sqrt.tendsto 0).comp h
+    rw [Real.sqrt_zero] at h'
+    exact h'
   have hlim : Tendsto (fun k => 3 * M * s k + 6 * M * (√g * √(s k))) atTop (𝓝 0) := by
     simpa using (h.const_mul (3 * M)).add ((hsq.const_mul √g).const_mul (6 * M))
   exact tendsto_iff_norm_sub_tendsto_zero.2 (squeeze_zero (fun k => norm_nonneg _) hbound hlim)

@@ -10,7 +10,8 @@ public import InnerVariational.Kernel.VariationalQ
 public import InnerVariational.Registry.GMT
 public import GMTFoundations.Defs.GMT
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Blowup.ChiLimitQ
 import InnerVariational.Monotonicity.DensityQ
 import InnerVariational.Monotonicity.HighestDensityQ
@@ -213,7 +214,7 @@ theorem measureReal_pos_inter_ball_le {u₀ : Rn n → ℝ}
 theorem half_le_of_tendsto_rescale (hn : 2 ≤ n) {u₀ : Rn n → ℝ}
     (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop) {y₀ : Rn n}
     (hy₀ : 0 < u₀ y₀) : unitBallVolume n / 2 ≤ d := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hH := blowup_isLipHarmonicPos hQ h hx hr hr0 hconv
   have hR07 := Registry.sperner_half_volume hn ⟨C, blowup_lipschitzWith hQ h hx hr hr0 hconv⟩
     (fun y => hH.nonneg y trivial) (fun y t ht => blowup_homogeneous' hQ h hx hr hr0 hconv t ht y)
@@ -262,7 +263,7 @@ theorem density_eq_zero_or_half_le (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
   · obtain ⟨y₀, hy₀⟩ := hpos
     exact Or.inr (half_le_of_tendsto_rescale hQ h hx hd hr' hr0' hn hconv hy₀)
   · push Not at hpos
-    haveI : NeZero n := ⟨by omega⟩
+    have : NeZero n := ⟨by omega⟩
     have hH := blowup_isLipHarmonicPos hQ h hx hr' hr0' hconv
     have hu₀ : u₀ = fun _ => 0 := funext fun y => le_antisymm (hpos y) (hH.nonneg y trivial)
     rw [hu₀] at hconv
@@ -288,7 +289,7 @@ theorem MzeroQ_eq_zero_or_half_le (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
     (h : IsVariationalSolutionQ Ω C Q u χ) (hx : x ∈ Ω) (hux : u x = 0) :
     ∃ m : ℝ, MzeroQ (Q x) u χ x = m ∧ (m = 0 ∨ Q x ^ 2 * unitBallVolume n / 2 ≤ m) ∧
       m ≤ Q x ^ 2 * unitBallVolume n := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨d, hdM, hd⟩ := h.exists_MzeroQ_eq_sq_mul hQ hx hux
   have hq2 : 0 < Q x ^ 2 := pow_pos (hQ.pos_of_mem hx) 2
   refine ⟨Q x ^ 2 * d, hdM, ?_, ?_⟩
@@ -305,7 +306,7 @@ theorem MzeroQ_eq_zero_or_half_le (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
 theorem mem_interior_of_MzeroQ_eq_zero (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
     (h : IsVariationalSolutionQ Ω C Q u χ) (hx : x ∈ Ω) (hM : MzeroQ (Q x) u χ x = 0) :
     x ∈ interior {y | u y = 0} := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hB := unitBallVolume_pos n
   have hc2 : 0 < c ^ 2 := pow_pos hQ.pos 2
   have hev : ∀ᶠ y in 𝓝 x, MzeroQ (Q y) u χ y < ((c ^ 2 * unitBallVolume n / 4 : ℝ) : EReal) := by
@@ -379,7 +380,7 @@ theorem MzeroQ_eq_of_tendsto_rescale_zero (hn : 2 ≤ n) (hQ : QBounds Ω Q L c 
     {r : ℕ → ℝ} (hr : ∀ k, 0 < r k) (hr0 : Tendsto r atTop (𝓝 0))
     (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) (fun _ => 0) atTop) :
     MzeroQ (Q x) u χ x = ((Q x ^ 2 * unitBallVolume n : ℝ) : EReal) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨hcl, hux⟩ := (h.mem_frontier_pos_iff hx).1 hfr
   obtain ⟨d, hdM, hd⟩ := h.exists_MzeroQ_eq_sq_mul hQ hx hux
   rcases eq_zero_or_eq_of_tendsto_rescale_zero hQ h hx hd hr hr0 hconv with h0 | h1

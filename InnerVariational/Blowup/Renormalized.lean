@@ -8,7 +8,8 @@ module
 public import InnerVariational.Blowup.Sobolev
 public import InnerVariational.Registry.Sobolev
 public import Mathlib.Analysis.Calculus.Gradient.Basic
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Sobolev.Lipschitz
@@ -70,7 +71,7 @@ omit [NeZero n] in
 theorem memLp_inner_id_of_subset_ball {Ω : Set (Rn n)} (hΩ : MeasurableSet Ω)
     (hΩB : Ω ⊆ ball 0 1) {g : Rn n → Rn n} (hg : MemLp g 2 (volume.restrict Ω)) :
     MemLp (fun y => ⟪g y, y⟫) 2 (volume.restrict Ω) := by
-  refine hg.of_le (hg.1.inner aestronglyMeasurable_id) ?_
+  refine hg.of_le (hg.aestronglyMeasurable.inner aestronglyMeasurable_id) ?_
   filter_upwards [self_mem_ae_restrict hΩ] with y hy
   exact norm_inner_le_of_mem_ball_one (hΩB hy)
 
@@ -82,7 +83,8 @@ theorem ae_nonneg_of_tendsto_integral_sq_sub {α : Type*} [MeasurableSpace α] {
   set m : α → ℝ := fun x => min (F x) 0 ^ 2
   have hm_int : Integrable m μ := by
     refine hF.integrable_sq.mono'
-      ((hF.1.aemeasurable.min aemeasurable_const).pow_const 2).aestronglyMeasurable
+      ((hF.aestronglyMeasurable.aemeasurable.min aemeasurable_const).pow_const
+        2).aestronglyMeasurable
       (Eventually.of_forall fun x => ?_)
     simp only [m, Real.norm_eq_abs, abs_pow, sq_abs]
     rcases le_total 0 (F x) with h0 | h0
@@ -139,7 +141,7 @@ theorem exists_subseq_tendsto_weakEuler (v : ℕ → Rn n → ℝ) (C N : ℝ)
   set B : Set (Rn n) := ball 0 1 with hB
   set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
   have hAm : MeasurableSet A := measurableSet_ball.diff measurableSet_closedBall
-  have hAB : A ⊆ B := diff_subset
+  have hAB : A ⊆ B := sdiff_subset
   have hμA : (volume.restrict B).restrict A = volume.restrict A :=
     Measure.restrict_restrict_of_subset hAB
   obtain ⟨φ, hφ, F, -, G, hF, -, hG, hconv, -, hweak, -⟩ :=
@@ -180,7 +182,7 @@ theorem exists_subseq_tendsto_weakEuler (v : ℕ → Rn n → ℝ) (C N : ℝ)
         (fun y => ⟪G y, y⟫) := by
       intro h hh
       have hhy : MemLp (fun y => h y • y) 2 (volume.restrict A) := by
-        refine hh.of_le (hh.1.smul aestronglyMeasurable_id) ?_
+        refine hh.of_le (hh.aestronglyMeasurable.smul aestronglyMeasurable_id) ?_
         filter_upwards [self_mem_ae_restrict hAm] with y hy
         have hy1 : ‖y‖ ≤ 1 := (mem_ball_zero_iff.1 (hAB hy)).le
         rw [norm_smul]
@@ -214,7 +216,7 @@ theorem exists_subseq_tendsto_weakEuler (v : ℕ → Rn n → ℝ) (C N : ℝ)
       (hIk k).sub ((hvA _).const_mul N)
     have hΦ : MemLp Φinf 2 (volume.restrict A) := hI.sub (hFA.const_mul N)
     have hlim : Tendsto (fun k => ∫ y, ‖Φ k y‖ ^ 2 ∂(volume.restrict A)) atTop (𝓝 0) := by
-      simpa only [Φ, Real.norm_eq_abs, sq_abs] using hE.comp hφ.tendsto_atTop
+      simpa only [Φ, Real.norm_eq_abs, sq_abs, Function.comp_def] using hE.comp hφ.tendsto_atTop
     have hle := hw.integral_norm_sq_le_of_tendsto hΦk hΦ hlim
     filter_upwards [ae_eq_zero_of_integral_norm_sq_nonpos hΦ hle] with y hy
     simp only [Φinf, Pi.zero_apply] at hy

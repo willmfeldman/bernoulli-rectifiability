@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.Blowup.Profile
 public import InnerVariational.Blowup.Approx1DQ
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Blowup.Renormalization
 import InnerVariational.Blowup.Limit
@@ -331,9 +332,9 @@ theorem approx1D_limit_frequency_eq_one_coord [NeZero n] (hn : 2 ≤ n) {Ω : Se
   congr 1
   -- `A` lies in `B_2`, where `u k` is `C_V k`-Lipschitz, so the partials are bounded there.
   have hAB : A ⊆ ball (0 : Rn n) 2 := fun y hy =>
-    mem_ball.2 ((mem_ball.1 (diff_subset hy)).trans (by norm_num))
+    mem_ball.2 ((mem_ball.1 (sdiff_subset hy)).trans (by norm_num))
   have hlip := (hsol k).lipschitzOnWith 0 2 (ball_subset_closedBall.trans hΩ)
-  have hAfin : volume A ≠ ⊤ := (measure_mono (diff_subset.trans (subset_refl _))).trans_lt
+  have hAfin : volume A ≠ ⊤ := (measure_mono (sdiff_subset.trans (subset_refl _))).trans_lt
     (measure_ball_lt_top (x := (0 : Rn n)) (r := 1)) |>.ne
   have hint : ∀ i : Fin n,
       IntegrableOn (fun y => (fderiv ℝ (u k) y (EuclideanSpace.single i 1)) ^ 2) A := by

@@ -101,7 +101,7 @@ theorem sigmaHQ_one (h : IsVariationalSolution Ω C u χ) [NeZero n] :
     sigmaHQ Ω (fun _ => 1) u χ = sigmaH Ω u χ := by
   ext x
   rw [h.mem_sigmaH_iff_le_Mzero]
-  simp only [sigmaHQ, MzeroQ_one, mem_setOf_eq, one_pow, one_mul]
+  simp only [sigmaHQ, MzeroQ_one, mem_ofPred_eq, one_pow, one_mul]
 
 /-- `u(x) = 0` on `Σ^H`. -/
 theorem eq_zero_of_mem_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ)

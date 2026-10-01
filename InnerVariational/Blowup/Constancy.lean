@@ -224,7 +224,7 @@ theorem exists_ae_eq_const_ball_of_hasWeakGrad_zero {Ω : Set (Rn n)} (hΩ : IsO
     filter_upwards [hconst] with k hk
     rw [hFeq k]
     exact hk x hx
-  haveI : (ae (volume.restrict (ball x₀ R))).NeBot := ae_neBot.2 hball
+  have : (ae (volume.restrict (ball x₀ R))).NeBot := ae_neBot.2 hball
   obtain ⟨x₁, hx₁⟩ := hgood.exists
   refine ⟨R, hR0, f x₁, ?_⟩
   filter_upwards [hgood] with x hx
@@ -268,7 +268,7 @@ theorem exists_ae_eq_const_of_hasWeakGrad_zero {Ω : Set (Rn n)} (hΩ : IsOpen �
     have hm : volume.restrict (ball x (min R R')) ≠ 0 := by
       rw [Ne, Measure.restrict_eq_zero]
       exact (measure_ball_pos volume x (lt_min hR hR')).ne'
-    haveI : (ae (volume.restrict (ball x (min R R')))).NeBot := ae_neBot.2 hm
+    have : (ae (volume.restrict (ball x (min R R')))).NeBot := ae_neBot.2 hm
     obtain ⟨y, hy, hy'⟩ :=
       ((ae_restrict_of_ae_restrict_of_subset (ball_subset_ball (min_le_left _ _)) h).and
         (ae_restrict_of_ae_restrict_of_subset (ball_subset_ball (min_le_right _ _)) h')).exists

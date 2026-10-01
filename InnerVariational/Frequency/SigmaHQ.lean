@@ -83,7 +83,7 @@ theorem closure_sigmaHQr_inter_subset (κ : ℝ) {r : ℝ} (hr : 0 < r) :
   · exact closure_minimal (fun z (hz : z ∈ sigmaHQr Ω Q u χ κ r) => hz.2.2.1) isClosed_closure
       hycl
   · have hc := h.continuousAt_modMonotonicityM hQ κ hr hyr'
-    haveI := mem_closure_iff_nhdsWithin_neBot.1 hycl
+    have := mem_closure_iff_nhdsWithin_neBot.1 hycl
     exact ge_of_tendsto (hc.tendsto.mono_left nhdsWithin_le_nhds)
       (eventually_nhdsWithin_of_forall fun z (hz : z ∈ sigmaHQr Ω Q u χ κ r) => hz.2.2.2)
 

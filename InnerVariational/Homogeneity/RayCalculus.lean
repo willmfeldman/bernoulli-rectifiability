@@ -13,7 +13,8 @@ public import Mathlib.Order.CompletePartialOrder
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.Rademacher
 public import Mathlib.Analysis.Calculus.Gradient.Basic
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import GMTFoundations.Defs.Setup
 
 /-!
@@ -80,7 +81,7 @@ theorem measurableSet_annulus (a b : ℝ) : MeasurableSet (annulus a b : Set (Rn
   measurableSet_ball.diff measurableSet_ball
 
 theorem isBounded_annulus (a b : ℝ) : IsBounded (annulus a b : Set (Rn n)) :=
-  isBounded_ball.subset diff_subset
+  isBounded_ball.subset sdiff_subset
 
 theorem annulus_subset_annulus {a b a' b' : ℝ} (ha : a ≤ a') (hb : b' ≤ b) :
     (annulus a' b' : Set (Rn n)) ⊆ annulus a b := fun y hy => by
@@ -138,7 +139,7 @@ theorem sq_setIntegral_le_measureReal_mul {α : Type*} [MeasurableSpace α] {μ 
   set c := ∫ x in s, f x ∂μ
   set m := μ.real s
   have hI : ∫ x in s, (m * f x - c) ^ 2 ∂μ = m * (m * ∫ x in s, f x ^ 2 ∂μ - c ^ 2) := by
-    haveI : IsFiniteMeasure (μ.restrict s) := isFiniteMeasure_restrict.2 hs
+    have : IsFiniteMeasure (μ.restrict s) := isFiniteMeasure_restrict.2 hs
     have h1 : Integrable (fun x => m ^ 2 * f x ^ 2 - (2 * m * c) * f x) (μ.restrict s) :=
       (hf2.const_mul _).sub (hf.const_mul _)
     have e1 : ∫ x in s, (m * f x - c) ^ 2 ∂μ =
@@ -231,7 +232,7 @@ theorem setIntegral_le_of_ae_le_intervalIntegral {E : Set (Rn n)} (hE : Measurab
     (hK : ∀ t ∈ Icc α β, ∫ y in E, F y t ≤ K) {G : Rn n → ℝ} (hG0 : ∀ y, 0 ≤ G y) {c : ℝ}
     (hc : 0 ≤ c) (hG : ∀ᵐ y, y ∈ E → G y ≤ c * ∫ t in α..β, F y t) :
     ∫ y in E, G y ≤ c * ((β - α) * K) := by
-  haveI : IsFiniteMeasure (volume.restrict E) := isFiniteMeasure_restrict.2 hEfin
+  have : IsFiniteMeasure (volume.restrict E) := isFiniteMeasure_restrict.2 hEfin
   have hprod : Integrable (Function.uncurry F)
       ((volume.restrict E).prod (volume.restrict (Ioc α β))) := by
     refine Integrable.of_bound hF.aestronglyMeasurable M ?_
@@ -294,7 +295,6 @@ theorem gradient_comp_add_left (u : Rn n → ℝ) (x z : Rn n) :
 theorem gradient_comp_add_smul (u : Rn n → ℝ) (p : Rn n) (ρ : ℝ) (z : Rn n) :
     gradient (fun y => u (p + ρ • y)) z = ρ • gradient u (p + ρ • z) := by
   have h := fderiv_comp_smul (𝕜 := ℝ) (f := fun w => u (p + w)) (x := z) ρ
-  simp only at h
   simp [gradient, h, fderiv_comp_add_left]
 
 /-- Change of variables `y = p + ρ • z` from the annulus `B_b ∖ B_a` to `B_{ρb}(p) ∖ B_{ρa}(p)`. -/
@@ -470,9 +470,7 @@ theorem setIntegral_sq_exp_mul_comp_add_sub_le (hu : LipschitzWith L u) (a : ℝ
         (fun s => Real.exp (a * s) * u (y + s • x)) (Real.exp (a * t) * w (y + t • x)) t := by
       filter_upwards [hy] with t ht _
       have h := (((hasDerivAt_id t).const_mul a).exp).mul ht
-      convert h using 1
-      simp only [hw, id, mul_one]
-      ring
+      convert h using 1 <;> first | rfl | (simp only [hw, id, mul_one]; ring)
     have hint := hAC.intervalIntegrable_of_ae_hasDerivAt hd
     have hint2 : IntervalIntegrable (fun t => (Real.exp (a * t) * w (y + t • x)) ^ 2)
         volume 0 1 :=

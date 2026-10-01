@@ -10,9 +10,9 @@ public import InnerVariational.Blowup.Renormalization
 public import InnerVariational.Kernel.Harmonic
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.Hom
 import InnerVariational.Blowup.ExplicitForm
 import InnerVariational.Blowup.DomainVariation
 public import InnerVariational.Blowup.Sobolev
@@ -72,14 +72,14 @@ theorem fderiv_max_inner_zero_apply {e y : Rn n} (he : ‖e‖ = 1) (hy : ⟪e, 
   · have hev : (fun z : Rn n => max ⟪e, z⟫ 0) =ᶠ[𝓝 y] fun _ => 0 := by
       filter_upwards [(hce.tendsto y).eventually (gt_mem_nhds h)] with z hz
       exact max_eq_right hz.le
-    rw [hev.fderiv_eq, if_neg (not_lt.2 h.le)]
+    rw [hev.fderiv_eq, ite_eq_right (not_lt.2 h.le)]
     simp
   · have hev : (fun z : Rn n => max ⟪e, z⟫ 0) =ᶠ[𝓝 y] fun z => ⟪e, z⟫ := by
       filter_upwards [(hce.tendsto y).eventually (lt_mem_nhds h)] with z hz
       exact max_eq_left hz.le
     have hd : HasFDerivAt (fun z : Rn n => ⟪e, z⟫) (innerSL ℝ e) y := (innerSL ℝ e).hasFDerivAt
-    rw [hev.fderiv_eq, hd.fderiv, if_pos h, innerSL_apply_apply, real_inner_self_eq_norm_sq, he,
-      one_pow]
+    rw [hev.fderiv_eq, hd.fderiv, ite_eq_left h, innerSL_apply_apply, real_inner_self_eq_norm_sq,
+      he, one_pow]
 
 /-- **Integration by parts across a hyperplane.** For a unit vector `e` and `η ∈ C_c^∞`,
 `∫ (1_{⟪e, y⟫ > 0} η + max(⟪e, y⟫, 0) ∂_e η) = 0`. This is `∫ ∂_e (max(⟪e, ·⟫, 0) η) = 0`. -/
@@ -96,8 +96,8 @@ theorem integral_indicator_add_max_inner_mul_fderiv {e : Rn n} (he : ‖e‖ = 1
     filter_upwards [measure_eq_zero_iff_ae_notMem.1 (volume_inner_eq_zero he0)] with y hy
     rw [fderiv_max_inner_zero_apply he hy]
     by_cases hp : 0 < ⟪e, y⟫
-    · rw [if_pos hp, indicator_of_mem (show y ∈ {y | 0 < ⟪e, y⟫} from hp), mul_one]
-    · rw [if_neg hp, indicator_of_notMem (show y ∉ {y | 0 < ⟪e, y⟫} from hp), mul_zero]
+    · rw [ite_eq_left hp, indicator_of_mem (show y ∈ {y | 0 < ⟪e, y⟫} from hp), mul_one]
+    · rw [ite_eq_right hp, indicator_of_notMem (show y ∉ {y | 0 < ⟪e, y⟫} from hp), mul_zero]
   rw [integral_congr_ae hae] at h
   have hi1 : Integrable ({y : Rn n | 0 < ⟪e, y⟫}.indicator η) :=
     (hη.continuous.integrable_of_hasCompactSupport hηc).indicator hS
@@ -152,7 +152,7 @@ theorem gradient_absProfile_of_neg {ν y : Rn n} (hy : ⟪y, ν⟫ < 0) :
 /-- A unit vector orthogonal to a given unit vector, in dimension `≥ 2`. -/
 theorem exists_unit_inner_eq_zero (hn : 2 ≤ n) {ν : Rn n} (hν : ν ≠ 0) :
     ∃ e : Rn n, ‖e‖ = 1 ∧ ⟪ν, e⟫ = 0 := by
-  haveI : Fact (Module.finrank ℝ (Rn n) = (n - 1) + 1) :=
+  have : Fact (Module.finrank ℝ (Rn n) = (n - 1) + 1) :=
     ⟨by rw [finrank_euclideanSpace_fin]; omega⟩
   have hfr : Module.finrank ℝ (ℝ ∙ ν)ᗮ = n - 1 := Submodule.finrank_orthogonal_span_singleton hν
   obtain ⟨w, hw⟩ := Module.finrank_pos_iff_exists_ne_zero.1 (show 0 < Module.finrank ℝ (ℝ ∙ ν)ᗮ
@@ -183,7 +183,7 @@ theorem exists_cutoff_annulus : ∃ η : Rn n → ℝ, ContDiff ℝ (⊤ : ℕ�
   have hsupp : tsupport (fun y => b₁ y - b₂ y) ⊆ S := by
     refine closure_minimal (fun y hy => ?_) hSc
     rw [Function.mem_support] at hy
-    simp only [hS, mem_diff, mem_closedBall_zero_iff, mem_ball_zero_iff, not_lt]
+    simp only [hS, Set.mem_sdiff, mem_closedBall_zero_iff, mem_ball_zero_iff, not_lt]
     constructor
     · by_contra h
       exact hy (by rw [h1' y (by linarith), h2' y (by linarith), sub_zero])
@@ -192,7 +192,7 @@ theorem exists_cutoff_annulus : ∃ η : Rn n → ℝ, ContDiff ℝ (⊤ : ℕ�
   refine ⟨fun y => b₁ y - b₂ y, b₁.contDiff.sub b₂.contDiff, ?_, ?_, fun y => ?_, fun y => ?_,
     fun y hy => ?_⟩
   · exact (isCompact_closedBall (0 : Rn n) (15 / 16)).of_isClosed_subset (isClosed_tsupport _)
-      (hsupp.trans diff_subset)
+      (hsupp.trans sdiff_subset)
   · refine hsupp.trans fun y hy => ⟨?_, ?_⟩
     · have := mem_closedBall_zero_iff.1 hy.1
       rw [mem_ball_zero_iff]; linarith
@@ -356,7 +356,7 @@ theorem integral_annulus_inner_sq [NeZero n] {ν : Rn n} (hν : ‖ν‖ = 1) :
   set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
   have hpre : R ⁻¹' A = A := by
     ext y
-    simp only [hA, mem_preimage, mem_diff, mem_ball_zero_iff, mem_closedBall_zero_iff,
+    simp only [hA, mem_preimage, Set.mem_sdiff, mem_ball_zero_iff, mem_closedBall_zero_iff,
       LinearIsometryEquiv.norm_map]
   have h1 : ∫ y in A, ⟪ν, y⟫ ^ 2 = ∫ y in A, y 0 ^ 2 := by
     have := (R.measurePreserving).setIntegral_preimage_emb
@@ -365,9 +365,9 @@ theorem integral_annulus_inner_sq [NeZero n] {ν : Rn n} (hν : ‖ν‖ = 1) :
     simp_rw [hinner]
     exact this
   have hae : A =ᵐ[volume] (ball (0 : Rn n) 1 \ ball 0 (1 / 2)) := by
-    refine (ae_eq_refl _).diff ?_
-    refine ae_eq_set.2 ⟨?_, by simp [diff_eq_empty.2 ball_subset_closedBall]⟩
-    rw [closedBall_diff_ball]
+    refine (EventuallyEqSet.refl _ _).diff ?_
+    refine ae_eq_set.2 ⟨?_, by simp [sdiff_eq_empty.2 ball_subset_closedBall]⟩
+    rw [closedBall_sdiff_ball]
     exact Measure.addHaar_sphere_of_ne_zero volume 0 (by norm_num)
   have hc : Continuous fun y : Rn n => y 0 ^ 2 :=
     ((EuclideanSpace.proj (0 : Fin n) : Rn n →L[ℝ] ℝ).continuous).pow 2
@@ -427,11 +427,13 @@ theorem tendsto_integral_mul_inner_of_tendsto {f : ℕ → α → ℝ} {F : α �
     (hweak : WeakTendstoL2 μ g G) :
     Tendsto (fun k => ∫ x, f k x * ⟪g k x, w x⟫ ∂μ) atTop (𝓝 (∫ x, F x * ⟪G x, w x⟫ ∂μ)) := by
   have hFw : MemLp (fun x => F x • w x) 2 μ := by
-    refine (hF.const_mul M).of_le (hF.1.smul hw) (Eventually.of_forall fun x => ?_)
+    refine (hF.const_mul M).of_le (hF.aestronglyMeasurable.smul hw)
+      (Eventually.of_forall fun x => ?_)
     rw [norm_smul, Real.norm_eq_abs, Real.norm_eq_abs, abs_mul, abs_of_nonneg hM, mul_comm M]
     exact mul_le_mul_of_nonneg_left (hwM x) (abs_nonneg _)
   have hgw : ∀ k, MemLp (fun x => ⟪g k x, w x⟫) 2 μ := fun k => by
-    refine ((hg k).norm.const_mul M).of_le ((hg k).1.inner hw) (Eventually.of_forall fun x => ?_)
+    refine ((hg k).norm.const_mul M).of_le ((hg k).aestronglyMeasurable.inner hw)
+      (Eventually.of_forall fun x => ?_)
     rw [Real.norm_eq_abs, Real.norm_eq_abs, abs_mul, abs_of_nonneg hM, abs_norm]
     refine (abs_real_inner_le_norm _ _).trans ?_
     rw [mul_comm M]

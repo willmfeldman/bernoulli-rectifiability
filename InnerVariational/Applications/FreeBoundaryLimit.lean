@@ -9,7 +9,8 @@ public import InnerVariational.Applications.DensityEstimate
 public import InnerVariational.Registry.FreeBoundary
 public import InnerVariational.Registry.Harmonic
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import InnerVariational.Defs.VariationalSolution
 public import InnerVariational.Defs.Solutions
 import InnerVariational.Basic.Polar
@@ -112,7 +113,7 @@ theorem eq_zero_of_frequently_pos_on_ball [NeZero n]
   have hmem := hcl.mem_of_frequently_of_tendsto hle
     ((hconv.tendsto_at hyB).prodMk_nhds (hconv.tendsto_at hx))
   have h0 : 0 ≤ v y := ge_of_tendsto' (hconv.tendsto_at hyB) fun k => (hu k).nonneg y hyB
-  simp only [mem_setOf_eq, hvx, mul_zero] at hmem
+  simp only [mem_ofPred_eq, hvx, mul_zero] at hmem
   exact le_antisymm hmem h0
 
 /-- If `u_k = 0` on `B_δ(x)` for infinitely many `k`, then `v = 0` there. -/

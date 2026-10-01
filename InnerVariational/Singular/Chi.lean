@@ -300,7 +300,7 @@ density argument of the proof of Lemma 8.2 on the open set `Ω \ Σ^H_Q`, where 
 `Σ^H_Q` is null by `volume_sigmaHQ_eq_zero`. -/
 theorem volume_inter_frontier_pos_eq_zeroQ [NeZero n] (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
     (h : IsVariationalSolutionQ Ω C Q u χ) : volume (Ω ∩ frontier {y | 0 < u y}) = 0 := by
-  have h1 := (h.diff_sigmaHQ hQ).volume_inter_frontier_pos_eq_zero hn (hQ.mono diff_subset)
+  have h1 := (h.diff_sigmaHQ hQ).volume_inter_frontier_pos_eq_zero hn (hQ.mono sdiff_subset)
     (sigmaHQ_diff_sigmaHQ_eq_empty Ω Q u χ)
   refine measure_mono_null (fun x hx => ?_)
     (measure_union_null h1 (volume_sigmaHQ_eq_zero hn hQ h))
@@ -317,7 +317,7 @@ theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_emptyQ [NeZero n] (hn : 2 �
   have hG : ∀ᵐ y, y ∈ Ω → y ∉ closure {y | 0 < u y} → χ y = 0 := by
     rw [ae_iff]
     refine measure_null_of_locally_null _ fun x hx => ?_
-    simp only [mem_setOf_eq, Classical.not_imp] at hx
+    simp only [mem_ofPred_eq, Classical.not_imp] at hx
     obtain ⟨hxΩ, hncl, -⟩ := hx
     obtain ⟨δ, hδ, hδΩ, hu0⟩ := h.exists_ball_eq_zero hxΩ hncl
     obtain ⟨c₀, hc01, hc⟩ := h.exists_ae_eq_const_of_eq_zero hQ isOpen_ball
@@ -334,7 +334,7 @@ theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_emptyQ [NeZero n] (hn : 2 �
       inter_mem_nhdsWithin _ (ball_mem_nhds x hδ), ?_⟩
     rw [ae_restrict_iff' measurableSet_ball, ae_iff] at hc
     refine measure_mono_null (fun z hz => ?_) hc
-    simp only [mem_setOf_eq, Classical.not_imp] at hz ⊢
+    simp only [mem_ofPred_eq, Classical.not_imp] at hz ⊢
     exact ⟨hz.2, hz.1.2.2⟩
   have hF := volume_inter_frontier_pos_eq_zeroQ hn hQ h
   rw [ae_restrict_iff' h.isOpen.measurableSet]
@@ -357,7 +357,7 @@ theorem chi_eq_indicatorQ (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {Q u 
     {L : ℝ≥0} {c C' : ℝ} (hΩ : IsConnected Ω) (hQ : QBounds Ω Q L c C')
     (h : IsVariationalSolutionQ Ω C_V Q u χ) :
     (∀ x ∈ Ω, u x = 0) ∨ χ =ᵐ[volume.restrict Ω] posIndicator u := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   set A := pathologicalSet Ω u χ with hAdef
   -- every point of `Ω` is interior to `closure A` or outside `closure A`
   have hcover : Ω ⊆ interior (closure A) ∪ (closure A)ᶜ := by
@@ -374,7 +374,7 @@ theorem chi_eq_indicatorQ (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {Q u 
       have hopen : IsOpen (ball x δ \ closure A) := isOpen_ball.sdiff isClosed_closure
       have hempty : ball x δ \ closure A = ∅ :=
         hopen.measure_eq_zero_iff volume |>.1
-          (measure_mono_null (diff_subset_diff_right subset_closure) h1)
+          (measure_mono_null (sdiff_subset_sdiff_right subset_closure) h1)
       exact mem_interior.2 ⟨ball x δ, fun y hy => by
         by_contra hy'
         exact (eq_empty_iff_forall_notMem.1 hempty) y ⟨hy, hy'⟩, isOpen_ball, mem_ball_self hδ⟩
@@ -413,7 +413,7 @@ theorem chi_eq_indicator_of_localQ' (hn : 2 ≤ n) {U : Set (Rn n)} {Q u χ : Rn
       QBounds V Q L c C' ∧ IsVariationalSolutionQ V C Q u χ) :
     ((∀ x ∈ U, u x = 0) ∧ ∀ᵐ y ∂(volume.restrict U), χ y = 1) ∨
       χ =ᵐ[volume.restrict U] posIndicator u := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hball : ∀ x ∈ U, ∃ δ > 0, ball x δ ⊆ U ∧ ∃ (C : ℝ≥0) (L : ℝ≥0) (c C' : ℝ),
       QBounds (ball x δ) Q L c C' ∧ IsVariationalSolutionQ (ball x δ) C Q u χ := by
     intro x hx
@@ -474,24 +474,24 @@ theorem chi_eq_indicator_of_localQ' (hn : 2 ≤ n) {U : Set (Rn n)} {Q u χ : Rn
       exact hu x (mem_ball_self hδ)
     rw [ae_restrict_iff' hUo.measurableSet, ae_iff]
     refine measure_null_of_locally_null _ fun x hx => ?_
-    simp only [mem_setOf_eq, Classical.not_imp] at hx
+    simp only [mem_ofPred_eq, Classical.not_imp] at hx
     obtain ⟨δ, hδ, -, -, hc⟩ := hP hx.1
     refine ⟨{y | ¬(y ∈ U → χ y = 1)} ∩ ball x δ,
       inter_mem_nhdsWithin _ (ball_mem_nhds x hδ), ?_⟩
     rw [ae_restrict_iff' measurableSet_ball, ae_iff] at hc
     refine measure_mono_null (fun z hz => ?_) hc
-    simp only [mem_setOf_eq, Classical.not_imp] at hz ⊢
+    simp only [mem_ofPred_eq, Classical.not_imp] at hz ⊢
     exact ⟨hz.2, hz.1.2⟩
   · right
     rw [EventuallyEq, ae_restrict_iff' hUo.measurableSet, ae_iff]
     refine measure_null_of_locally_null _ fun x hx => ?_
-    simp only [mem_setOf_eq, Classical.not_imp] at hx
+    simp only [mem_ofPred_eq, Classical.not_imp] at hx
     obtain ⟨δ, hδ, -, hc⟩ := hP' hx.1
     refine ⟨{y | ¬(y ∈ U → χ y = posIndicator u y)} ∩ ball x δ,
       inter_mem_nhdsWithin _ (ball_mem_nhds x hδ), ?_⟩
     rw [ae_restrict_iff' measurableSet_ball, ae_iff] at hc
     refine measure_mono_null (fun z hz => ?_) hc
-    simp only [mem_setOf_eq, Classical.not_imp] at hz ⊢
+    simp only [mem_ofPred_eq, Classical.not_imp] at hz ⊢
     exact ⟨hz.2, hz.1.2⟩
 
 /-! ### The coefficient `Q ≡ 1` -/

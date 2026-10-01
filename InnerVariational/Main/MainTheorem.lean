@@ -106,7 +106,7 @@ theorem hasLocallyFinitePerimeter_of_local (hn : 2 ≤ n) {U E : Set (Rn n)} (hU
 structure theorem, `hasLocallyFinitePerimeter_of_local`). -/
 theorem hasLocallyFinitePerimeter_chi (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
     HasLocallyFinitePerimeter Ω (Ω ∩ {y | χ y = 1}) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   refine hasLocallyFinitePerimeter_of_local hn h.isOpen h.measurableSet_chi_eq_one
     fun x hx => ?_
   obtain ⟨r, hr, hB⟩ := exists_closedBall_two_mul_subset h.isOpen hx

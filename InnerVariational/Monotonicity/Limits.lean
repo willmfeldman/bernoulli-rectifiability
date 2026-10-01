@@ -10,7 +10,8 @@ public import InnerVariational.Monotonicity.LimitsQ
 public import InnerVariational.Kernel.Rescale
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Monotonicity.Radial
 public import InnerVariational.Defs.Quantities
 import InnerVariational.Kernel.RellichPohozaev

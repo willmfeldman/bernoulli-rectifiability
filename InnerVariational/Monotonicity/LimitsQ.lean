@@ -8,7 +8,8 @@ module
 public import InnerVariational.Monotonicity.RadialQ
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Basic.Polar
 
 /-!
@@ -58,7 +59,7 @@ theorem tendsto_ereal_add_of_tendsto_zero {α : Type*} {l : Filter α} {f g : α
     (hf : Tendsto (fun r => (f r : EReal)) l (𝓝 a)) (hg : Tendsto g l (𝓝 0)) :
     Tendsto (fun r => ((f r + g r : ℝ) : EReal)) l (𝓝 a) := by
   have hg' : Tendsto (fun r => (g r : EReal)) l (𝓝 0) := by
-    simpa using (continuous_coe_real_ereal.tendsto 0).comp hg
+    simpa [Function.comp_def] using (continuous_coe_real_ereal.tendsto 0).comp hg
   have := (EReal.continuousAt_add (p := (a, 0)) (Or.inr (by simp)) (Or.inr (by simp))).tendsto.comp
     (hf.prodMk_nhds hg')
   simpa [Function.comp_def, EReal.coe_add] using this
@@ -147,7 +148,8 @@ theorem integral_sphere_sub_inner_sq_le [NeZero n] (hQ : QBounds Ω Q L c C')
       sphereIntegral (fun y => u y ^ 2) x s)
     rw [h.sphereIntegral_sub_inner_sq hR hs0.le (hs.2.trans_lt hs₂)]
   rw [e]
-  simpa only [radialDataErr_monotonicityM, weissConst, mul_assoc] using key
+  rw [show d.monotonicityM = weightedMonotonicityM Q u χ x from rfl] at key
+  simpa only [weissConst, mul_assoc] using key
 
 /-! ### Comparison with the frozen coefficient -/
 

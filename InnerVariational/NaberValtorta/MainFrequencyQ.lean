@@ -144,7 +144,7 @@ theorem hausdorffN_not_tendsto_modFrequencyN_ball_eq_zero (hn : 2 ≤ n)
     (h0 : (0 : Rn n) ∈ sigmaHQ (ball 0 1) Q u χ) :
     hausdorffN n (n - 1) {x | x ∈ sigmaHQ (ball 0 1) Q u χ ∩ ball 0 (1 / 100) ∧
       ¬ Tendsto (modFrequencyN (weissKappa L c C') Q u χ x) (𝓝[>] 0) (𝓝 1)} = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   set κ := weissKappa L c C' with hκdef
   have hk : 0 ≤ κ := weissKappa_nonneg_of_closedBall hQ hΩ
   have hB1 : ball (0 : Rn n) 1 ⊆ Ω := ball_subset_closedBall.trans hΩ
@@ -231,7 +231,7 @@ theorem hausdorffN_not_tendsto_modFrequencyN_inter_ball_eq_zero (hn : 2 ≤ n)
     hausdorffN n (n - 1) {x | (x ∈ sigmaHQ Ω Q u χ ∧
       ¬ Tendsto (modFrequencyN (weissKappa L c C') Q u χ x) (𝓝[>] 0) (𝓝 1)) ∧
       x ∈ ball x₀ (ρ₀ / 100)} = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hsol := h.rescale x₀ hρ₀
   have hQ' := hQ.rescale x₀ hρ₀
   have hκ' : weissKappa (Real.toNNReal ρ₀ * L) c C' ≤ 1 / 2 := by
@@ -338,7 +338,7 @@ theorem sigmaHQ_inter_ball_structure (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ
     (hρ : 0 < ρ) (hB : closedBall x₀ ρ ⊆ Ω) (hκ : weissKappa L c C' * ρ ≤ 1 / 2) :
     hausdorffN n (n - 1) (sigmaHQ Ω Q u χ ∩ ball x₀ (ρ / 100)) < ∞ ∧
       IsCountablyRectifiable n (n - 1) (sigmaHQ Ω Q u χ ∩ ball x₀ (ρ / 100)) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hsol := h.rescale x₀ hρ
   have hQ' := hQ.rescale x₀ hρ
   set v := oneHomRescale u x₀ ρ

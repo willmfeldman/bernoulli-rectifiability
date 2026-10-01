@@ -9,7 +9,8 @@ public import InnerVariational.Kernel.GradVariation
 public import InnerVariational.Defs.VariationalSolutionQ
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.Rademacher
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 
 /-!
@@ -300,7 +301,7 @@ theorem measurableSet_chi_eq_one (h : IsVariationalSolutionQ Ω C Q u χ) :
     MeasurableSet (Ω ∩ {y | χ y = 1}) := by
   have e : Ω ∩ {y | χ y = 1} = Ω ∩ Ω.indicator χ ⁻¹' {1} := by
     ext y
-    simp only [mem_inter_iff, mem_setOf_eq, mem_preimage, mem_singleton_iff]
+    simp only [mem_inter_iff, mem_ofPred_eq, mem_preimage, mem_singleton_iff]
     constructor
     · rintro ⟨hy, h1⟩; exact ⟨hy, by rw [indicator_of_mem hy, h1]⟩
     · rintro ⟨hy, h1⟩; exact ⟨hy, by rwa [indicator_of_mem hy] at h1⟩

@@ -112,10 +112,10 @@ section Polarize
 variable {a : EuclideanSpace ℝ (Fin n)} {f : EuclideanSpace ℝ (Fin n) → ℝ}
 
 lemma polarize_of_nonneg {x : EuclideanSpace ℝ (Fin n)} (hx : 0 ≤ ⟪x, a⟫) :
-    polarize a f x = max (f x) (f (reflect a x)) := if_pos hx
+    polarize a f x = max (f x) (f (reflect a x)) := ite_eq_left hx
 
 lemma polarize_of_neg {x : EuclideanSpace ℝ (Fin n)} (hx : ⟪x, a⟫ < 0) :
-    polarize a f x = min (f x) (f (reflect a x)) := if_neg (not_le.2 hx)
+    polarize a f x = min (f x) (f (reflect a x)) := ite_eq_right (not_le.2 hx)
 
 variable (ha : ‖a‖ = 1)
 include ha
@@ -290,8 +290,8 @@ lemma differentiableAt_comp_reflect {h : EuclideanSpace ℝ (Fin n) → ℝ}
 lemma norm_fderiv_comp_reflect {h : EuclideanSpace ℝ (Fin n) → ℝ}
     {x : EuclideanSpace ℝ (Fin n)} (hd : DifferentiableAt ℝ h (reflect a x)) :
     ‖fderiv ℝ (h ∘ reflect a) x‖ = ‖fderiv ℝ h (reflect a x)‖ := by
-  rw [(hasFDerivAt_comp_reflect hd).fderiv,
-    ContinuousLinearMap.opNorm_comp_linearIsometryEquiv]
+  rw [(hasFDerivAt_comp_reflect hd).fderiv]
+  exact ContinuousLinearMap.opNorm_comp_linearIsometryEquiv _ (reflect a)
 
 lemma ae_inner_ne_zero (ha : ‖a‖ = 1) : ∀ᵐ x ∂gaussMeasure n, ⟪x, a⟫ ≠ 0 := by
   have hac : gaussMeasure n ≪ volume := withDensity_absolutelyContinuous _ _
@@ -304,7 +304,7 @@ lemma ae_inner_ne_zero (ha : ‖a‖ = 1) : ∀ᵐ x ∂gaussMeasure n, ⟪x, a�
   have hv : ∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin n))), ⟪x, a⟫ ≠ 0 := by
     rw [ae_iff]
     refine measure_mono_null (fun x hx => ?_) h0
-    simp only [ne_eq, not_not, mem_setOf_eq] at hx
+    simp only [ne_eq, not_not, mem_ofPred_eq] at hx
     rw [SetLike.mem_coe, Submodule.mem_orthogonal_singleton_iff_inner_right, real_inner_comm]
     exact hx
   exact hac.ae_le hv

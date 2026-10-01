@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.NaberValtorta.Covering
 public import InnerVariational.NaberValtorta.Rectifiable
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.NaberValtorta.Hausdorff
 public import InnerVariational.NaberValtorta.Data
@@ -165,7 +166,7 @@ theorem exists_null_cover (hn : 2 ≤ n) {CJ Nplus : ℝ} {ε : ℝ → ℝ}
     by_cases hzA : z ∈ A
     · exact Or.inl hzA
     right
-    simp only [hA, mem_setOf_eq, not_forall] at hzA
+    simp only [hA, mem_ofPred_eq, not_forall] at hzA
     obtain ⟨m, hm⟩ := hzA
     have hzm : z ∈ (D m).S ∩ ball c r₀ :=
       ⟨hDS m ⟨hz.1, ball_subset_closedBall.trans (closedBall_subset_closedBall (by linarith))

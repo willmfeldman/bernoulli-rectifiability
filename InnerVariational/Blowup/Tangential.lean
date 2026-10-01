@@ -6,7 +6,8 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Blowup.Renormalized
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 public import InnerVariational.Blowup.Sobolev
 

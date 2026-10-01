@@ -12,7 +12,8 @@ import Mathlib.MeasureTheory.Measure.RegularityCompacts
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.AbsolutelyContinuousFun
 import Mathlib.Topology.EMetricSpace.Paracompact
 public import Mathlib.Analysis.Calculus.Gradient.Basic
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import Mathlib.Tactic.Monotonicity.Lemmas
 import GMTFoundations.GMT.Polar
@@ -68,7 +69,7 @@ theorem add_smul_mem_sphere {x : Rn n} {s : ℝ} (hs : 0 ≤ s) (ω : sphere (0 
 
 theorem continuous_add_smul_sphere (x : Rn n) (s : ℝ) :
     Continuous fun ω : sphere (0 : Rn n) 1 => x + s • (ω : Rn n) :=
-  continuous_const.add (continuous_const.smul continuous_subtype_val)
+  by fun_prop
 
 theorem _root_.ContinuousOn.sphereIntegrable {f : Rn n → ℝ} {x : Rn n} {s : ℝ} (hs : 0 ≤ s)
     (hf : ContinuousOn f (sphere x s)) : SphereIntegrable f x s := by
@@ -207,7 +208,6 @@ theorem setIntegral_ball_comp_add_smul (f : Rn n → ℝ) (x z : Rn n) {r : ℝ}
   simp_rw [hH]
   have h1 := Measure.integral_comp_smul (volume : Measure (Rn n))
     (fun w => (ball (x + r • z) (r * s)).indicator f (x + w)) r
-  simp only at h1
   rw [h1, integral_add_left_eq_self, finrank_Rn, smul_eq_mul,
     abs_of_pos (inv_pos.2 (pow_pos hr n))]
 
@@ -256,7 +256,7 @@ theorem lipschitzOnWith_integral_ball [NeZero n] {f : Rn n → ℝ} {x : Rn n} {
       |(∫ y in ball x b, f y) - ∫ y in ball x a, f y| ≤ K * (b - a) := by
     intro a ha b hb hab
     have hfb := hf.mono_set (ball_subset_ball hb.2)
-    rw [← setIntegral_diff measurableSet_ball hfb (ball_subset_ball hab),
+    rw [← setIntegral_sdiff measurableSet_ball hfb (ball_subset_ball hab),
       integral_ball_diff_ball ha.1 hab hfb, ← Real.norm_eq_abs,
       ← abs_of_nonneg (sub_nonneg.2 hab)]
     refine intervalIntegral.norm_integral_le_of_norm_le_const_ae ?_
@@ -309,7 +309,7 @@ theorem ae_tendsto_average_annulus [NeZero n] {f : Rn n → ℝ} {x : Rn n} {R :
   have hk0 : (0 : ℝ) < 1 / k := by
     simp only [one_div, inv_pos, Nat.cast_pos]; omega
   simp only [Function.comp_apply, smul_eq_mul, one_div, inv_inv]
-  rw [setIntegral_diff measurableSet_ball
+  rw [setIntegral_sdiff measurableSet_ball
     (hf.mono_set (ball_subset_ball (by rw [one_div] at hk; linarith)))
     (ball_subset_ball (by rw [one_div] at hk0; linarith))]
 
@@ -479,7 +479,9 @@ theorem _root_.LipschitzWith.integral_sphere_sq_sub {u : Rn n → ℝ} {C : ℝ�
       ∫ t in a..b, radialSqDeriv u x ω t := by
     filter_upwards [hray] with ω hω
     have hv : LipschitzWith C fun τ : ℝ => u (x + τ • (ω : Rn n)) := by
-      simpa using hu.comp (lipschitzWith_ray x ω)
+      have h := hu.comp (lipschitzWith_ray x ω)
+      rw [mul_one] at h
+      exact h
     have hac := (hv.lipschitzOnWith (s := uIcc a b)).absolutelyContinuousOnInterval
     have key := hac.integral_deriv_mul_eq_sub hac
     rw [sq, sq, ← key]
@@ -489,8 +491,9 @@ theorem _root_.LipschitzWith.integral_sphere_sq_sub {u : Rn n → ℝ} {C : ℝ�
     have htR : t ∈ Ioo 0 (b + 1) := ⟨ha.trans_lt htab.1, by linarith [htab.2]⟩
     rw [(ht htR).2.deriv, radialSqDeriv]
     ring
-  rw [← integral_sub ((hu.continuous.pow 2).sphereIntegrable x b)
-    ((hu.continuous.pow 2).sphereIntegrable x a), integral_congr_ae hpt]
+  have hc2 : Continuous fun y => u y ^ 2 := hu.continuous.pow 2
+  rw [← integral_sub (hc2.sphereIntegrable x b) (hc2.sphereIntegrable x a),
+    integral_congr_ae hpt]
   simp_rw [intervalIntegral.integral_of_le hab]
   exact integral_integral_swap hprod
 

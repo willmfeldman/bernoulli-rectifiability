@@ -8,7 +8,8 @@ module
 public import InnerVariational.Defs.Quantities
 public import InnerVariational.Defs.VariationalSolution
 public import InnerVariational.Kernel.VariationalQ
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.MeasureTheory.Measure.Haar.NormedSpace
 public import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 import Mathlib.MeasureTheory.Group.Integral
@@ -90,7 +91,6 @@ theorem integral_comp_similarity (F : Rn n → ℝ) (x : Rn n) {r : ℝ} (hr : 0
     (Q.measurePreserving).integral_comp Q.toHomeomorph.measurableEmbedding
       (fun w => F (x + r • w))
   have h2 := Measure.integral_comp_smul (volume : Measure (Rn n)) (fun w => F (x + w)) r
-  simp only at h2
   rw [h1, h2, integral_add_left_eq_self, finrank_euclideanSpace_fin, smul_eq_mul,
     abs_of_pos (inv_pos.2 (pow_pos hr n))]
 
@@ -118,7 +118,7 @@ theorem gradient_comp_similarity (u : Rn n → ℝ) (x : Rn n) {r : ℝ} (hr : 0
   refine ext_inner_right ℝ fun v => ?_
   rw [LinearIsometryEquiv.inner_map_eq_flip, LinearIsometryEquiv.symm_symm]
   simp only [gradient, InnerProductSpace.toDual_symm_apply, hD]
-  simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.coe_comp', Function.comp_apply,
+  simp only [smul_apply, ContinuousLinearMap.coe_comp, Function.comp_apply,
     ContinuousLinearEquiv.coe_coe, L, simLinear_apply, map_smul, smul_eq_mul]
   field_simp
 
@@ -151,7 +151,7 @@ theorem comp_similarity (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r :
       (fun y => u (x + r • T y) / r) (fun y => χ (x + r • T y)) := by
   set L := simLinear r hr.ne' T with hLdef
   set A : Rn n → Rn n := fun y => x + r • T y with hAdef
-  have hAc : Continuous A := continuous_const.add (continuous_const.smul T.continuous)
+  have hAc : Continuous A := by fun_prop
   have hAL : ∀ y, A y = x + L y := fun y => rfl
   -- the inverse of `A`
   set B : Rn n ≃ₜ Rn n := (Homeomorph.subRight x).trans L.symm.toHomeomorph with hBdef
@@ -204,7 +204,7 @@ theorem comp_similarity (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r :
     refine (ae_restrict_iff' (h.isOpen.preimage hAc).measurableSet).2 ?_
     filter_upwards [ae_comp_similarity h0 x hr T] with y hy hyΩ
     have e : posIndicator (fun y => u (x + r • T y) / r) y = posIndicator u (A y) := by
-      simp only [posIndicator_apply, indicator, mem_setOf_eq]
+      simp only [posIndicator_apply, indicator, mem_ofPred_eq]
       exact if_congr (hpos y) rfl rfl
     rw [e]
     exact hy hyΩ
@@ -220,7 +220,9 @@ theorem comp_similarity (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r :
     have hξ'L : LipschitzWith K ξ' := by
       refine LipschitzWith.of_dist_le_mul fun a b => ?_
       have hdL : ∀ v w, dist (L v) (L w) = r * dist v w := fun v w => by
-        simpa using dist_similarity hr T 0 v w
+        have h := dist_similarity hr T 0 v w
+        simp only [zero_add] at h
+        exact h
       have hdB : dist (B a) (B b) = r⁻¹ * dist a b := by
         have := hdL (B a) (B b)
         rw [show L (B a) = a - x by rw [hB, L.apply_symm_apply],
@@ -262,7 +264,7 @@ theorem comp_similarity (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r :
         ⟪T.symm (gradient u (A y)), fderiv ℝ ξ y (T.symm (gradient u (A y)))⟫ := by
       intro y
       rw [hDξ']
-      simp only [ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,
+      simp only [ContinuousLinearMap.coe_comp, ContinuousLinearEquiv.coe_coe,
         Function.comp_apply, simLinear_symm_apply, map_smul, hLdef, simLinear_apply,
         smul_smul, inv_mul_cancel₀ hr.ne', one_smul]
       rw [LinearIsometryEquiv.inner_map_eq_flip, LinearIsometryEquiv.symm_symm]
@@ -271,7 +273,7 @@ theorem comp_similarity (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) {r :
       intro y
       have e1 : (fun z => Q (x + r • T z) ^ 2) = (fun w => (fun z => Q z ^ 2) (x + w)) ∘ L := rfl
       rw [e1, L.comp_right_fderiv, fderiv_comp_add_left (f := fun z : Rn n => Q z ^ 2)]
-      simp only [ContinuousLinearMap.coe_comp', ContinuousLinearEquiv.coe_coe,
+      simp only [ContinuousLinearMap.coe_comp, ContinuousLinearEquiv.coe_coe,
         Function.comp_apply, hξ'def, hBA]
       rfl
     have hpt : ∀ y, ((‖gradient (fun z => u (x + r • T z) / r) y‖ ^ 2 +
@@ -313,7 +315,7 @@ theorem rescale_ball {x : Rn n} {r : ℝ} (hr : 0 < r)
 /-- **Rotation invariance** with a Lipschitz coefficient. -/
 theorem comp_linearIsometryEquiv (h : IsVariationalSolutionQ Ω C Q u χ)
     (T : Rn n ≃ₗᵢ[ℝ] Rn n) : IsVariationalSolutionQ (T ⁻¹' Ω) C (Q ∘ T) (u ∘ T) (χ ∘ T) := by
-  simpa using h.comp_similarity 0 one_pos T
+  simpa [Function.comp_def] using h.comp_similarity 0 one_pos T
 
 /-- **Translation invariance** with a Lipschitz coefficient. -/
 theorem comp_add_left (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) :
@@ -393,7 +395,7 @@ theorem rescale_ball {x : Rn n} {r : ℝ} (hr : 0 < r)
 /-- **Rotation invariance** (used in the proof of Theorem 6.3). -/
 theorem comp_linearIsometryEquiv (h : IsVariationalSolution Ω C u χ) (Q : Rn n ≃ₗᵢ[ℝ] Rn n) :
     IsVariationalSolution (Q ⁻¹' Ω) C (u ∘ Q) (χ ∘ Q) := by
-  simpa using h.comp_similarity 0 one_pos Q
+  simpa [Function.comp_def] using h.comp_similarity 0 one_pos Q
 
 /-- **Translation invariance.** -/
 theorem comp_add_left (h : IsVariationalSolution Ω C u χ) (x : Rn n) :

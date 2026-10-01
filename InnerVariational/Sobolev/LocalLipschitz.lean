@@ -10,7 +10,7 @@ public import InnerVariational.Sobolev.Lipschitz
 import Mathlib.Analysis.InnerProductSpace.Trace
 import Mathlib.Analysis.Calculus.Rademacher
 public import Mathlib.Analysis.Calculus.Gradient.Basic
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 public import GMTFoundations.Defs.Calculus
 
 /-!

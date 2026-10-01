@@ -11,7 +11,8 @@ public import InnerVariational.Blowup.Approx1D
 public import InnerVariational.Estimates.Dichotomy.Setup
 public import InnerVariational.Frequency.SigmaH
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Estimates.Dichotomy.Rescale
 import InnerVariational.Homogeneity.RayCalculus
 import InnerVariational.Frequency.Concrete
@@ -446,7 +447,7 @@ theorem tendsto_tangential {ν : Rn n} (hν : ‖ν‖ = 1) (hflat : IsFlatAt Ω
   have hAm : MeasurableSet A := measurableSet_ball.diff measurableSet_ball
   set F : Rn n → Rn n → ℝ := fun y z => (⟪gradient u z, z - y⟫ - l * u z) ^ 2 with hF
   have hlip := h.lipschitzOnWith x (50 * r') hΩ50
-  have hA50 : A ⊆ ball x (50 * r') := diff_subset.trans (ball_subset_ball (by rw [hr']; linarith))
+  have hA50 : A ⊆ ball x (50 * r') := sdiff_subset.trans (ball_subset_ball (by rw [hr']; linarith))
   have hFint : ∀ y, IntegrableOn (F y) A := fun y =>
     Dichotomy.integrableOn_sq_inner_gradient_sub_mul_of_lipschitzOnWith hlip hAm hA50 y l
   have hFbound : ∀ y, Dichotomy.IsPinched u χ x r' l εp y →
@@ -508,7 +509,7 @@ theorem tendsto_tangential {ν : Rn n} (hν : ‖ν‖ = 1) (hflat : IsFlatAt Ω
       (⟪gradient u z, z - a i⟫ - l * u z))]
   have hgint : IntegrableOn (fun z => ‖gradient u z‖ ^ 2) A :=
     (h.integrableOn_norm_gradient_sq (ball_subset_closedBall.trans
-      ((closedBall_subset_closedBall (by linarith)).trans hRΩ))).mono_set diff_subset
+      ((closedBall_subset_closedBall (by linarith)).trans hRΩ))).mono_set sdiff_subset
   have hsumint : ∀ i, IntegrableOn (fun z => 800 * (ρ⁻¹) ^ 2 * (2 * F x z + 2 * F (a i) z)) A :=
     fun i => (((hFint x).const_mul 2).add ((hFint (a i)).const_mul 2)).const_mul _
   have hGpint : IntegrableOn Gp A := by
@@ -535,7 +536,7 @@ theorem tendsto_tangential {ν : Rn n} (hν : ‖ν‖ = 1) (hflat : IsFlatAt Ω
   have hgrad : ∫ z in A, ‖gradient u z‖ ^ 2 ≤ K₀ * (ρ ^ n * Hx) :=
     (setIntegral_mono_set (h.integrableOn_norm_gradient_sq (ball_subset_closedBall.trans
       ((closedBall_subset_closedBall (by linarith)).trans hRΩ)))
-      (Eventually.of_forall fun z => sq_nonneg _) (diff_subset (s := ball x ρ)).eventuallyLE).trans
+      (Eventually.of_forall fun z => sq_nonneg _) (sdiff_subset (s := ball x ρ)).eventuallyLE).trans
       (hen ρ ⟨hρ0, hρ1⟩)
   have hsum : ∑ i : Fin n, 800 * (ρ⁻¹) ^ 2 * (2 * (∫ z in A, F x z) + 2 * ∫ z in A, F (a i) z) ≤
       n * (800 * (ρ⁻¹) ^ 2 * (4 * P)) := by
@@ -736,12 +737,12 @@ theorem tendsto_profile_of_isFlatAt (hn : 2 ≤ n) {ν : Rn n} (hν : ‖ν‖ =
   · -- the `L²` part: `E = ℝ`, `f = u`, `q = p`
     have hint : ∀ k : ℝ, IntegrableOn (fun y => ‖u y - k • p y‖ ^ 2) (ball x r₀) := by
       intro k
-      have hc : ContinuousOn (fun y => ‖u y - k • p y‖ ^ 2) (closedBall x r₀) :=
-        (((h.continuousOn.mono (hsΩ r₀ le_rfl)).sub
-          (continuousOn_const.smul hp.continuousOn)).norm).pow 2
+      have hu' := h.continuousOn.mono (hsΩ r₀ le_rfl)
+      have hc : ContinuousOn (fun y => ‖u y - k • p y‖ ^ 2) (closedBall x r₀) := by fun_prop
       exact (hc.integrableOn_compact (isCompact_closedBall x r₀)).mono_set ball_subset_closedBall
     have hqint' : ∀ s, IntegrableOn (fun y => ‖p y‖ ^ 2) (ball x s) := fun s =>
-      ((hp.norm.pow 2).continuousOn.integrableOn_compact (isCompact_closedBall x s)).mono_set
+      ((show Continuous fun y => ‖p y‖ ^ 2 by fun_prop).continuousOn.integrableOn_compact
+        (isCompact_closedBall x s)).mono_set
         ball_subset_closedBall
     have hf : ∀ s ∈ Ioo 0 r₀, ∫ y in ball x s, ‖u y‖ ^ 2 ≤ 1 * (s ^ (n + 2) * heightH u x s) := by
       intro s hs

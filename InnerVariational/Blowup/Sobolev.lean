@@ -8,9 +8,9 @@ module
 public import InnerVariational.Sobolev.Lipschitz
 public import InnerVariational.Sobolev.WeakGradient
 public import Mathlib.MeasureTheory.Function.L2Space
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.Hom
 public import GMTFoundations.Defs.Sobolev
 
 /-!
@@ -178,7 +178,9 @@ theorem weakTendstoL2_of_tendsto_integral_norm_sub_sq {F : ℕ → α → E} {G 
     exact abs_integral_inner_le ((hF k).sub hG) hφ
   refine squeeze_zero (fun k => norm_nonneg _) hbound ?_
   have : Tendsto (fun k => √(∫ x, ‖F k x - G x‖ ^ 2 ∂μ)) atTop (𝓝 0) := by
-    simpa using (Real.continuous_sqrt.tendsto 0).comp h
+    have h' := (Real.continuous_sqrt.tendsto 0).comp h
+    rw [Real.sqrt_zero] at h'
+    exact h'
   simpa using this.mul_const (√(∫ x, ‖φ x‖ ^ 2 ∂μ))
 
 /-- Weak `L²` convergence restricts to measurable subsets. -/

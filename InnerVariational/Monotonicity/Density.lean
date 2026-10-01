@@ -9,7 +9,8 @@ public import InnerVariational.Monotonicity.Homogeneity
 public import InnerVariational.Monotonicity.DensityQ
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import InnerVariational.Monotonicity.Limits
 import InnerVariational.Kernel.Rescale
 import InnerVariational.Monotonicity.Blowup

@@ -11,7 +11,8 @@ public import InnerVariational.Registry.Harmonic
 public import InnerVariational.Registry.GMT
 import Mathlib.Algebra.Lie.OfAssociative
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.ZeroGradient
 import InnerVariational.Monotonicity.HighestDensity
 import InnerVariational.Monotonicity.Density

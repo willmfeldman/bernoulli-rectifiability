@@ -8,7 +8,8 @@ module
 public import InnerVariational.Kernel.Energy
 public import InnerVariational.Kernel.Subharmonic
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 public import InnerVariational.Defs.VariationalSolution
 public import InnerVariational.Kernel.VariationalQ
@@ -117,7 +118,7 @@ theorem ae_radialField [NeZero n] (hδ : 0 < δ) (hs : 0 < s) :
       radialCutoff x s δ y * ‖w‖ ^ 2 + η' w * ⟪w, y - x⟫ := by
     intro w
     rw [hD]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+    simp only [add_apply, smul_apply,
       ContinuousLinearMap.id_apply, ContinuousLinearMap.smulRight_apply, inner_add_right,
       inner_smul_right, real_inner_self_eq_norm_sq]
   refine ⟨?_, fun w => ?_⟩
@@ -127,21 +128,21 @@ theorem ae_radialField [NeZero n] (hδ : 0 < δ) (hs : 0 < s) :
         have := hyA.2; rw [mem_ball, dist_eq_norm, not_lt] at this
         exact (lt_of_lt_of_le hs this).ne'
       rw [hη'def, indicator_of_mem hyA, indicator_of_mem hyA]
-      simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul,
+      simp only [smul_apply, innerSL_apply_apply, smul_eq_mul,
         real_inner_self_eq_norm_sq]
       field_simp
       ring
     · rw [hη'def, indicator_of_notMem hyA, indicator_of_notMem hyA]
-      simp only [ContinuousLinearMap.zero_apply]
+      simp only [zero_apply]
       ring
   · rw [hquad]
     by_cases hyA : y ∈ A
     · rw [hη'def, indicator_of_mem hyA, indicator_of_mem hyA]
-      simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul,
+      simp only [smul_apply, innerSL_apply_apply, smul_eq_mul,
         real_inner_comm (y - x) w]
       ring
     · rw [hη'def, indicator_of_notMem hyA, indicator_of_notMem hyA]
-      simp only [ContinuousLinearMap.zero_apply]
+      simp only [zero_apply]
       ring
 
 /-- `G η` is integrable for `G` bounded and measurable on `B̄_{s+δ}(x)`, with
@@ -231,7 +232,7 @@ theorem integral_rellich_mul_radialCutoff [NeZero n] (hQ : QBounds Ω Q L c C') 
   set A := ball x (s + δ) \ ball x s with hAdef
   have hξ := isLipTestField_radialField hδ hK
   have h0 := hQ.integral_sq_mul_divergence_add_eq_zero hΩ hξ
-  have hAK : A ⊆ closedBall x (s + δ) := diff_subset.trans ball_subset_closedBall
+  have hAK : A ⊆ closedBall x (s + δ) := sdiff_subset.trans ball_subset_closedBall
   have hpt : ∀ᵐ y, Q y ^ 2 * divergence (fun z => η z • (z - x)) y +
       fderiv ℝ (fun z => Q z ^ 2) y (η y • (y - x)) =
       (n * Q y ^ 2 + fderiv ℝ (fun z => Q z ^ 2) y (y - x)) * η y -
@@ -250,7 +251,7 @@ theorem integral_rellich_mul_radialCutoff [NeZero n] (hQ : QBounds Ω Q L c C') 
       gcongr
   have hI2 : Integrable (A.indicator fun z => ‖z - x‖ * Q z ^ 2) := by
     refine (IntegrableOn.integrable_indicator ?_ (measurableSet_ball.diff measurableSet_ball))
-    refine IntegrableOn.of_bound (measure_ball_lt_top.trans_le' (measure_mono diff_subset))
+    refine IntegrableOn.of_bound (measure_ball_lt_top.trans_le' (measure_mono sdiff_subset))
       ((measurable_id.sub_const x).norm.aestronglyMeasurable.mul
         (((hQ.continuousOn.mono (hAK.trans hK)).pow 2).aestronglyMeasurable
           (measurableSet_ball.diff measurableSet_ball))) ((s + δ) * C' ^ 2)
@@ -281,7 +282,9 @@ theorem rellich_pohozaev_ae [NeZero n] (hQ : QBounds Ω Q L c C') (hΩ : IsOpen 
     gcongr
   have hae := ae_setIntegral_ball_eq_of_radialCutoff
     (hQ.aestronglyMeasurable_rellich (x := x) measurableSet_ball hR) hGb
-    (((hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable measurableSet_ball)
+    ((show ContinuousOn (fun y => Q y ^ 2) _ from
+      (hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable
+      measurableSet_ball)
     (B' := C' ^ 2) (fun y hy => by
       rw [abs_of_nonneg (sq_nonneg _)]; exact hQ.sq_le (hR hy))
     fun s δ hs hδ hsδ => hQ.integral_rellich_mul_radialCutoff hΩ hs hδ
@@ -400,7 +403,7 @@ theorem integral_rellich_mul_radialCutoff [NeZero n] (h : IsVariationalSolutionQ
   set η := radialCutoff x s δ with hηdef
   set A := ball x (s + δ) \ ball x s with hAdef
   have hA : MeasurableSet A := measurableSet_ball.diff measurableSet_ball
-  have hAK : A ⊆ closedBall x (s + δ) := diff_subset.trans ball_subset_closedBall
+  have hAK : A ⊆ closedBall x (s + δ) := sdiff_subset.trans ball_subset_closedBall
   have hIV := h.innerVariationQ_eq_zero _ (isLipTestField_radialField hδ hK)
   have hpt : ∀ᵐ y, ((‖gradient u y‖ ^ 2 + Q y ^ 2 * χ y) *
       divergence (fun z => η z • (z - x)) y -
@@ -436,7 +439,7 @@ theorem integral_rellich_mul_radialCutoff [NeZero n] (h : IsVariationalSolutionQ
       (ball_subset_closedBall.trans hK))
     (B := 3 * C ^ 2 + C' ^ 2) fun y hy =>
       h.abs_rellich_sphere_le (x := x) hQ (hK (ball_subset_closedBall hy))).mono_set
-    diff_subset).integrable_indicator hA
+    sdiff_subset).integrable_indicator hA
   rw [innerVariationQ, integral_congr_ae hpt, integral_sub hI1 (hI2.const_mul _),
     integral_const_mul, integral_indicator hA] at hIV
   linarith
@@ -582,7 +585,9 @@ theorem rellich_pohozaev_weighted_ae [NeZero n] {L : ℝ≥0} {c C' : ℝ}
       (n * C' ^ 2 + 2 * C' * L * R))
     (fun y hy => (abs_sub _ _).trans (add_le_add (hbA y hy) (hbB y hy)))
     ((h.aestronglyMeasurable_rellich_sphere (x := x) hQ measurableSet_ball hR).sub
-      (((hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable measurableSet_ball))
+      ((show ContinuousOn (fun y => Q y ^ 2) _ from
+      (hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable
+      measurableSet_ball))
     (B' := (3 * C ^ 2 + C' ^ 2) + C' ^ 2)
     (fun y hy => (abs_sub _ _).trans (add_le_add (h.abs_rellich_sphere_le (x := x) hQ (hR hy))
       (by rw [abs_of_nonneg (sq_nonneg _)]; exact hQ.sq_le (hR hy))))
@@ -596,12 +601,14 @@ theorem rellich_pohozaev_weighted_ae [NeZero n] {L : ℝ≥0} {c C' : ℝ}
         (hQ.aestronglyMeasurable_rellich (x := x) measurableSet_closedBall hK)
         fun y hy => hbB y (hKR hy)
       have hAR : ball x (s + δ) \ ball x s ⊆ ball x R :=
-        diff_subset.trans (ball_subset_ball hsδ.le)
+        sdiff_subset.trans (ball_subset_ball hsδ.le)
       have hJa := (integrableOn_norm_sub_mul (x := x)
         (h.aestronglyMeasurable_rellich_sphere (x := x) hQ measurableSet_ball hR)
         fun y hy => h.abs_rellich_sphere_le (x := x) hQ (hR hy)).mono_set hAR
       have hJb := (integrableOn_norm_sub_mul (x := x) (B := C' ^ 2)
-        (((hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable measurableSet_ball)
+        ((show ContinuousOn (fun y => Q y ^ 2) _ from
+      (hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable
+      measurableSet_ball)
         fun y hy => by
           rw [abs_of_nonneg (sq_nonneg _)]; exact hQ.sq_le (hR hy)).mono_set hAR
       simp_rw [sub_mul, mul_sub]

@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.Estimates.Dichotomy.Setup
 public import InnerVariational.Frequency.SigmaHQ
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import Mathlib.Analysis.InnerProductSpace.GramSchmidtOrtho
 
 /-!

@@ -160,9 +160,9 @@ theorem setLIntegral_jonesBetaSq_le (hn : 2 ≤ n) {CJ : ℝ} (J : JonesData n C
   have hn0 : 0 < n := by omega
   set ℋ := hausdorffN n (n - 1) with hℋ
   set ν := ℋ.restrict T with hν
-  haveI hνfin : IsFiniteMeasure ν := isFiniteMeasure_restrict.2 hTfin.ne
+  have hνfin : IsFiniteMeasure ν := isFiniteMeasure_restrict.2 hTfin.ne
   set κ := ℋ.restrict (T ∩ ball y τ) with hκ
-  haveI : IsFiniteMeasure κ :=
+  have : IsFiniteMeasure κ :=
     isFiniteMeasure_restrict.2 (ne_top_of_le_ne_top hTfin.ne (measure_mono inter_subset_left))
   have hνS : ν J.Sᶜ = 0 := by
     rw [hν, Measure.restrict_apply' hTm]
@@ -186,7 +186,7 @@ theorem setLIntegral_jonesBetaSq_le (hn : 2 ≤ n) {CJ : ℝ} (J : JonesData n C
       (measurableSet_lt (measurable_snd.dist measurable_fst) measurable_const)
   have hΦball : ∀ k z w, Φ k (z, w) = (ball z (τ / 20 ^ k)).indicator (G k) w := by
     intro k z w
-    simp only [hΦ, indicator_apply, mem_setOf_eq, mem_ball]
+    simp only [hΦ, indicator_apply, mem_ofPred_eq, mem_ball]
   -- Step 1: the dyadic bound and the Jones estimate
   have hstep1 : ∀ z ∈ T ∩ ball y τ, ∫⁻ ρ in Ioo 0 τ, jonesBetaSq ν z ρ / ENNReal.ofReal ρ ≤
       ENNReal.ofReal A * ∑' k, ENNReal.ofReal (m / (τ / 20 ^ k) ^ (n - 1)) *

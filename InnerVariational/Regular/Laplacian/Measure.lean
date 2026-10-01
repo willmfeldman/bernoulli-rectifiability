@@ -19,7 +19,8 @@ import Mathlib.MeasureTheory.Measure.RegularityCompacts
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Topology.EMetricSpace.Paracompact
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.HarmonicCone
 import InnerVariational.Regular.Perimeter
 import InnerVariational.Regular.Density
@@ -135,8 +136,7 @@ theorem integral_scaledBump_eq [NeZero n] (h : IsVariationalSolution Ω C u χ)
     Kernel.integral_mul_laplacian_eq_neg h.isOpen h.isLipHarmonicPos.locallyLipschitzOn hψ]
   congr 1
   have hg : ∀ z, gradient (oneHomRescale u x r) z = gradient u (x + r • z) := fun z => by
-    have := Kernel.gradient_comp_similarity u x hr (LinearIsometryEquiv.refl ℝ (Rn n)) z
-    simpa [oneHomRescale] using this
+    exact Kernel.gradient_comp_similarity u x hr (LinearIsometryEquiv.refl ℝ (Rn n)) z
   simp_rw [hg, Regular.gradient_scaledBump, real_inner_smul_right]
   rw [integral_const_mul]
   have hcv := Regular.integral_comp_rescale
@@ -240,9 +240,9 @@ theorem hasLocallyFinitePerimeter_inter_pos [NeZero n] (hn : 2 ≤ n)
         (ball x r ∩ (Ω ∩ {y | χ y = 1}) : Set (Rn n)) := by
       filter_upwards [(ae_restrict_iff' measurableSet_ball).1 hae] with y hy
       refine propext ⟨fun hy' => ⟨hy'.1, hy'.2.1, ?_⟩, fun hy' => ⟨hy'.1, hy'.2.1, ?_⟩⟩
-      · rw [mem_setOf_eq, hy hy'.1, posIndicator_of_pos hy'.2.2]
+      · rw [mem_ofPred_eq, hy hy'.1, posIndicator_of_pos hy'.2.2]
       · have h1 := hy'.2.2
-        rw [mem_setOf_eq, hy hy'.1] at h1
+        rw [mem_ofPred_eq, hy hy'.1] at h1
         by_contra hp
         rw [posIndicator_of_nonpos (not_lt.1 hp)] at h1
         exact zero_ne_one h1
@@ -272,7 +272,7 @@ theorem inter_frontier_pos_eq [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSoluti
         y ∈ Ω ∩ {y | χ y = 1} ↔ y ∈ Ω ∩ {y | 0 < u y} := by
       filter_upwards [hae, ae_restrict_mem measurableSet_ball] with y hy hyB
       have hyΩ := hrΩ hyB
-      rw [mem_inter_iff, mem_inter_iff, mem_setOf_eq, mem_setOf_eq, hy]
+      rw [mem_inter_iff, mem_inter_iff, mem_ofPred_eq, mem_ofPred_eq, hy]
       by_cases hp : 0 < u y
       · simp [posIndicator_of_pos hp, hp, hyΩ]
       · simp [posIndicator_of_nonpos (not_lt.1 hp), hp, hyΩ]
@@ -281,7 +281,7 @@ theorem inter_frontier_pos_eq [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSoluti
   · rintro ⟨hxΩ, hxe⟩
     refine ⟨hxΩ, ?_⟩
     have hfr := Regular.essentialBoundary_subset_frontier _ hxe
-    rw [frontier, mem_diff] at hfr ⊢
+    rw [frontier, Set.mem_sdiff] at hfr ⊢
     refine ⟨closure_mono inter_subset_right hfr.1, fun hint => hfr.2 ?_⟩
     rw [interior_inter, h.isOpen.interior_eq]
     exact ⟨hxΩ, hint⟩

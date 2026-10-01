@@ -6,7 +6,8 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Regular.Density
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Kernel.BV
 import InnerVariational.Kernel.Subharmonic
 public import InnerVariational.Defs.VariationalSolution

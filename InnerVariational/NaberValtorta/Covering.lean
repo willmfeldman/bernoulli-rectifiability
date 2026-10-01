@@ -6,7 +6,8 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.NaberValtorta.VolumeEstimate
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import InnerVariational.NaberValtorta.Packing
 public import InnerVariational.NaberValtorta.Data
 import InnerVariational.Basic.Polar

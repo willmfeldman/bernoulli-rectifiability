@@ -43,12 +43,14 @@ theorem exists_subseq_tendsto_of_lipschitzWith {L : ℝ≥0} {w : ℕ → Euclid
     ∃ (φ : ℕ → ℕ) (w₀ : EuclideanSpace ℝ (Fin n) → ℝ), StrictMono φ ∧
       ∀ x, Tendsto (fun k => w (φ k) x) atTop (𝓝 (w₀ x)) := by
   let B := closedBall (0 : EuclideanSpace ℝ (Fin n)) 1
-  haveI : CompactSpace B := isCompact_iff_compactSpace.1 (isCompact_closedBall 0 1)
+  have : CompactSpace B := isCompact_iff_compactSpace.1 (isCompact_closedBall 0 1)
   let u : ℕ → (↥B →ᵇ ℝ) := fun k => BoundedContinuousFunction.mkOfCompact
     ⟨fun y => w k y, (hw k).continuous.comp continuous_subtype_val⟩
   have hu : ∀ k (y : B), u k y = w k y := fun _ _ => rfl
   have hLip : ∀ k, LipschitzWith L (fun y : B => w k y) := fun k => by
-    simpa using (hw k).comp (LipschitzWith.subtype_val B)
+    have h := (hw k).comp (LipschitzWith.subtype_val B)
+    rw [mul_one] at h
+    exact h
   have hA : IsCompact (closure (range u)) := by
     refine BoundedContinuousFunction.arzela_ascoli (closedBall (0 : ℝ) L)
       (isCompact_closedBall 0 L) (range u) ?_ ?_

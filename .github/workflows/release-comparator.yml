@@ -28,10 +28,13 @@ jobs:
           df -h /
       # Build the trusted library once, outside the sandbox. The challenge workspaces share its
       # dependency folder (`packagesDir`), which Comparator's sandbox can read but not write.
+      # `--no-cache`: tracked dependencies are built from source, never taken from prebuilt
+      # release archives. The Mathlib cache is fetched separately and is not affected.
       - uses: leanprover/lean-action@v1
         with:
           use-mathlib-cache: true
           build: true
+          build-args: "--no-cache"
           test: false
       - name: Remove downloaded Mathlib cache archives
         run: |

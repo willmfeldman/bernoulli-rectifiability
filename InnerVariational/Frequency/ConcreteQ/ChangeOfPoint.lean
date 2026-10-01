@@ -11,7 +11,8 @@ import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.SpecialFunctions.Log.Deriv
 import Mathlib.Analysis.Complex.ExponentialBounds
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import InnerVariational.Basic.Polar
 
@@ -137,7 +138,7 @@ theorem heightH_change_of_point_le {r : ℝ} (hr : 0 < r) (hΩ : closedBall x r 
   have hup : ∫ z in ball y (3 / 4 * r) \ ball y (5 / 8 * r), u z ^ 2 ≤
       ∫ z in ball x r, u z ^ 2 :=
     setIntegral_mono_set (h.integrableOn_sq_of_closedBall hΩ)
-      (.of_forall fun z => sq_nonneg (u z)) (diff_subset.trans hsub2).eventuallyLE
+      (.of_forall fun z => sq_nonneg (u z)) (sdiff_subset.trans hsub2).eventuallyLE
   have hball := h.integral_ball_sq_le hQ hr hΩ
   have key : r ^ (n + 2) * (1 / 8 * (5 / 8) ^ (n + 1) * heightH u y (5 / 8 * r)) ≤
       r ^ (n + 2) * heightH u x r := by
@@ -217,7 +218,7 @@ theorem heightH_le_change_of_point (hx : x ∈ closure {y | 0 < u y}) {r : ℝ} 
   have hup : ∫ z in ball x (3 / 8 * r) \ ball x (r / 4), u z ^ 2 ≤
       ∫ z in ball y (5 / 8 * r), u z ^ 2 :=
     setIntegral_mono_set (h.integrableOn_sq_of_closedBall hcl)
-      (.of_forall fun z => sq_nonneg (u z)) (diff_subset.trans hsub).eventuallyLE
+      (.of_forall fun z => sq_nonneg (u z)) (sdiff_subset.trans hsub).eventuallyLE
   have hball := h.integral_ball_sq_le hQ (x := y) hρ hcl
   have hHy0 := heightH_nonneg u y hρ.le
   have hK := heightHChangeConst'_pos n Np

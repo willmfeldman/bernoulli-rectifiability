@@ -230,7 +230,7 @@ theorem HarmonicOnNhd.setIntegral_ball_eq {u : E → ℝ} {x₀ : E} {R : ℝ}
       fun x _ ↦ congrArg u (Subsingleton.elim x x₀), setIntegral_const, smul_eq_mul]
   -- the harmonic points form an open set containing the closed ball
   set U := {x : E | HarmonicAt u x}
-  have hU : IsOpen U := isOpen_setOf_harmonicAt u
+  have hU : IsOpen U := isOpen_setOfPred_harmonicAt u
   have hΩ : closedBall x₀ R ⊆ U := fun x hx ↦ hu x hx
   have huU : HarmonicOnNhd u U := fun x hx ↦ hx
   have h := setIntegral_ball_zero_add_eq hU huU.contDiffOn.continuousOn

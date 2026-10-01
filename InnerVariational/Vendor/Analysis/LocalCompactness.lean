@@ -49,7 +49,7 @@ def exhaust (U : Set (Rn d)) (m : ℕ) : Set (Rn d) :=
 
 theorem isClosed_exhaust (U : Set (Rn d)) (m : ℕ) : IsClosed (exhaust U m) := by
   refine isClosed_closedBall.inter ?_
-  simp only [setOf_forall]
+  simp only [ofPred_forall]
   exact isClosed_biInter fun y _ ↦
     isClosed_le continuous_const (continuous_id.dist continuous_const)
 
@@ -144,15 +144,11 @@ theorem exists_tendstoLpLoc_subseq_of_cutoff {p : ℝ≥0∞} [Fact (1 ≤ p)] (
         simp only [Pi.sub_apply, hf, hζ1 m x hx, hζ1 M x (exhaust_mono U hmM hx), one_mul]
         ring
       rw [eLpNorm_congr_ae heq]
-      refine (eLpNorm_sub_le ?_ ?_ Fact.out).trans ?_
-      · exact ((hmem M (φ n)).sub (Lp.memLp (L M))).aestronglyMeasurable.restrict
-      · exact ((hmem m (φ n)).sub (Lp.memLp (L m))).aestronglyMeasurable.restrict
-      · rw [add_comm]
-        exact add_le_add (eLpNorm_mono_measure _ Measure.restrict_le_self)
-          (eLpNorm_mono_measure _ Measure.restrict_le_self)
-    rw [eLpNorm_eq_zero_iff (((Lp.stronglyMeasurable (L m)).sub
-      (Lp.stronglyMeasurable (L M))).aestronglyMeasurable)
-      (zero_lt_one.trans_le (Fact.out : (1 : ℝ≥0∞) ≤ p)).ne'] at hzero
+      refine (eLpNorm_sub_le Fact.out).trans ?_
+      rw [add_comm]
+      exact add_le_add (eLpNorm_mono_measure _ Measure.restrict_le_self)
+        (eLpNorm_mono_measure _ Measure.restrict_le_self)
+    rw [eLpNorm_eq_zero_iff (zero_lt_one.trans_le (Fact.out : (1 : ℝ≥0∞) ≤ p)).ne'] at hzero
     rw [← ae_restrict_iff' hKm]
     filter_upwards [hzero] with x hx
     simpa [sub_eq_zero] using hx

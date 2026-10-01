@@ -85,6 +85,6 @@ alias _root_.GMTFoundations.HasDensity.lebesgueDensity_eq := HasDensity.lebesgue
 theorem IsCountablyRectifiable.mono {k : ℕ} {S T : Set (Rn n)} (h : IsCountablyRectifiable n k T)
     (hST : S ⊆ T) : IsCountablyRectifiable n k S := by
   obtain ⟨f, hf, hnull⟩ := h
-  exact ⟨f, hf, measure_mono_null (diff_subset_diff_left hST) hnull⟩
+  exact ⟨f, hf, measure_mono_null (sdiff_subset_sdiff_left hST) hnull⟩
 
 end InnerVariational

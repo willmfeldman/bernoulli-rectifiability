@@ -115,14 +115,14 @@ The formalization follows the paper section by section:
 
 ## Build
 
-The project uses Lean `v4.30.0` and Mathlib `v4.30.0`, as pinned in `lean-toolchain`,
+The project uses Lean `v4.34.1` and Mathlib `v4.34.1`, as pinned in `lean-toolchain`,
 `lakefile.toml` and `lake-manifest.json`. It depends on
 
-- [gmt-foundations](https://github.com/willmfeldman/gmt-foundations) `v0.1.0` (sets of finite
+- [gmt-foundations](https://github.com/willmfeldman/gmt-foundations) `v0.2.0` (sets of finite
   perimeter, the Reifenberg theorems, Rellich compactness with traces, Hausdorff measure on
   spheres), and
 - [elliptic-bernoulli-foundations](https://github.com/willmfeldman/elliptic-bernoulli-foundations)
-  `v0.1.0` (Lipschitz regularity of classical solutions and their domain-variation identity),
+  `v0.2.0` (Lipschitz regularity of classical solutions and their domain-variation identity),
 
 together with their own pinned dependencies. All libraries use the Lean module system.
 

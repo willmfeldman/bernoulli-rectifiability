@@ -61,7 +61,7 @@ theorem exists_ae_eq_const_of_integral_mul_divergence_eq_zero {U : Set (Rn n)} (
   simp only [divergence_smul_const hφd] at h0
   rw [setIntegral_eq_integral_of_forall_compl_eq_zero fun y hy => by
     rw [fderiv_of_notMem_tsupport (𝕜 := ℝ) fun h' => hy (hφU h'),
-      ContinuousLinearMap.zero_apply, mul_zero], h0]
+      zero_apply, mul_zero], h0]
   simp
 
 end Regular

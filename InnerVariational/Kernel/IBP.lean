@@ -271,7 +271,7 @@ theorem integral_inner_gradient_eq_neg_laplacian {V : Set (Rn n)} (hV : IsOpen V
         (measurable_fderiv_apply_const ℝ g (b i))).aestronglyMeasurable hA
       (B := C) (fun y _ => (norm_apply_stdBasis_le _ i).trans (norm_fderiv_le_of_lipschitz ℝ hC)) ?_
     intro y hy
-    rw [fderiv_eq_zero_of_notMem_tsupport hy, ContinuousLinearMap.zero_apply]
+    rw [fderiv_eq_zero_of_notMem_tsupport hy, zero_apply]
   have hint2 : ∀ i, Integrable fun y => g y * q i y := by
     intro i
     obtain ⟨A, hA⟩ := hK.exists_bound_of_continuousOn ((hqc i).mono hgV)
@@ -330,7 +330,7 @@ theorem integral_mul_laplacian_eq_neg {Ω : Set (Rn n)} (hΩ : IsOpen Ω) {f φ 
         hc.aestronglyMeasurable
     · intro y hy
       rw [fderiv_eq_zero_of_notMem_tsupport (fun h => hy (hgK i h)),
-        ContinuousLinearMap.zero_apply]
+        zero_apply]
   have hint2 : ∀ i, Integrable fun y => g i y * fderiv ℝ f y (b i) := by
     intro i
     obtain ⟨B, hB⟩ := hK.exists_bound_of_continuousOn (hgs i).continuous.continuousOn

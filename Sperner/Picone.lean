@@ -72,10 +72,10 @@ section Quot
 variable {w φ : EuclideanSpace ℝ (Fin n) → ℝ} {M : ℝ}
 
 lemma piconeQuot_of_pos {x : EuclideanSpace ℝ (Fin n)} (hx : 0 < w x) :
-    piconeQuot w φ x = w x ^ 2 / φ x := if_pos hx
+    piconeQuot w φ x = w x ^ 2 / φ x := ite_eq_left hx
 
 lemma piconeQuot_of_not_pos {x : EuclideanSpace ℝ (Fin n)} (hx : ¬ 0 < w x) :
-    piconeQuot w φ x = 0 := if_neg hx
+    piconeQuot w φ x = 0 := ite_eq_right hx
 
 variable (hM : ∀ x, 0 < w x → 0 < φ x ∧ w x ≤ M * φ x)
 include hM
@@ -170,7 +170,7 @@ lemma hasFDerivAt_norm_of_ne_zero {x : EuclideanSpace ℝ (Fin n)} (hx : x ≠ 0
   rw [Real.sqrt_sq (norm_nonneg x)]
   ext v
   have : ‖x‖ ≠ 0 := norm_ne_zero_iff.2 hx
-  simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul, nsmul_eq_mul]
+  simp only [smul_apply, innerSL_apply_apply, smul_eq_mul, nsmul_eq_mul]
   field_simp
   norm_num
 
@@ -271,7 +271,7 @@ lemma picone_pointwise {w : EuclideanSpace ℝ (Fin n) → ℝ} (hwc : Continuou
       Filter.Eventually.of_forall fun y => by
         rw [hh0]; exact piconeQuot_nonneg hM y
     rw [hmin.fderiv_eq_zero, hh0]
-    simp only [ContinuousLinearMap.zero_apply, mul_zero, zero_div, sub_zero]
+    simp only [zero_apply, mul_zero, zero_div, sub_zero]
     positivity
 
 /-- **Picone's inequality, integrated.** With `φ = ⟪x, e⟫ - c|x|` positive on `{w > 0}` and

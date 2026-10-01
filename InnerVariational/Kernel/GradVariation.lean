@@ -10,7 +10,8 @@ public import InnerVariational.Basic.SphereIntegral
 public import InnerVariational.Kernel.IBP
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.Rademacher
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Registry.Sobolev
 import InnerVariational.Sobolev.LocalLipschitz
@@ -152,8 +153,8 @@ theorem divergence_smul_eq {f : Rn n → ℝ} {ξ : Rn n → Rn n} {f' : Rn n �
     divergence (fun z => f z • ξ z) y = f y * divergence ξ y + f' (ξ y) := by
   have hd : HasFDerivAt (fun z => f z • ξ z) (f y • fderiv ℝ ξ y + f'.smulRight (ξ y)) y :=
     hf.smul hξ.hasFDerivAt
-  rw [divergence, divergence, hd.fderiv, ContinuousLinearMap.coe_add,
-    ContinuousLinearMap.coe_smul, map_add, map_smul, ContinuousLinearMap.coe_smulRight,
+  rw [divergence, divergence, hd.fderiv, ContinuousLinearMap.toLinearMap_add,
+    ContinuousLinearMap.toLinearMap_smul, map_add, map_smul, ContinuousLinearMap.coe_smulRight,
     LinearMap.trace_smulRight, smul_eq_mul]
   rfl
 
@@ -170,7 +171,7 @@ theorem gradVariation_smul_eq {u f : Rn n → ℝ} {ξ : Rn n → Rn n} {f' : Rn
   have hquad : ⟪gradient u y, fderiv ℝ (fun z => f z • ξ z) y (gradient u y)⟫ =
       f y * ⟪gradient u y, fderiv ℝ ξ y (gradient u y)⟫ +
         f' (gradient u y) * ⟪gradient u y, ξ y⟫ := by
-    rw [hd.fderiv, ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+    rw [hd.fderiv, add_apply, smul_apply,
       ContinuousLinearMap.smulRight_apply, inner_add_right, inner_smul_right, inner_smul_right]
   rw [gradVariation, gradVariation, hdiv, hquad]
   ring

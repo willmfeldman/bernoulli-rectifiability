@@ -98,7 +98,7 @@ theorem sigmaH_inter_ball_structure (hn : 2 ≤ n) (h : IsVariationalSolution Ω
     {x₀ : Rn n} (hx₀ : x₀ ∈ sigmaH Ω u χ) {ρ : ℝ} (hρ : 0 < ρ) (hB : closedBall x₀ ρ ⊆ Ω) :
     hausdorffN n (n - 1) (sigmaH Ω u χ ∩ ball x₀ (ρ / 100)) < ∞ ∧
       IsCountablyRectifiable n (n - 1) (sigmaH Ω u χ ∩ ball x₀ (ρ / 100)) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hsol := h.rescale x₀ hρ
   set v := oneHomRescale u x₀ ρ
   set η := chiRescale χ x₀ ρ
@@ -154,7 +154,7 @@ theorem integral_hyperplane_pos (hn : 2 ≤ n) {ν p : Rn n} (hν : ‖ν‖ = 1
     {τ : ℝ} (hτ : 0 < τ) :
     0 < ∫ y in {y : Rn n | ⟪y, ν⟫ = 0}, max 0 (τ - ‖y - p‖) ∂hausdorffN n (n - 1) := by
   have hν0 : ν ≠ 0 := fun h0 => by rw [h0, norm_zero] at hν; exact zero_ne_one hν
-  haveI : Fact (Module.finrank ℝ (Rn n) = (n - 1) + 1) :=
+  have : Fact (Module.finrank ℝ (Rn n) = (n - 1) + 1) :=
     ⟨by rw [finrank_euclideanSpace_fin]; omega⟩
   set K : Submodule ℝ (Rn n) := (ℝ ∙ ν)ᗮ with hK
   have hfr : Module.finrank ℝ K = n - 1 := Submodule.finrank_orthogonal_span_singleton hν0
@@ -164,7 +164,7 @@ theorem integral_hyperplane_pos (hn : 2 ≤ n) {ν p : Rn n} (hν : ‖ν‖ = 1
     rw [hK, Submodule.mem_orthogonal_singleton_iff_inner_right, real_inner_comm]
   have hrange : range (fun y => (0 : Rn n) + L y) = {y : Rn n | ⟪y, ν⟫ = 0} := by
     ext y
-    simp only [zero_add, mem_range, mem_setOf_eq]
+    simp only [zero_add, mem_range, mem_ofPred_eq]
     constructor
     · rintro ⟨z, rfl⟩
       exact (hmemK _).1 (b.repr.symm z).2
@@ -248,7 +248,7 @@ Theorem 7.2 and the existence of approximate tangent planes a.e. on rectifiable 
 theorem hausdorffN_not_isFlatAt_eq_zero (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
     hausdorffN n (n - 1)
       {x | x ∈ sigmaH Ω u χ ∧ ¬ ∃ ν : Rn n, ‖ν‖ = 1 ∧ IsFlatAt Ω u χ x ν} = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hρ : ∀ x ∈ Ω, ∃ ρ, 0 < ρ ∧ closedBall x ρ ⊆ Ω := by
     intro x hx
     obtain ⟨ε, hε, hεΩ⟩ := Metric.isOpen_iff.1 h.isOpen x hx

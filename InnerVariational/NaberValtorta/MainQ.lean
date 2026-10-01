@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.NaberValtorta.InstanceQ
 public import InnerVariational.NaberValtorta.Main
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.NaberValtorta.CoveringLimit
 import InnerVariational.NaberValtorta.Hausdorff
 import InnerVariational.NaberValtorta.Covering
@@ -69,7 +70,7 @@ theorem dichotomyEpsQ_spec (n : ℕ) [NeZero n] (hn : 2 ≤ n) (Np : ℝ) {δ : 
           Nmax - modFrequencyN (weissKappa L c C') Q u χ y r < dichotomyEpsQ n hn Np δ} ⊆
           thickening (δ * r) (P : Set (Rn n)) := by
   unfold dichotomyEpsQ
-  rw [dif_pos hδ]
+  rw [dite_eq_left hδ]
   exact Classical.choose_spec (frequency_drop_dichotomyQ n hn Np δ hδ)
 
 /-- **Theorem 7.2** (1)–(2) with a Lipschitz coefficient. Let `(u, χ)` be a variational solution
@@ -94,7 +95,7 @@ theorem sigmaHQ_main (hn : 2 ≤ n) (Nplus : ℝ) :
             ENNReal.ofReal (C * s)) ∧
         hausdorffN n (n - 1) (sigmaHQ (ball 0 1) Q u χ ∩ ball 0 (1 / 100)) ≤ ENNReal.ofReal C ∧
         IsCountablyRectifiable n (n - 1) (sigmaHQ (ball 0 1) Q u χ ∩ ball 0 (1 / 100))) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   -- constants
   obtain ⟨Np, hNp⟩ := modFrequencyN_change_of_point n Nplus
   obtain ⟨CJ, hCJ⟩ := jonesBetaSqQ_le n Np

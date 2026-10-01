@@ -12,7 +12,8 @@ public import InnerVariational.Frequency.SigmaHQ
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.Complex.ExponentialBounds
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
 # `L²`-subspace approximation with a Lipschitz coefficient (Theorem 6.1)
@@ -450,7 +451,7 @@ theorem le_integral_annulus_norm_gradient_sq {x₀ : Rn n} (hx₀ : x₀ ∈ clo
   have hdiff : ∫ z in ball x₀ (10 * r) \ ball x₀ (5 * r), ‖gradient u z‖ ^ 2 =
       (∫ z in ball x₀ (10 * r), ‖gradient u z‖ ^ 2) -
         ∫ z in ball x₀ (5 * r), ‖gradient u z‖ ^ 2 :=
-    setIntegral_diff measurableSet_ball
+    setIntegral_sdiff measurableSet_ball
       (h.integrableOn_norm_gradient_sq hQ (hball _ (by linarith)))
       (ball_subset_ball (by linarith))
   rw [hdiff, hI5, hI10]
@@ -531,7 +532,7 @@ theorem jonesBetaSq_mul_lintegral_le_of_isMinOn (μ : Measure (Rn n)) [IsFiniteM
   have hgint : IntegrableOn (fun z => ⟪gradient u z, y - x₀⟫ ^ 2 / r ^ 2)
       (ball x₀ (18 * r) \ ball x₀ (4 * r)) := by
     refine (IntegrableOn.of_bound measure_ball_lt_top ?_ ((C : ℝ) ^ 2 * ‖y - x₀‖ ^ 2 / r ^ 2)
-      ?_).mono_set diff_subset
+      ?_).mono_set sdiff_subset
     · exact ((((measurable_gradient u).inner measurable_const).pow_const 2).div_const
         _).aestronglyMeasurable
     · refine (ae_restrict_iff' measurableSet_ball).2 (.of_forall fun z hz => ?_)
@@ -549,7 +550,7 @@ theorem jonesBetaSq_mul_lintegral_le_of_isMinOn (μ : Measure (Rn n)) [IsFiniteM
         ENNReal.ofReal (⟪gradient u z, y - x₀⟫ ^ 2 / r ^ 2)
       ≤ ∫⁻ z in ball x₀ (18 * r) \ ball x₀ (4 * r),
           ENNReal.ofReal (⟪gradient u z, y - x₀⟫ ^ 2 / r ^ 2) :=
-        lintegral_mono_set (diff_subset_diff (ball_subset_ball (by linarith))
+        lintegral_mono_set (sdiff_subset_sdiff (ball_subset_ball (by linarith))
           (ball_subset_ball (by linarith)))
     _ = ENNReal.ofReal (∫ z in ball x₀ (18 * r) \ ball x₀ (4 * r),
           ⟪gradient u z, y - x₀⟫ ^ 2 / r ^ 2) :=
@@ -596,7 +597,7 @@ theorem jonesBetaSqQ_le (n : ℕ) [NeZero n] (Np : ℝ) :
         ∫⁻ y in ball x r, ENNReal.ofReal (modFrequencyN (weissKappa L c C') Q u χ y (20 * r) -
           modFrequencyN (weissKappa L c C') Q u χ y r) ∂μ := by
   refine ⟨l2SubspaceConstQ n Np, fun Ω C Q u χ L c C' x r μ hQ h hr hκ hΩ hμfin hμ hx hN => ?_⟩
-  haveI := hμfin
+  have := hμfin
   set κ := weissKappa L c C' with hκdef
   set S := closedBall x r ∩ sigmaHQr Ω Q u χ κ r with hS
   have hSsub : ∀ y ∈ S, closedBall y (20 * r) ⊆ Ω := fun y hy =>
@@ -642,7 +643,7 @@ theorem jonesBetaSqQ_le (n : ℕ) [NeZero n] (Np : ℝ) :
       have hint : IntegrableOn (fun z => ‖gradient u z‖ ^ 2)
           (ball x₀ (10 * r) \ ball x₀ (5 * r)) :=
         (h.integrableOn_norm_gradient_sq hQ (ball_subset_closedBall.trans
-          (hpos (10 * r) (by linarith) (by linarith) x₀ hx₀S).1)).mono_set diff_subset
+          (hpos (10 * r) (by linarith) (by linarith) x₀ hx₀S).1)).mono_set sdiff_subset
       rw [← ofReal_integral_eq_lintegral_ofReal hint (ae_of_all _ fun z => sq_nonneg _)]
       exact ENNReal.ofReal_le_ofReal hlow
     have hc0 : 0 ≤ 4 * l2SubspaceFubiniConstQ n Np / 10 ^ n :=

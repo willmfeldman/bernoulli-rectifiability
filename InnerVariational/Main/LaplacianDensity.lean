@@ -10,7 +10,8 @@ public import InnerVariational.Singular.Density
 public import InnerVariational.Singular.HeightLimit
 public import InnerVariational.Frequency.Concrete
 import Mathlib.Topology.UniformSpace.Uniformizable
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Main.RieszMeasure
 public import InnerVariational.Defs.LaplacianMeasure
 import InnerVariational.Kernel.Rescale
@@ -299,7 +300,9 @@ theorem tendsto_integral_mul_laplacian_scaleTest (hn : 1 ≤ n) {Ω : Set (Rn n)
           rw [hpow]
           field_simp
     have hsq : Tendsto (fun r => √(a r * H r * (M ^ 2 * 2 ^ n * V))) (𝓝[>] 0) (𝓝 0) := by
-      simpa using (Real.continuous_sqrt.tendsto 0).comp hb
+      have h' := (Real.continuous_sqrt.tendsto 0).comp hb
+      rw [Real.sqrt_zero] at h'
+      exact h'
     refine squeeze_zero_norm' ?_ hsq
     filter_upwards [hbd] with r hr
     rw [Real.norm_eq_abs, ← Real.sqrt_sq_eq_abs]

@@ -195,7 +195,7 @@ theorem innerVariationQ_const (u χ : Rn n → ℝ) (ξ : Rn n → Rn n) {q : �
   have h0 : fderiv ℝ (fun _ : Rn n => q ^ 2) x = 0 := by
     rw [fderiv_fun_const]; rfl
   simp only [gradient_div_const u q, norm_smul, inner_smul_left, map_smul, inner_smul_right,
-    h0, ContinuousLinearMap.zero_apply, zero_mul, add_zero,
+    h0, zero_apply, zero_mul, add_zero,
     Real.norm_eq_abs, mul_pow, sq_abs, conj_trivial]
   field_simp
 

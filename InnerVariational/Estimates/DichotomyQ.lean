@@ -9,7 +9,8 @@ public import InnerVariational.Estimates.DichotomyQ.Setup
 public import InnerVariational.Estimates.Dichotomy
 public import InnerVariational.Blowup.Approx1DQ
 public import InnerVariational.Kernel.Rescale
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Estimates.GeneralPosition
 import InnerVariational.Estimates.Dichotomy.Rescale

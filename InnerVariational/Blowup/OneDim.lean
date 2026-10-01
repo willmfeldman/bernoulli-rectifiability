@@ -9,7 +9,7 @@ public import InnerVariational.Blowup.ExplicitForm
 import Mathlib.Analysis.Calculus.LineDeriv.IntegrationByParts
 import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
 import Mathlib.Algebra.Ring.IsFormallyReal
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 public import GMTFoundations.Defs.Sobolev
 
 /-!
@@ -101,7 +101,7 @@ theorem eq_zero_of_integral_inner_rpow_mul_fderiv_eq_zero {U : Set (Rn n)} (hU :
         ((hη.contDiffAt (hU.mem_nhds hx)).differentiableAt (by simp)).hasFDerivAt.mul
           ((hφ.differentiable (by simp)) x).hasFDerivAt
       rw [hd.fderiv]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+      simp only [add_apply, smul_apply, smul_eq_mul]
       ring
     · have hxφ : x ∉ tsupport φ := fun h => hx (hφs h)
       rw [fderiv_of_notMem_tsupport ℝ (fun h => hxφ (hψs h)), fderiv_of_notMem_tsupport ℝ hxφ,
@@ -134,7 +134,7 @@ theorem eq_zero_of_integral_inner_rpow_mul_fderiv_eq_zero {U : Set (Rn n)} (hU :
     intro x
     by_cases hx : x ∈ U
     · rw [(hasFDerivAt_inner_rpow (hUν x hx) p).fderiv]
-      simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul,
+      simp only [smul_apply, innerSL_apply_apply, smul_eq_mul,
         real_inner_self_eq_norm_sq, hν]
       ring
     · rw [image_eq_zero_of_notMem_tsupport (fun h => hx (hφs h))]
@@ -251,7 +251,7 @@ theorem eq_one_of_weakEuler_of_domainVariation {r₁ r₂ : ℝ} (hr₁ : 0 ≤ 
     · rw [mem_closedBall_zero_iff, norm_smul, hμ, Real.norm_eq_abs, abs_of_pos hc, mul_one,
         not_le]
       linarith
-    · simp only [mem_setOf_eq, inner_smul_right, real_inner_self_eq_norm_sq, hμ, one_pow,
+    · simp only [mem_ofPred_eq, inner_smul_right, real_inner_self_eq_norm_sq, hμ, one_pow,
         mul_one]
       exact hc
   have hνm : ‖-ν‖ = 1 := by rw [norm_neg, hν]

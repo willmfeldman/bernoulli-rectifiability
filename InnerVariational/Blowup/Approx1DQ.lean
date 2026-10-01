@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.Blowup.RenormalizationQ
 public import InnerVariational.Blowup.Profile
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import InnerVariational.Blowup.Limit
@@ -139,7 +140,7 @@ theorem renormalizedQ_properties (hQ : ∀ k, QBounds Ω (Q k) (L k) (c k) (C' k
   set κ : ℕ → ℝ := fun k => weissKappa (L k) (c k) (C' k) with hκdef
   set Nt : ℕ → ℝ → ℝ := fun k s => modFrequencyN (κ k) (Q k) (u k) (χ k) 0 s with hNt
   set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
-  have hAB : A ⊆ ball (0 : Rn n) 1 := diff_subset
+  have hAB : A ⊆ ball (0 : Rn n) 1 := sdiff_subset
   have hB1 : ball (0 : Rn n) 1 ⊆ Ω :=
     ball_subset_closedBall.trans (closedBall_one_subset_of_two hΩ)
   have hcB1 : closedBall (0 : Rn n) 1 ⊆ Ω := closedBall_one_subset_of_two hΩ
@@ -363,7 +364,10 @@ theorem renormalizedQ_properties (hQ : ∀ k, QBounds Ω (Q k) (L k) (c k) (C' k
       fun_prop
     have hDt : Tendsto (fun k => Abstract.RadialData.doublingConst (Np k)) atTop (𝓝 1) := by
       have := (hDc.tendsto 1).comp hNpt
-      simpa [Abstract.RadialData.doublingConst] using this
+      have hD1 : Abstract.RadialData.doublingConst 1 = 1 := by
+        simp [Abstract.RadialData.doublingConst]
+      rw [hD1] at this
+      exact this
     have he : Tendsto (fun k => Real.exp (κ k ^ 2 / 8)) atTop (𝓝 1) := by
       have h : Tendsto (fun k => κ k ^ 2 / 8) atTop (𝓝 0) := by
         simpa using (hκt.pow 2).div_const 8
@@ -380,7 +384,9 @@ theorem renormalizedQ_properties (hQ : ∀ k, QBounds Ω (Q k) (L k) (c k) (C' k
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le
       (g := fun k => m / Abstract.RadialData.doublingConst (Np k))
       (h := fun k => Real.exp (κ k ^ 2 / 8) * m) ?_ ?_ (fun k => ?_) (fun k => ?_)
-    · simpa using (tendsto_const_nhds (x := m)).div hDt one_ne_zero
+    · have h := (tendsto_const_nhds (x := m)).div hDt one_ne_zero
+      rw [div_one] at h
+      exact h
     · simpa using he.mul_const m
     · have hb := (IsVariationalSolutionQ.integral_annulus_sq_mem_Icc (hQ k) (hsol k) hΩ (hκ k)
         (hcl k) (hZ k) (hNp1 k) (hNpN k)).1

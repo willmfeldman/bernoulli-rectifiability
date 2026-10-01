@@ -65,7 +65,7 @@ of `|∇u| = Q` on the open set `Ω \ Σ^H`. -/
 theorem isViscositySolutionQ_diff_sigmaHQ (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
     (h : IsVariationalSolutionQ Ω C Q u χ) :
     IsViscositySolutionQ (Ω \ sigmaHQ Ω Q u χ) Q u where
-  continuousOn := h.continuousOn.mono diff_subset
+  continuousOn := h.continuousOn.mono sdiff_subset
   nonneg x hx := h.nonneg x hx.1
   harmonicAt _ hx hpos := h.harmonicOn_pos hQ hx.1 hpos
   norm_gradient_le _ hx _ hr _ _ hφ hφx hle :=

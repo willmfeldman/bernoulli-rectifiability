@@ -155,7 +155,7 @@ theorem coord_add_smul (x : Rn n) (t : ℝ) (v : Rn n) :
 theorem hasGradientAt_coord (x : Rn n) : HasGradientAt (coord n) (en n) x := by
   have hfun : coord n = fun y => ⟪en n, y⟫ := funext coord_eq_inner
   rw [hfun, hasGradientAt_iff_hasFDerivAt]
-  convert (innerSL ℝ (en n)).hasFDerivAt using 1
+  convert (innerSL ℝ (en n)).hasFDerivAt using 1 <;> rfl
 
 theorem gradient_coord (x : Rn n) : gradient (coord n) x = en n :=
   (hasGradientAt_coord x).gradient
@@ -276,7 +276,7 @@ theorem posSet_twoPlane : {y | 0 < twoPlaneSolution n y} = coord n ⁻¹' {0}ᶜ
 
 theorem frontier_twoPlane : frontier {y | 0 < twoPlaneSolution n y} = coord n ⁻¹' {0} := by
   rw [posSet_twoPlane, frontier_coord_preimage, frontier_compl, frontier, closure_singleton,
-    interior_singleton, diff_empty]
+    interior_singleton, sdiff_empty]
 
 theorem lipschitzWith_twoPlane : LipschitzWith 1 (twoPlaneSolution n) := by
   refine LipschitzWith.of_dist_le_mul fun x y => ?_
@@ -335,18 +335,18 @@ theorem volume_half {r : ℝ} (hr : 0 < r) :
   set N := coord n ⁻¹' Iio 0 with hN
   set B := ball (0 : Rn n) r with hB
   have hPm : MeasurableSet P := measurableSet_Ioi.preimage continuous_coord.measurable
-  have h1 : volume (B ∩ P) + volume (B \ P) = volume B := measure_inter_add_diff B hPm
+  have h1 : volume (B ∩ P) + volume (B \ P) = volume B := measure_inter_add_sdiff B hPm
   have h2 : volume (B \ P) = volume (B ∩ N) := by
     have hset : (B \ P) \ coord n ⁻¹' {0} = B ∩ N := by
       ext y
-      simp only [hP, hN, hB, mem_diff, mem_inter_iff, mem_preimage, mem_Ioi, mem_Iio,
+      simp only [hP, hN, hB, Set.mem_sdiff, mem_inter_iff, mem_preimage, mem_Ioi, mem_Iio,
         mem_singleton_iff, not_lt]
       constructor
       · rintro ⟨⟨hb, hle⟩, hne⟩
         exact ⟨hb, lt_of_le_of_ne hle hne⟩
       · rintro ⟨hb, hlt⟩
         exact ⟨⟨hb, hlt.le⟩, hlt.ne⟩
-    rw [← hset, measure_diff_null volume_hyperplane]
+    rw [← hset, measure_sdiff_null volume_hyperplane]
   have h3 : volume (B ∩ N) = volume (B ∩ P) := by
     have hpre : (LinearIsometryEquiv.neg ℝ : Rn n ≃ₗᵢ[ℝ] Rn n) ⁻¹' (B ∩ P) = B ∩ N := by
       ext y
@@ -386,7 +386,7 @@ theorem zero_mem_sigmaH_twoPlane :
   · rw [setOf_posIndicator_eq_one, posSet_twoPlane]
     refine tendsto_const_nhds.congr' (eventually_nhdsWithin_of_forall fun r (hr : 0 < r) => ?_)
     dsimp only
-    rw [preimage_compl, inter_comm, ← diff_eq, measure_diff_null volume_hyperplane,
+    rw [preimage_compl, inter_comm, ← sdiff_eq, measure_sdiff_null volume_hyperplane,
       ENNReal.div_self (measure_ball_pos volume _ hr).ne' measure_ball_lt_top.ne]
 
 /-! ### The normalization of `α(n)` -/

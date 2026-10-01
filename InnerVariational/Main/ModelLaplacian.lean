@@ -11,7 +11,7 @@ public import InnerVariational.Kernel.Rescale
 public import InnerVariational.Blowup.Profile
 public import InnerVariational.Singular.FlatPoint
 import Mathlib.Topology.UniformSpace.Uniformizable
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 public import Mathlib.Analysis.InnerProductSpace.Laplacian
 public import GMTFoundations.Defs.Calculus
 
@@ -291,7 +291,7 @@ theorem exists_integral_abs_inner_mul_laplacian' {m : ℕ} {ν : Rn (m + 1)} (h�
           (Iio 0).indicator (fun t => D (t • ν + L w)) t := by
       intro t
       rw [hpt, hGdef]
-      simp only [indicator, mem_setOf_eq, mem_Ioi, mem_Iio, hinner]
+      simp only [indicator, mem_ofPred_eq, mem_Ioi, mem_Iio, hinner]
     simp_rw [e]
     rw [integral_sign_mul_deriv hgd hgc' hgc, zero_smul, zero_add]
   simp_rw [hinner1] at hsplit

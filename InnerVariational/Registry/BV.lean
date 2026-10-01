@@ -93,7 +93,7 @@ theorem exists_subseq_tendsto_of_integral_mul_divergence_le {V : Set (Rn n)} (hV
     simp only [Function.comp_apply]
     rw [e, integral_norm_eq_lintegral_enorm (μ := volume.restrict K) (f := f (φ (ψ k)) - f₀)
       ((hf _).sub hf₀).aestronglyMeasurable,
-      eLpNorm_one_eq_lintegral_enorm]
+      eLpNorm_one_eq_lintegral_enorm ((hf _).sub hf₀).aestronglyMeasurable]
   · -- a.e. convergence on each `K_m` by summability of the `L¹(K_m)` norms
     have hVK : V = ⋃ j, Kx j := by
       refine Subset.antisymm (fun y hy ↦ ?_) (iUnion_subset (Vendor.Analysis.exhaust_subset V))
@@ -108,7 +108,7 @@ theorem exists_subseq_tendsto_of_integral_mul_divergence_le {V : Set (Rn n)} (hV
       intro j
       calc ∫⁻ y in Kx m, g j y
           = eLpNorm (f (φ (ψ (j + m))) - f₀) 1 (volume.restrict (Kx m)) := by
-            rw [eLpNorm_one_eq_lintegral_enorm]; rfl
+            rw [eLpNorm_one_eq_lintegral_enorm ((hf _).sub hf₀).aestronglyMeasurable]; rfl
         _ ≤ eLpNorm (f (φ (ψ (j + m))) - f₀) 1 (volume.restrict (Kx (j + m))) :=
             eLpNorm_mono_measure _
               (Measure.restrict_mono (Vendor.Analysis.exhaust_mono V (Nat.le_add_left m j)) le_rfl)

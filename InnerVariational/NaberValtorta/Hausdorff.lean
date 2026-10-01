@@ -142,11 +142,11 @@ theorem hausdorffN_le_of_volume_thickening_le (hn : 0 < n) {A : Set (Rn n)} {z :
 theorem IsCountablyRectifiable.mono {k : ℕ} {A B : Set (Rn n)}
     (hB : IsCountablyRectifiable n k B) (hAB : A ⊆ B) : IsCountablyRectifiable n k A := by
   obtain ⟨f, hf, hnull⟩ := hB
-  exact ⟨f, hf, measure_mono_null (diff_subset_diff_left hAB) hnull⟩
+  exact ⟨f, hf, measure_mono_null (sdiff_subset_sdiff_left hAB) hnull⟩
 
 theorem isCountablyRectifiable_of_null {k : ℕ} {A : Set (Rn n)} (hA : hausdorffN n k A = 0) :
     IsCountablyRectifiable n k A :=
-  ⟨fun _ _ => 0, fun _ => ⟨0, LipschitzWith.const 0⟩, measure_mono_null diff_subset hA⟩
+  ⟨fun _ _ => 0, fun _ => ⟨0, LipschitzWith.const 0⟩, measure_mono_null sdiff_subset hA⟩
 
 /-- A countable union of countably `ℋ^k`-rectifiable sets is countably `ℋ^k`-rectifiable. -/
 theorem isCountablyRectifiable_iUnion {k : ℕ} {ι : Type*} [Countable ι] {A : ι → Set (Rn n)}
@@ -169,7 +169,7 @@ theorem isCountablyRectifiable_iUnion {k : ℕ} {ι : Type*} [Countable ι] {A :
 theorem isCountablyRectifiable_biUnion {k : ℕ} {ι : Type*} {s : Set ι} (hs : s.Countable)
     {A : ι → Set (Rn n)} (hA : ∀ i ∈ s, IsCountablyRectifiable n k (A i)) :
     IsCountablyRectifiable n k (⋃ i ∈ s, A i) := by
-  haveI := hs.to_subtype
+  have := hs.to_subtype
   rw [biUnion_eq_iUnion]
   exact isCountablyRectifiable_iUnion fun i => hA i i.2
 

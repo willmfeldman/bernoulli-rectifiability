@@ -125,11 +125,11 @@ before Comparator has processed it. This ordering follows Comparator's documente
 
 Pinned release tools:
 
-- Lean and Mathlib: `v4.30.0` (Mathlib `c5ea00351c28e24afc9f0f84379aa41082b1188f`);
-- Comparator: `d03acab154d269c06e60e4de7e4cc85deebff94b`;
-- `lean4export`: `a3e35a584f59b390667db7269cd37fca8575e4bf`, built with this repository's
+- Lean and Mathlib: `v4.34.1` (Mathlib `d13f23b723b8a846827a245b89c10fc7d3f11612`);
+- Comparator: `575674928e239f5bc452aab72d1dd7b0f1326494`;
+- `lean4export`: `076e8e57707e813375e8f9da8bf989799ace9680`, built with this repository's
   `lean-toolchain`; and
-- `landrun`: `5ed4a3db3a4ad930d577215c6b9abaa19df7f99f`.
+- `landrun`: `811cfff51ceaf3d9843708aa6d22e9b84ccac8b4`.
 
 Comparator runs under `landrun` without the additional `systemd-run` containment that upstream
 recommends for a full adversarial guarantee. A passing run establishes Comparator's statement,

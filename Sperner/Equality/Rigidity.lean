@@ -141,7 +141,7 @@ theorem polarize_eq_of_exists_lt (ha : ‖a‖ = 1) {v : EuclideanSpace ℝ (Fin
       have hσx : σ x = x := reflect_eq_self_of_inner_eq_zero ha hxa
       set O := U ∩ {y | 0 < v (σ y)}
       have hOo : IsOpen O := hUo.inter (isOpen_lt continuous_const (hvc.comp hσc))
-      obtain ⟨ρ, hρ, hB⟩ := Metric.isOpen_iff.1 hOo x ⟨hxU, by simpa [hσx] using hxU⟩
+      obtain ⟨ρ, hρ, hB⟩ := Metric.isOpen_iff.1 hOo x ⟨hxU, show 0 < v (σ x) by rw [hσx]; exact hxU⟩
       set B := ball x ρ
       have hσB : ∀ y ∈ B, σ y ∈ B := fun y hy => by
         rw [mem_ball, ← hσx, (reflect a).dist_map]; exact hy
@@ -253,7 +253,7 @@ theorem polarize_dichotomy (hn : 2 ≤ n) (ha : ‖a‖ = 1) {v : EuclideanSpace
   have hv'conn : IsPreconnected {x | 0 < (v ∘ σ) x} := by
     have : {x | 0 < (v ∘ σ) x} = σ '' {x | 0 < v x} := by
       ext x
-      simp only [mem_setOf_eq, Function.comp_apply, mem_image]
+      simp only [mem_ofPred_eq, Function.comp_apply, mem_image]
       constructor
       · intro hx; exact ⟨σ x, hx, reflect_reflect x⟩
       · rintro ⟨y, hy, rfl⟩; simpa [σ] using hy

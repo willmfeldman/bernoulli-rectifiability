@@ -175,7 +175,7 @@ theorem net_spec {A : Set (Rn n)} {z : Rn n} {ρ : ℝ} (hA : A ⊆ closedBall z
     ↑(net A a) ⊆ A ∧ (net A a : Set (Rn n)).Pairwise (fun x y => a ≤ dist x y) ∧
       A ⊆ ⋃ y ∈ net A a, ball y a := by
   have h := exists_net hA ha
-  rw [net, dif_pos h]
+  rw [net, dite_eq_left h]
   exact h.choose_spec
 
 theorem net_subset (A : Set (Rn n)) (a : ℝ) : ↑(net A a) ⊆ A := by
@@ -216,18 +216,18 @@ theorem exists_orthonormalBasis_orthogonal (hn : 2 ≤ n) {W : Submodule ℝ (Rn
     omega
   set e := stdOrthonormalBasis ℝ Wᗮ
   let v : Fin n → Rn n := fun i => if h : (i : ℕ) < 2 then (e ⟨i, by omega⟩ : Rn n) else 0
-  have hv : Orthonormal ℝ (({i : Fin n | (i : ℕ) < 2} : Set (Fin n)).restrict v) := by
+  have hv : Orthonormal ℝ (({i : Fin n | (i : ℕ) < 2} : Set (Fin n)).domRestrict v) := by
     rw [orthonormal_iff_ite]
     rintro ⟨i, hi⟩ ⟨j, hj⟩
-    simp only [Set.mem_setOf_eq] at hi hj
-    simp only [Set.restrict_apply, v, dif_pos hi, dif_pos hj, Subtype.mk.injEq]
+    simp only [Set.mem_ofPred_eq] at hi hj
+    simp only [Set.domRestrict_apply, v, hi, hj, ↓reduceDIte, Subtype.mk.injEq]
     rw [← Submodule.coe_inner, orthonormal_iff_ite.1 e.orthonormal]
     simp only [Fin.mk.injEq, Fin.val_inj]
   obtain ⟨b, hb⟩ := hv.exists_orthonormalBasis_extension_of_card_eq
     (by rw [finrank_euclideanSpace_fin, Fintype.card_fin])
   refine ⟨b, fun i hi => ?_⟩
   rw [hb i hi]
-  simp only [v, dif_pos hi]
+  simp only [v, dite_eq_left hi]
   exact (e _).2
 
 /-- `∏_{i < n} (A if i < 2 else B) = A² B^{n-2}` for `n ≥ 2`. -/
@@ -285,21 +285,21 @@ theorem card_mul_le_of_subset_thickening (hn : 2 ≤ n) {L : AffineSubspace ℝ 
       have h0 : ⟪e i, l - l₀⟫ = 0 :=
         Submodule.inner_left_of_mem_orthogonal (L.vsub_mem_direction hl hl₀) (he i hi)
       have hsplit : ⟪e i, z⟫ - m i = ⟪e i, z - l⟫ := by
-        simp only [hm, if_pos hi]
+        simp only [hm, ite_eq_left hi]
         rw [← inner_sub_right, show z - l₀ = (z - l) + (l - l₀) by abel, inner_add_right, h0,
           add_zero]
       rw [hsplit]
       refine (hnorm i _).trans_lt ?_
       rw [← dist_eq_norm]
-      simp only [hw, if_pos hi]
+      simp only [hw, ite_eq_left hi]
       linarith [dist_triangle z y l]
     · have hsplit : ⟪e i, z⟫ - m i = ⟪e i, z - x⟫ := by
-        simp only [hm, if_neg hi]
+        simp only [hm, ite_eq_right hi]
         rw [← inner_sub_right]
       rw [hsplit]
       refine (hnorm i _).trans_lt ?_
       rw [← dist_eq_norm]
-      simp only [hw, if_neg hi]
+      simp only [hw, ite_eq_right hi]
       linarith [dist_triangle z y x, mem_closedBall.1 (hFx hy)]
   have hdisj : (F : Set (Rn n)).PairwiseDisjoint fun y => ball y (a / 2) :=
     pairwiseDisjoint_ball_of_pairwise fun y hy z hz hyz => by linarith [hF hy hz hyz]

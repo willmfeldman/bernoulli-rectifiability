@@ -79,7 +79,7 @@ lemma two_mul_gaussMeasure_halfSpace {e : EuclideanSpace ℝ (Fin n)} (he : ‖e
     simpa using this
   have hunion : univ = {x : EuclideanSpace ℝ (Fin n) | 0 < ⟪x, e⟫} ∪
       {x | ⟪x, e⟫ < 0} ∪ {x | ⟪x, e⟫ = 0} := by
-    ext x; simp only [mem_univ, mem_union, mem_setOf_eq, true_iff]
+    ext x; simp only [mem_univ, mem_union, mem_ofPred_eq, true_iff]
     rcases lt_trichotomy ⟪x, e⟫ 0 with h | h | h <;> simp [h]
   have hle : gaussMeasure n univ ≤ 2 * gaussMeasure n {x | 0 < ⟪x, e⟫} := by
     rw [hunion]
@@ -93,7 +93,7 @@ lemma two_mul_gaussMeasure_halfSpace {e : EuclideanSpace ℝ (Fin n)} (he : ‖e
     rw [← measure_union _ hm2]
     · exact measure_mono (subset_univ _)
     · exact Set.disjoint_left.2 fun x h1 h2 => by
-        simp only [mem_setOf_eq] at h1 h2; linarith
+        simp only [mem_ofPred_eq] at h1 h2; linarith
   exact le_antisymm hge hle
 
 variable {w : EuclideanSpace ℝ (Fin n) → ℝ} {e : EuclideanSpace ℝ (Fin n)}
@@ -150,7 +150,7 @@ theorem inner_pos_of_two_mul_le (he : ‖e‖ = 1) (hwc : Continuous w)
     have hmem : 0 < w (x₁ - (ε / 2) • e) :=
       hball (by rw [Real.dist_eq, sub_zero, abs_of_pos (half_pos hε)]; linarith)
     refine ⟨x₁ - (ε / 2) • e, hmem, ?_⟩
-    simp only [mem_setOf_eq, inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq,
+    simp only [mem_ofPred_eq, inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq,
       he]
     nlinarith
   have hopen : IsOpen ({x | 0 < w x} ∩ {x | ⟪x, e⟫ < 0}) :=
@@ -160,7 +160,7 @@ theorem inner_pos_of_two_mul_le (he : ‖e‖ = 1) (hwc : Continuous w)
   have hdisj : Disjoint {x : EuclideanSpace ℝ (Fin n) | 0 < ⟪x, e⟫}
       ({x | 0 < w x} ∩ {x | ⟪x, e⟫ < 0}) :=
     Set.disjoint_left.2 fun x h1 h2 => by
-      simp only [mem_setOf_eq, mem_inter_iff] at h1 h2; linarith [h2.2]
+      simp only [mem_ofPred_eq, mem_inter_iff] at h1 h2; linarith [h2.2]
   have hsum : gaussMeasure n {x | 0 < ⟪x, e⟫} +
       gaussMeasure n ({x | 0 < w x} ∩ {x | ⟪x, e⟫ < 0}) ≤ gaussMeasure n {x | 0 < w x} := by
     rw [← measure_union hdisj hopen.measurableSet]

@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this Lean formalization, please cite it using this metadata."
 title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries, in Lean"
-version: "0.2.0"
+version: "0.3.0"
 license: "Apache-2.0"
 repository-code: "https://github.com/willmfeldman/bernoulli-rectifiability"
 authors:
@@ -33,7 +33,7 @@ preferred-citation:
   authors:
     - family-names: Feldman
       given-names: "William M."
-  version: "0.2.0"
+  version: "0.3.0"
   repository-code: "https://github.com/willmfeldman/bernoulli-rectifiability"
 references:
   - type: article

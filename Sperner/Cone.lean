@@ -57,7 +57,7 @@ lemma exists_volume_inter_setOf_lt_gaussWeight {t : ℝ} (ht : 0 < t) :
   · refine ⟨0, fun s _ => ?_⟩
     have : {x : EuclideanSpace ℝ (Fin n) | t < gaussWeight x} = ∅ := by
       ext x
-      simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_lt]
+      simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_lt]
       refine le_trans ?_ h1
       unfold gaussWeight
       rw [Real.exp_le_one_iff]
@@ -69,7 +69,7 @@ lemma exists_volume_inter_setOf_lt_gaussWeight {t : ℝ} (ht : 0 < t) :
     have hr : 0 < r := Real.sqrt_pos.2 (by linarith)
     have hset : {x : EuclideanSpace ℝ (Fin n) | t < gaussWeight x} = ball 0 r := by
       ext x
-      simp only [mem_setOf_eq, mem_ball, dist_zero_right, gaussWeight]
+      simp only [mem_ofPred_eq, mem_ball, dist_zero_right, gaussWeight]
       rw [← Real.log_lt_iff_lt_exp ht, hrdef, Real.lt_sqrt (norm_nonneg _)]
       constructor <;> intro h <;> linarith
     exact ⟨ENNReal.ofReal (r ^ n), fun s hs => by rw [hset, volume_inter_ball_of_isCone hs hr]⟩

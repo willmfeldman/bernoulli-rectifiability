@@ -6,7 +6,8 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.Homogeneity.RayCalculus
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 
 /-!
 # Two-point homogeneity (Lemma 6.2)
@@ -754,7 +755,7 @@ theorem two_point_homogeneity_scaled_of_lipschitzOnWith {p q : Rn n} {ρ : ℝ}
     have h : u =ᶠ[nhds y] g := Filter.eventuallyEq_of_mem (isOpen_ball.mem_nhds hy) hug
     simp only [gradient, h.fderiv_eq]
   have hsub₁ : ball p (10 * ρ) \ ball p ρ ⊆ ball p (20 * ρ) :=
-    diff_subset.trans (ball_subset_ball (by linarith))
+    sdiff_subset.trans (ball_subset_ball (by linarith))
   have hsub₂ : ball q (10 * ρ) \ ball q ρ ⊆ ball p (20 * ρ) := by
     intro y hy
     have hy1 : dist y q < 10 * ρ := hy.1
@@ -762,7 +763,7 @@ theorem two_point_homogeneity_scaled_of_lipschitzOnWith {p q : Rn n} {ρ : ℝ}
     have := dist_triangle y q p
     linarith
   have hsub₃ : ball p (9 * ρ) \ ball p (2 * ρ) ⊆ ball p (20 * ρ) :=
-    diff_subset.trans (ball_subset_ball (by linarith))
+    sdiff_subset.trans (ball_subset_ball (by linarith))
   have hm := fun (c : Rn n) (r r' : ℝ) =>
     (measurableSet_ball (x := c) (ε := r)).diff (measurableSet_ball (x := c) (ε := r'))
   have e₀ : ∫ y in ball p (10 * ρ) \ ball p ρ, (⟪gradient u y, y - p⟫ - N₀ * u y) ^ 2 =

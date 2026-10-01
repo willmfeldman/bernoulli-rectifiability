@@ -9,7 +9,7 @@ public import InnerVariational.Regular.Density
 public import InnerVariational.Blowup.DomainVariation
 import Mathlib.Topology.Separation.CompletelyRegular
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Topology.EMetricSpace.Paracompact
 import InnerVariational.Registry.BV
 import InnerVariational.Monotonicity.Blowup

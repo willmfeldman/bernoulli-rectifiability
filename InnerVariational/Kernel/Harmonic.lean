@@ -13,7 +13,8 @@ public import Mathlib.Analysis.InnerProductSpace.Harmonic.Basic
 import Mathlib.Analysis.Calculus.Rademacher
 public import Mathlib.Analysis.Calculus.Gradient.Basic
 public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Basic.SphereIntegral
 public import InnerVariational.Defs.Calculus
@@ -166,7 +167,7 @@ theorem fderiv_eq_zero_of_eq_zero (h : IsLipHarmonicPos U u) {x : Rn n} (hx : x 
     (h0 : u x = 0) : fderiv ℝ u x = 0 := by
   have hmin : IsLocalMin u x :=
     Filter.mem_of_superset (h.isOpen.mem_nhds hx) fun y hy => by
-      simp only [mem_setOf_eq, h0]; exact h.nonneg y hy
+      simp only [mem_ofPred_eq, h0]; exact h.nonneg y hy
   exact hmin.fderiv_eq_zero
 
 theorem gradient_eq_zero_of_eq_zero (h : IsLipHarmonicPos U u) {x : Rn n} (hx : x ∈ U)
@@ -259,11 +260,11 @@ theorem integral_comp_mul_inner_gradient (h : IsLipHarmonicPos U u) {F F' : ℝ 
       have hsq : fderiv ℝ u y (gradient u y) = ‖gradient u y‖ ^ 2 := by
         rw [← Kernel.inner_gradient_left, real_inner_self_eq_norm_sq]
       rw [hgd.fderiv]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+      simp only [add_apply, smul_apply,
         ContinuousLinearMap.smulRight_apply, smul_eq_mul, hsq]
       ring
     · have hyK' : y ∉ tsupport g := fun hy' => hyV (hK'V (hts hy'))
-      rw [Kernel.fderiv_eq_zero_of_notMem_tsupport hyK', ContinuousLinearMap.zero_apply]
+      rw [Kernel.fderiv_eq_zero_of_notMem_tsupport hyK', zero_apply]
       by_cases hyK : y ∈ K
       · have hu0 : u y = 0 :=
           le_antisymm (not_lt.1 fun hp => hyV ⟨hηU hyK, hp⟩) (h.nonneg y (hηU hyK))
@@ -331,9 +332,8 @@ theorem integral_norm_gradient_sq_mul (h : IsLipHarmonicPos U u) {η : Rn n → 
     · have h1 : HasDerivAt (fun t : ℝ => ((k : ℝ) + 1) * t - 1) ((k : ℝ) + 1) t := by
         simpa using ((hasDerivAt_id t).const_mul ((k : ℝ) + 1)).sub_const 1
       have h2 := (Kernel.hasDerivAt_smoothTransition (((k : ℝ) + 1) * t - 1)).comp t h1
-      convert (hasDerivAt_id t).mul h2 using 1
-      simp only [id, one_mul, S', S, Function.comp_apply]
-      ring
+      convert (hasDerivAt_id t).mul h2 using 1 <;>
+        first | rfl | (simp only [id, one_mul, S', S, Function.comp_apply]; ring)
     · have : ((k : ℝ) + 1) * t - 1 ≤ 0 := by
         rw [le_div_iff₀ hc] at ht; linarith
       simp only [S, Real.smoothTransition.zero_of_nonpos this, mul_zero]
@@ -425,9 +425,8 @@ theorem integral_inner_gradient_nonpos (h : IsLipHarmonicPos U u) {φ : Rn n →
       positivity
     · have h1 : HasDerivAt (fun t : ℝ => ((k : ℝ) + 1) * t - 1) ((k : ℝ) + 1) t := by
         simpa using ((hasDerivAt_id t).const_mul ((k : ℝ) + 1)).sub_const 1
-      convert (Kernel.hasDerivAt_smoothTransition (((k : ℝ) + 1) * t - 1)).comp t h1 using 1
-      simp only [S']
-      ring
+      convert (Kernel.hasDerivAt_smoothTransition (((k : ℝ) + 1) * t - 1)).comp t h1 using 1 <;>
+        first | rfl | (simp only [S']; ring)
     · have : ((k : ℝ) + 1) * t - 1 ≤ 0 := by
         rw [le_div_iff₀ hc] at ht; linarith
       exact Real.smoothTransition.zero_of_nonpos this
@@ -461,7 +460,7 @@ theorem hasFDerivAt_sq_of_eq_zero (h : IsLipHarmonicPos U u) {y : Rn n} (hy : y 
   obtain ⟨C, hC⟩ := h.lipschitzOnWith
   obtain ⟨r, hr, hrU⟩ := Metric.isOpen_iff.1 h.isOpen y hy
   rw [hasFDerivAt_iff_isLittleO]
-  simp only [h0, ContinuousLinearMap.zero_apply, sub_zero, ne_eq, OfNat.ofNat_ne_zero,
+  simp only [h0, zero_apply, sub_zero, ne_eq, OfNat.ofNat_ne_zero,
     not_false_eq_true, zero_pow]
   refine Asymptotics.isLittleO_iff.2 fun c hc => ?_
   have hδ : 0 < min r (c / ((C : ℝ) ^ 2 + 1)) := lt_min hr (by positivity)
@@ -531,7 +530,7 @@ theorem weaklySubharmonic_sq (h : IsLipHarmonicPos U u) :
     intro y
     by_cases hy : y ∈ tsupport φ
     · rw [Kernel.inner_gradient_left, Kernel.inner_gradient_left, h.fderiv_sq (hφU hy)]
-      simp only [ContinuousLinearMap.smul_apply, smul_eq_mul]
+      simp only [smul_apply, smul_eq_mul]
       ring
     · rw [Kernel.gradient_eq_zero_of_notMem_tsupport hy]
       simp

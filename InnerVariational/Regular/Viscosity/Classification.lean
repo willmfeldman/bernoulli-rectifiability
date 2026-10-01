@@ -12,7 +12,8 @@ import Mathlib.Algebra.Lie.OfAssociative
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.Density
 import InnerVariational.Registry.BV
 import InnerVariational.Regular.ChiInterior
@@ -72,14 +73,14 @@ namespace Regular
 
 theorem convex_halfSpace (e : Rn n) : Convex ℝ {y : Rn n | 0 < ⟪y, e⟫} := by
   intro y hy z hz a b ha hb hab
-  simp only [mem_setOf_eq, inner_add_left, real_inner_smul_left] at hy hz ⊢
+  simp only [mem_ofPred_eq, inner_add_left, real_inner_smul_left] at hy hz ⊢
   rcases ha.lt_or_eq with ha' | rfl
   · nlinarith [mul_pos ha' hy, mul_nonneg hb hz.le]
   · rw [zero_add] at hab; subst hab; simpa using hz
 
 theorem convex_halfSpace_neg (e : Rn n) : Convex ℝ {y : Rn n | ⟪y, e⟫ < 0} := by
   intro y hy z hz a b ha hb hab
-  simp only [mem_setOf_eq, inner_add_left, real_inner_smul_left] at hy hz ⊢
+  simp only [mem_ofPred_eq, inner_add_left, real_inner_smul_left] at hy hz ⊢
   rcases ha.lt_or_eq with ha' | rfl
   · nlinarith [mul_pos ha' (neg_pos.2 hy), mul_nonneg hb (neg_pos.2 hz).le]
   · rw [zero_add] at hab; subst hab; simpa using hz
@@ -106,7 +107,7 @@ theorem volume_halfSpace_inter_ball {e : Rn n} (he : e ≠ 0) :
   have hdisj : Disjoint (H ∩ B) (L ∩ B) := by
     rw [Set.disjoint_left]
     rintro y ⟨hy, -⟩ ⟨hy', -⟩
-    simp only [hHdef, hLdef, mem_setOf_eq] at hy hy'
+    simp only [hHdef, hLdef, mem_ofPred_eq] at hy hy'
     linarith
   have hLm : MeasurableSet (L ∩ B) := (isOpen_halfSpace_neg e).measurableSet.inter
     measurableSet_ball
@@ -140,7 +141,7 @@ theorem eq_of_halfSpace_subset {e e' : Rn n} (he : ‖e‖ = 1) (he' : ‖e'‖ 
   -- `y = e' − c e` has `⟪y, e⟫ = 0`, so `⟪y, e'⟫ = 1 − c² ≤ 0`
   have hy : ¬ (0 < ⟪e' - c • e, e'⟫) := fun hpos => by
     have := h hpos
-    simp only [mem_setOf_eq, inner_sub_left, real_inner_smul_left, hee, ← hc] at this
+    simp only [mem_ofPred_eq, inner_sub_left, real_inner_smul_left, hee, ← hc] at this
     linarith
   simp only [inner_sub_left, real_inner_smul_left, he'e', real_inner_comm e' e, ← hc] at hy
   have hcpos : 0 < c := h (show 0 < ⟪e', e'⟫ by rw [he'e']; exact one_pos)
@@ -292,12 +293,12 @@ theorem exists_tangentialField {ν : Rn n} (hν : ‖ν‖ = 1) {U : Set (Rn n)}
   refine ⟨ξT, ⟨hξ.1.sub (Q.contDiff.comp hξ.1),
     hξ.2.1.of_isClosed_subset (isClosed_tsupport _) hsupp, hsupp.trans hξ.2.2⟩,
     fun y => ?_, fun y => ?_⟩
-  · rw [(hd y).fderiv, ContinuousLinearMap.sub_apply, ContinuousLinearMap.comp_apply, hQ,
+  · rw [(hd y).fderiv, sub_apply, ContinuousLinearMap.comp_apply, hQ,
       inner_sub_right, real_inner_smul_right, hνν, mul_one, sub_self]
   · have hcomp : Q.comp (fderiv ℝ ξ y) = ((innerSL ℝ ν).comp (fderiv ℝ ξ y)).smulRight ν := by
       ext v
       simp [hQ]
-    rw [divergence, (hd y).fderiv, ContinuousLinearMap.coe_sub, map_sub, hcomp,
+    rw [divergence, (hd y).fderiv, ContinuousLinearMap.toLinearMap_sub, map_sub, hcomp,
       ContinuousLinearMap.coe_smulRight, LinearMap.trace_smulRight, divergence]
     simp
 
@@ -340,7 +341,7 @@ theorem exists_integral_indicator_divergence_ne_zero {ν : Rn n} (hν : ‖ν‖
     ⟨_, hB2, show ⟪(-(1 / 2) : ℝ) • ν, ν⟫ < 0 by rw [real_inner_smul_left, hνν]; norm_num⟩
     (ae_restrict_of_ae_restrict_of_subset inter_subset_left hc')
   have hy₂H : y₂ ∉ H := by
-    simp only [hHdef, mem_setOf_eq, not_lt]
+    simp only [hHdef, mem_ofPred_eq, not_lt]
     exact (hy₂.2 : ⟪y₂, ν⟫ < 0).le
   rw [indicator_of_mem (show y₁ ∈ H from hy₁.2), Pi.one_apply] at hy₁c
   rw [indicator_of_notMem hy₂H] at hy₂c
@@ -370,7 +371,7 @@ theorem eq_one_of_halfSpace {ν : Rn n} (hν : ‖ν‖ = 1) {a : ℝ} (ha : 0 <
   have hBLo : IsOpen (B ∩ L) := isOpen_ball.inter (isOpen_halfSpace_neg ν)
   have hBL : (B ∩ L).Nonempty := ⟨(-(1 / 2) : ℝ) • ν, by
     rw [hBdef, mem_ball_zero_iff, norm_smul, hν]; norm_num, by
-    simp only [hLdef, mem_setOf_eq, real_inner_smul_left, hνν]; norm_num⟩
+    simp only [hLdef, mem_ofPred_eq, real_inner_smul_left, hνν]; norm_num⟩
   have hf₀B : IntegrableOn f₀ B := IntegrableOn.of_bound measure_ball_lt_top
     hf₀m.aestronglyMeasurable 1 (by
       filter_upwards [h01] with y hy

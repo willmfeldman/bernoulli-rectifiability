@@ -60,7 +60,7 @@ theorem setIntegral_chi_eq_measureReal (h : IsVariationalSolutionQ Ω C Q u χ) 
   set E : Set (Rn n) := {y | Ω.indicator χ y = 1} with hEdef
   have hE : MeasurableSet E := h.measurable_chi (measurableSet_singleton 1)
   have hmem : ∀ y ∈ ball x r, y ∈ E ↔ χ y = 1 := fun y hy => by
-    simp only [hEdef, mem_setOf_eq, indicator_of_mem (hball hy)]
+    simp only [hEdef, mem_ofPred_eq, indicator_of_mem (hball hy)]
   have hEB : E ∩ ball x r = {y | χ y = 1} ∩ ball x r := by
     ext y
     exact ⟨fun hy => ⟨(hmem y hy.2).1 hy.1, hy.2⟩, fun hy => ⟨(hmem y hy.2).2 hy.1, hy.2⟩⟩
@@ -131,7 +131,7 @@ theorem tendsto_volume_ratio_iff [NeZero n] (hQ : QBounds Ω Q L c C')
 /-- For `x ∈ Ω`: `x ∈ frontier {u > 0}` if and only if `x ∈ closure {u > 0}` and `u(x) = 0`. -/
 theorem mem_frontier_pos_iff (h : IsVariationalSolutionQ Ω C Q u χ) (hx : x ∈ Ω) :
     x ∈ frontier {y | 0 < u y} ↔ x ∈ closure {y | 0 < u y} ∧ u x = 0 := by
-  rw [frontier, mem_diff]
+  rw [frontier, Set.mem_sdiff]
   constructor
   · rintro ⟨hcl, hint⟩
     refine ⟨hcl, le_antisymm (not_lt.1 fun hpos => hint ?_) (h.nonneg x hx)⟩
@@ -149,7 +149,7 @@ theorem mem_frontier_pos_iff (h : IsVariationalSolutionQ Ω C Q u χ) (hx : x �
 theorem mem_frontier_pos_inter_iff (h : IsVariationalSolutionQ Ω C Q u χ) (hx : x ∈ Ω) :
     x ∈ frontier {y | y ∈ Ω ∧ 0 < u y} ↔ x ∈ frontier {y | 0 < u y} := by
   have e : {y | y ∈ Ω ∧ 0 < u y} = Ω ∩ {y | 0 < u y} := rfl
-  rw [e, frontier, frontier, mem_diff, mem_diff, interior_inter, h.isOpen.interior_eq]
+  rw [e, frontier, frontier, Set.mem_sdiff, Set.mem_sdiff, interior_inter, h.isOpen.interior_eq]
   have hcl : x ∈ closure (Ω ∩ {y | 0 < u y}) ↔ x ∈ closure {y | 0 < u y} :=
     ⟨fun hc => closure_mono inter_subset_right hc, fun hc => h.isOpen.inter_closure ⟨hx, hc⟩⟩
   rw [hcl]

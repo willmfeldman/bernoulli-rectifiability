@@ -9,7 +9,8 @@ public import InnerVariational.Monotonicity.Limits
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Monotonicity.Blowup
 import InnerVariational.Monotonicity.Radial
 public import InnerVariational.Defs.Quantities
@@ -132,11 +133,9 @@ theorem homogeneous_of_inner_gradient_eq {f : Rn n → ℝ} (hc : Continuous f)
         rw [← this]
         ring
       have := hg'.div (hasDerivAt_id s) hs.ne'
-      convert this using 1
-      rw [he]
-      simp only [id]
-      field_simp
-      ring
+      convert this using 1 <;> first
+        | rfl
+        | (rw [he]; simp only [id]; field_simp; ring)
     -- Local constancy of `q` near a point where `g > 0`.
     have hloc : ∀ s, 0 < s → 0 < g s → ∀ᶠ s' in 𝓝 s, q s' = q s := by
       intro s hs hgs
@@ -173,7 +172,7 @@ theorem homogeneous_of_inner_gradient_eq {f : Rn n → ℝ} (hc : Continuous f)
       rwa [closure_singleton, mem_singleton_iff] at this
     intro t ht
     have := interior_subset (hIoi ht)
-    simp only [mem_setOf_eq, hqdef, hgdef] at this
+    simp only [mem_ofPred_eq, hqdef, hgdef] at this
     rw [div_eq_iff ht.ne'] at this
     rw [this]; ring
   intro t ht y
@@ -215,7 +214,7 @@ theorem inner_gradient_eq_of_tendsto_integral_annulus [NeZero n] {C : ℝ≥0} {
   set K := closedBall (0 : Rn n) t
   have hK : IsCompact K := isCompact_closedBall _ _
   have hKρ : K ⊆ ball 0 ρ := closedBall_subset_ball htρ
-  have hAK : A ⊆ K := diff_subset.trans ball_subset_closedBall
+  have hAK : A ⊆ K := sdiff_subset.trans ball_subset_closedBall
   have hAm : MeasurableSet A := measurableSet_ball.diff measurableSet_ball
   have hnormK : ∀ z ∈ K, ‖z‖ ≤ t := fun z hz => mem_closedBall_zero_iff.1 hz
   set F₀ : Rn n → ℝ := fun z => w₀ z - ⟪gradient w₀ z, z⟫ with hF₀def

@@ -7,9 +7,9 @@ module
 
 public import InnerVariational.Blowup.Constancy
 public import Mathlib.Analysis.Calculus.Gradient.Basic
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
-import Mathlib.Data.Real.Hom
 import InnerVariational.Sobolev.WeakGradient
 import GMTFoundations.Sobolev.Lattice
 import InnerVariational.Sobolev.Lipschitz
@@ -77,7 +77,7 @@ and vanishes on `U \ K`. -/
 theorem integrableOn_mul_of_eqOn_zero {U K : Set (Rn n)} (hU : MeasurableSet U) (hK : IsCompact K)
     (hKU : K ⊆ U) {v h : Rn n → ℝ} (hv : LocallyIntegrableOn v U) (hh : ContinuousOn h K)
     (h0 : ∀ x ∈ U \ K, h x = 0) : IntegrableOn (fun x => v x * h x) U :=
-  ((hv.integrableOn_compact_subset hKU hK).mul_continuousOn hh hK).of_forall_diff_eq_zero hU
+  ((hv.integrableOn_compact_subset hKU hK).mul_continuousOn hh hK).of_forall_sdiff_eq_zero hU
     fun x hx => by simp [h0 x hx]
 
 /-- **Weak product rule with a locally smooth factor.** If `G` is the weak gradient of `v` on the
@@ -197,7 +197,7 @@ theorem exists_ae_eq_mul_inner_rpow {U : Set (Rn n)} (hU : IsOpen U) (hUc : IsPr
       rw [inner_smul_left]
       simp
     have hrp : ⟪ν, x⟫ ^ (-N - 1) = ⟪ν, x⟫ ^ (-N) / ⟪ν, x⟫ := Real.rpow_sub_one hx0.ne' _
-    simp only [ContinuousLinearMap.smul_apply, innerSL_apply_apply, smul_eq_mul, hGi, hrp,
+    simp only [smul_apply, innerSL_apply_apply, smul_eq_mul, hGi, hrp,
       EuclideanSpace.inner_single_right, η, PiLp.zero_apply]
     rw [hGx] at he
     field_simp
@@ -242,7 +242,7 @@ theorem isPreconnected_ball_diff_closedBall_inter_inner_pos (ν : Rn n) {r₁ r�
       refine ⟨⟨?_, ?_⟩, ?_⟩
       · rw [mem_ball_zero_iff, hnorm]; exact hr2
       · rw [mem_closedBall_zero_iff, hnorm, not_le]; exact hr1
-      · simp only [H, mem_setOf_eq, f, inner_smul_right]
+      · simp only [H, mem_ofPred_eq, f, inner_smul_right]
         exact mul_pos (div_pos hr0 (norm_pos_iff.2 (hne z hz))) hz
     · rintro ⟨⟨hx2, hx1⟩, hxH⟩
       rw [mem_ball_zero_iff] at hx2

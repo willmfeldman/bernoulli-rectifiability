@@ -8,7 +8,8 @@ module
 public import InnerVariational.Frequency.Concrete
 public import InnerVariational.Regular.Perimeter
 public import InnerVariational.Singular.Tangent
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.NaberValtorta.MainFrequency
 public import InnerVariational.Defs.HighestDensity
 public import InnerVariational.Defs.VariationalSolution
@@ -159,7 +160,7 @@ theorem volume_slab_scaled (x ν : Rn n) {r : ℝ} (hr : 0 < r) (ε : ℝ) :
   have hset : {y | y ∈ ball x r ∧ |⟪y - x, ν⟫| < ε * r} =
       (fun y => -x + y) ⁻¹' ((r⁻¹ • ·) ⁻¹' slab ν ε) := by
     ext y
-    simp only [slab, mem_setOf_eq, mem_preimage, mem_ball, dist_eq_norm, sub_zero]
+    simp only [slab, mem_ofPred_eq, mem_preimage, mem_ball, dist_eq_norm, sub_zero]
     rw [neg_add_eq_sub, norm_smul, real_inner_smul_left, abs_mul, Real.norm_eq_abs, abs_inv,
       abs_of_pos hr, inv_mul_lt_iff₀ hr, inv_mul_lt_iff₀ hr, mul_one, mul_comm r ε]
   rw [hset, measure_preimage_add, Measure.addHaar_preimage_smul volume (inv_ne_zero hr.ne'),
@@ -169,7 +170,7 @@ theorem volume_slab_scaled (x ν : Rn n) {r : ℝ} (hr : 0 < r) (ε : ℝ) :
 theorem alphaN_pos [NeZero n] : 0 < alphaN n := by
   have hS : 0 < sphereIntegral (fun y : Rn n => y 0 ^ 2) 0 1 := by
     have hc : Continuous fun y : Rn n => y 0 ^ 2 := by fun_prop
-    haveI : (sphereMeasure n).IsOpenPosMeasure := by unfold sphereMeasure; infer_instance
+    have : (sphereMeasure n).IsOpenPosMeasure := by unfold sphereMeasure; infer_instance
     rw [sphereIntegral, one_pow, one_mul]
     set e : sphere (0 : Rn n) 1 := ⟨EuclideanSpace.single 0 1, by simp⟩
     refine integral_pos_of_integrable_nonneg_nonzero (x := e)
@@ -306,8 +307,8 @@ theorem hasDensity_pos_of_tendsto' [NeZero n] (hΩ : IsOpen Ω) (hu : Continuous
   have hsplit : (volume (ball x r ∩ F)).toReal + (volume (ball x r \ F)).toReal =
       (volume (ball x r)).toReal := by
     rw [← ENNReal.toReal_add (measure_ne_top_of_subset inter_subset_left measure_ball_lt_top.ne)
-      (measure_ne_top_of_subset diff_subset measure_ball_lt_top.ne),
-      measure_inter_add_diff _ hFo.measurableSet]
+      (measure_ne_top_of_subset sdiff_subset measure_ball_lt_top.ne),
+      measure_inter_add_sdiff _ hFo.measurableSet]
   simp only [hρdef]
   rw [inter_comm F, eq_div_iff hB.ne', sub_mul, div_mul_cancel₀ _ hB.ne', one_mul]
   linarith

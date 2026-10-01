@@ -8,9 +8,9 @@ module
 public import InnerVariational.Frequency.Concrete
 public import InnerVariational.Blowup.RenormalizationQ
 public import InnerVariational.Kernel.BV
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
-import Mathlib.Data.Real.Hom
 import InnerVariational.Monotonicity.Radial
 public import InnerVariational.Defs.Quantities
 import InnerVariational.Kernel.RellichPohozaev
@@ -134,9 +134,9 @@ theorem integral_annulus_euler_le (l : ℝ) :
   refine le_trans ?_ key
   have hint := (h.integrableOn_ball_inner_gradient (x := 0) hΩ1).2.2 l
   simp only [sub_zero] at hint
-  refine setIntegral_mono_set (hint.mono_set diff_subset)
+  refine setIntegral_mono_set (hint.mono_set sdiff_subset)
     (Eventually.of_forall fun y => sq_nonneg _) ?_
-  exact (diff_subset_diff_right ball_subset_closedBall).eventuallyLE
+  exact (sdiff_subset_sdiff_right ball_subset_closedBall).eventuallyLE
 
 /-- **Mass lower bound on `A`** (from Lemma 4.3): if `N_0(u; 1) ≤ N₊` with `N₊ > 1`, then
 `(1/4) (3/4)^{n+1} H_0(u; 1) / C(N₊) ≤ ∫_A u²`. -/

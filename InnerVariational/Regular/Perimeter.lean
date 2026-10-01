@@ -101,14 +101,14 @@ theorem isOpen_diff_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ) :
 /-- `(u, χ)` is a variational solution on `Ω \ Σ^H`. -/
 theorem diff_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ) :
     IsVariationalSolution (Ω \ sigmaH Ω u χ) C u χ :=
-  h.mono h.isOpen_diff_sigmaH diff_subset
+  h.mono h.isOpen_diff_sigmaH sdiff_subset
 
 /-- On `Ω' = Ω \ Σ^H`, the set of highest density is empty. So the results below (and
 Lemma 8.3) apply on `Ω'`. -/
 theorem sigmaH_diff_sigmaH_eq_empty [NeZero n] (h : IsVariationalSolution Ω C u χ) :
     sigmaH (Ω \ sigmaH Ω u χ) u χ = ∅ := by
-  rw [h.sigmaH_eq_inter_of_subset h.isOpen_diff_sigmaH diff_subset]
-  exact inter_diff_self _ _
+  rw [h.sigmaH_eq_inter_of_subset h.isOpen_diff_sigmaH sdiff_subset]
+  exact inter_sdiff_self _ _
 
 /-! ### Densities on the free boundary -/
 

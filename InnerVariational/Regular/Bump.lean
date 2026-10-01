@@ -11,8 +11,8 @@ import Mathlib.Topology.UniformSpace.Uniformizable
 public import Mathlib.Analysis.Calculus.Gradient.Basic
 public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
 import Mathlib.Analysis.InnerProductSpace.Calculus
-import Mathlib.Data.Real.StarOrdered
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Kernel.Harmonic
 import InnerVariational.Kernel.IBP
 public import GMTFoundations.Defs.Calculus
@@ -90,12 +90,13 @@ theorem gradient_bump (z : Rn n) :
   have h3 := (Kernel.hasDerivAt_smoothTransition (2 * (1 - ‖z‖ ^ 2))).comp_hasFDerivAt z h2
   have h4 : HasGradientAt bump ((-4 * deriv Real.smoothTransition (2 * (1 - ‖z‖ ^ 2))) • z) z := by
     rw [hasGradientAt_iff_hasFDerivAt]
-    convert h3 using 1
-    ext w
-    simp only [InnerProductSpace.toDual_apply_apply, ContinuousLinearMap.smul_apply,
-      innerSL_apply_apply, smul_eq_mul, real_inner_smul_left, nsmul_eq_mul]
-    push_cast
-    ring
+    convert h3 using 1 <;> first
+      | rfl
+      | (ext w
+         simp only [InnerProductSpace.toDual_apply_apply, smul_apply,
+           innerSL_apply_apply, smul_eq_mul, real_inner_smul_left, nsmul_eq_mul]
+         push_cast
+         ring)
   exact h4.gradient
 
 /-- `⟪∇bump(z), v⟫ = −4 s'(2(1 − |z|²)) ⟪z, v⟫`. -/
@@ -176,8 +177,7 @@ theorem gradient_scaledBump (x : Rn n) (r : ℝ) (y : Rn n) :
     gradient (scaledBump x r) y = r⁻¹ • gradient bump (r⁻¹ • (y - x)) := by
   have hA : HasFDerivAt (fun y : Rn n => r⁻¹ • (y - x))
       (r⁻¹ • ContinuousLinearMap.id ℝ (Rn n)) y := by
-    have := ((hasFDerivAt_id (𝕜 := ℝ) y).sub_const x).const_smul r⁻¹
-    simpa using this
+    exact ((hasFDerivAt_id (𝕜 := ℝ) y).sub_const x).const_smul r⁻¹
   have hb : HasFDerivAt bump (fderiv ℝ bump (r⁻¹ • (y - x))) (r⁻¹ • (y - x)) :=
     (contDiff_bump.differentiable (by simp) _).hasFDerivAt
   have hc := hb.comp y hA
@@ -191,8 +191,8 @@ theorem continuous_gradient_scaledBump (x : Rn n) (r : ℝ) :
     Continuous (gradient (scaledBump x r)) := by
   rw [show gradient (scaledBump x r) = fun y => r⁻¹ • gradient bump (r⁻¹ • (y - x)) from
     funext (gradient_scaledBump x r)]
-  exact continuous_const.smul
-    (continuous_gradient_bump.comp (continuous_const.smul (continuous_id.sub continuous_const)))
+  exact (continuous_gradient_bump.comp
+    (by fun_prop : Continuous fun y : Rn n => r⁻¹ • (y - x))).const_smul r⁻¹
 
 theorem hasCompactSupport_gradient_scaledBump (x : Rn n) {r : ℝ} (hr : 0 < r) :
     HasCompactSupport (gradient (scaledBump x r)) :=
@@ -242,7 +242,8 @@ theorem halfSpaceFlux_pos {v : Rn n} (hv : ‖v‖ = 1) : 0 < halfSpaceFlux v :=
   have hfcs : HasCompactSupport f := HasCompactSupport.intro (isCompact_closedBall (0 : Rn n) 1)
     fun z hz => by
       rw [mem_closedBall_zero_iff, not_le] at hz
-      simp [hfdef, gradient_bump_eq_zero_of_one_lt_norm hz]
+      change ⟪gradient bump z, v⟫ = 0
+      rw [gradient_bump_eq_zero_of_one_lt_norm hz, inner_zero_left]
   have hint : Integrable f := hfc.integrable_of_hasCompactSupport hfcs
   have hnn : 0 ≤ᵐ[volume.restrict H] f := by
     refine (ae_restrict_iff' (isOpen_halfSpace_neg v).measurableSet).2 (.of_forall fun z hz => ?_)
@@ -254,7 +255,7 @@ theorem halfSpaceFlux_pos {v : Rn n} (hv : ‖v‖ = 1) : 0 < halfSpaceFlux v :=
   have hW : IsOpen ({z | 0 < f z} ∩ H) :=
     (isOpen_lt continuous_const hfc).inter (isOpen_halfSpace_neg v)
   have hz₀H : z₀ ∈ H := by
-    simp only [hHdef, hz₀def, mem_setOf_eq, real_inner_smul_left, hvv]
+    simp only [hHdef, hz₀def, mem_ofPred_eq, real_inner_smul_left, hvv]
     linarith
   refine lt_of_lt_of_le (hW.measure_pos volume ⟨z₀, ?_, hz₀H⟩) (measure_mono ?_)
   · change 0 < f z₀

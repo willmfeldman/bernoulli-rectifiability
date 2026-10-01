@@ -40,7 +40,7 @@ lemma isCone_connectedComponentIn_pos (hhom : IsOneHomogeneous u) :
   have hxT : x ∈ T := ⟨1, by norm_num, one_smul _ _⟩
   have hTsub : T ⊆ {y | 0 < u y} := by
     rintro _ ⟨s, hs, rfl⟩
-    simp only [mem_setOf_eq, hhom x s hs]
+    simp only [mem_ofPred_eq, hhom x s hs]
     exact mul_pos hs hxpos
   have := hTconn.subset_connectedComponentIn hxT hTsub
   rw [← connectedComponentIn_eq hx] at this
@@ -85,7 +85,7 @@ lemma setOf_indicator_pos :
       connectedComponentIn {y | 0 < u y} y₀ := by
   ext x
   by_cases hx : x ∈ connectedComponentIn {y | 0 < u y} y₀
-  · simp only [mem_setOf_eq, indicator_of_mem hx, hx, iff_true]
+  · simp only [mem_ofPred_eq, indicator_of_mem hx, hx, iff_true]
     exact (connectedComponentIn_subset {y | 0 < u y} y₀ hx : _)
   · simp [hx]
 

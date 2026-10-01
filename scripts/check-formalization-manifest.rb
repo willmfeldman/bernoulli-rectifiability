@@ -6,7 +6,10 @@
 # is complete, on the root toolchain, trusted-only by default, with a Mathlib-only Statement.lean
 # and a Challenge.lean importing only Statement; config theorem names and permitted axioms agree
 # with the manifest; every target's challenge theorem is listed; the pinned Comparator tool
-# revisions agree with scripts/release-comparator.sh.
+# revisions agree with scripts/release-comparator.sh. Each project dependency's version is its
+# lakefile rev and its commit is the one locked in lake-manifest.json; project.mathlib and
+# external_challenges.mathlib equal the lakefile's Mathlib rev, which is the lockfile's Mathlib
+# inputRev; every workspace's lake-manifest.json locks exactly the root manifest's package revisions.
 #
 # Lean checks (after `lake build`): every lean_name and statement_interface resolves, and every
 # target depends on exactly axioms.expected.
@@ -35,6 +38,30 @@ abort 'duplicate target id' unless targets.map { |t| t.fetch('id') }.uniq.length
 root_toolchain = File.read('lean-toolchain').strip
 failures << 'project.lean_toolchain differs from lean-toolchain' \
   unless manifest.fetch('project').fetch('lean_toolchain') == root_toolchain
+
+# Dependencies agree with lakefile.toml and lake-manifest.json (matched by repository URL).
+root_lock = JSON.parse(File.read('lake-manifest.json')).fetch('packages')
+locked = root_lock.reject { |p| p['type'] == 'path' }.to_h { |p| [p['name'], p['rev']] }
+manifest.fetch('project').fetch('dependencies').each do |dep|
+  lock = root_lock.find { |p| p['url'] == dep['repository'] }
+  if lock.nil?
+    failures << "dependency #{dep['name']}: #{dep['repository']} is not in lake-manifest.json"
+    next
+  end
+  failures << "dependency #{dep['name']}: version #{dep['version'].inspect} differs from the locked inputRev #{lock['inputRev'].inspect}" \
+    unless dep['version'] == lock['inputRev']
+  failures << "dependency #{dep['name']}: commit #{dep['commit'].inspect} differs from lake-manifest.json (#{lock['rev']})" \
+    unless dep['commit'] == lock['rev']
+end
+lakefile_text = File.read('lakefile.toml')
+lakefile_revs = lakefile_text.scan(/^\[\[require\]\]\s*\nname = "([^"]+)"\s*\n(?:[^\[\n]*\n)*?rev = "([^"]+)"/).to_h
+root_lock.each do |p|
+  next unless lakefile_revs.key?(p['name'])
+  failures << "lake-manifest.json #{p['name']} inputRev #{p['inputRev'].inspect} differs from lakefile.toml (#{lakefile_revs[p['name']].inspect})" \
+    unless p['inputRev'] == lakefile_revs[p['name']]
+end
+lakefile_mathlib = lakefile_revs['mathlib']
+failures << 'lakefile.toml has no Mathlib rev' unless lakefile_mathlib
 
 # Targets.
 targets.each do |t|
@@ -69,6 +96,10 @@ abort 'duplicate challenge id' unless entries.map { |e| e.fetch('id') }.uniq.len
 allowed = external.fetch('permitted_axioms')
 failures << 'comparator permitted_axioms differ from axioms.expected' unless allowed.sort == expected_axioms.sort
 failures << 'external_challenges.toolchain differs from lean-toolchain' unless external['toolchain'] == root_toolchain
+[['project.mathlib', manifest.fetch('project')['mathlib']], ['external_challenges.mathlib', external['mathlib']]].each do |key, rev|
+  failures << "#{key} #{rev.inspect} differs from the lakefile's Mathlib rev #{lakefile_mathlib.inspect}" \
+    unless rev == lakefile_mathlib
+end
 
 listed = entries.map { |e| e.fetch('path') }.sort
 on_disk = Dir.glob('challenges/*/config.json').map { |c| File.dirname(c) }.sort
@@ -86,6 +117,13 @@ entries.each do |entry|
   toolchain = File.join(path, 'lean-toolchain')
   failures << "#{path}: lean-toolchain differs from the root" \
     if File.file?(toolchain) && File.read(toolchain).strip != root_toolchain
+  workspace_lock = File.join(path, 'lake-manifest.json')
+  if File.file?(workspace_lock)
+    ws_revs = JSON.parse(File.read(workspace_lock)).fetch('packages')
+                  .reject { |p| p['type'] == 'path' }.to_h { |p| [p['name'], p['rev']] }
+    failures << "#{path}: lake-manifest.json package revisions differ from the root manifest" \
+      unless ws_revs == locked
+  end
   imports = lambda do |f|
     File.file?(f) ? File.read(f).scan(/^\s*import\s+(\S+)/).flatten : []
   end

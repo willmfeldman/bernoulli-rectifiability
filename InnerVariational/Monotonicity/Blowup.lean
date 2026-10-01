@@ -11,7 +11,8 @@ import Mathlib.Topology.UniformSpace.Ascoli
 import Mathlib.Topology.MetricSpace.UniformConvergence
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import InnerVariational.Kernel.Harmonic
 import InnerVariational.Kernel.IBP
 import InnerVariational.Basic.SphereIntegral
@@ -494,7 +495,7 @@ theorem exists_subseq_tendstoLocallyUniformly_of_lipschitzWith {g : ℕ → Rn n
       TendstoLocallyUniformly (fun k => g (φ k)) g₀ atTop := by
   obtain ⟨𝔖, h𝔖⟩ : ∃ 𝔖 : Set (Set (Rn n)), 𝔖 = {K | IsCompact K} := ⟨_, rfl⟩
   have hmem : ∀ K, K ∈ 𝔖 ↔ IsCompact K := fun K => by rw [h𝔖]; rfl
-  haveI : IsCountablyGenerated (uniformity (Rn n →ᵤ[𝔖] ℝ)) :=
+  have : IsCountablyGenerated (uniformity (Rn n →ᵤ[𝔖] ℝ)) :=
     UniformOnFun.isCountablyGenerated_uniformity 𝔖
       (t := fun m : ℕ => closedBall (0 : Rn n) m)
       (fun m => (hmem _).2 (isCompact_closedBall _ _))

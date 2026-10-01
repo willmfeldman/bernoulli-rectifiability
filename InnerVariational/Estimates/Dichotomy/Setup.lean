@@ -8,7 +8,8 @@ module
 public import InnerVariational.Frequency.Concrete
 public import InnerVariational.Estimates.Dichotomy.Rescale
 public import InnerVariational.Estimates.GeneralPosition
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import Mathlib.Analysis.InnerProductSpace.GramSchmidtOrtho
 import InnerVariational.Homogeneity.RayCalculus
 public import InnerVariational.Defs.Quantities
@@ -81,11 +82,11 @@ theorem exists_unit_forall_norm_sub_inner_smul_sq {k : ℕ} (hk : k + 1 = n) {e 
     ∃ ν : Rn n, ‖ν‖ = 1 ∧ ∀ g : Rn n, ‖g - ⟪g, ν⟫ • ν‖ ^ 2 = ∑ j, ⟪e j, g⟫ ^ 2 := by
   subst hk
   set v : Fin (k + 1) → Rn (k + 1) := Fin.snoc e 0 with hv
-  have hvs : Orthonormal ℝ ((range Fin.castSucc).restrict v) := by
+  have hvs : Orthonormal ℝ ((range Fin.castSucc).domRestrict v) := by
     rw [orthonormal_iff_ite] at he ⊢
     rintro ⟨_, i, rfl⟩ ⟨_, j, rfl⟩
-    simp only [restrict_apply, hv, Fin.snoc_castSucc, he i j, Subtype.mk.injEq,
-      Fin.castSucc_inj]
+    simp only [Set.domRestrict_apply, hv, Fin.snoc_castSucc, he i j]
+    simp [Subtype.ext_iff, Fin.castSucc_inj]
   have hcard : finrank ℝ (Rn (k + 1)) = Fintype.card (Fin (k + 1)) := by
     rw [finrank_euclideanSpace_fin, Fintype.card_fin]
   obtain ⟨b, hb⟩ := Orthonormal.exists_orthonormalBasis_extension_of_card_eq hcard hvs

@@ -281,7 +281,7 @@ theorem tendsto_extendPositive (hT : IsPositiveDistrib Ω T) (hΩ : IsOpen Ω) {
   obtain ⟨L, hL⟩ := cauchySeq_tendsto_of_complete (hT.cauchySeq hΩ hex.1 hex.2.1
     (fun k => (hψ k).1) (fun k => (hψ k).2.1) he₀ fun k x => (hψ k).2.2 x)
   have hdef : extendPositive Ω T F = L := by
-    rw [extendPositive, dif_pos h]
+    rw [extendPositive, dite_eq_left h]
     exact hL.limUnder_eq
   rw [hdef]
   have hsub := hT.tendsto_sub hΩ (hK.union hex.1) (union_subset hKΩ hex.2.1) hφ
@@ -516,7 +516,7 @@ theorem IsPositiveDistrib.exists_measure {T : (Rn n → ℝ) → ℝ} (hT : IsPo
     (hΩ : IsOpen Ω) :
     ∃ ρ : Measure (Rn n), ρ Ωᶜ = 0 ∧ (∀ K, IsCompact K → K ⊆ Ω → ρ K < ⊤) ∧
       ∀ φ, IsTestFunction Ω φ → ∫ x, φ x ∂ρ = T φ := by
-  haveI : LocallyCompactSpace Ω := hΩ.locallyCompactSpace
+  have : LocallyCompactSpace Ω := hΩ.locallyCompactSpace
   set Λ := rieszFunctional hT hΩ
   set ρ₀ := RealRMK.rieszMeasure Λ
   refine ⟨ρ₀.map Subtype.val, ?_, fun K hK hKΩ => ?_, fun φ hφ => ?_⟩
@@ -543,7 +543,7 @@ theorem eq_of_integral_eq (hΩ : IsOpen Ω) {ρ₁ ρ₂ : Measure (Rn n)} (h₁
     (h₂ : ρ₂ Ωᶜ = 0) (hf₁ : ∀ K, IsCompact K → K ⊆ Ω → ρ₁ K < ⊤)
     (hf₂ : ∀ K, IsCompact K → K ⊆ Ω → ρ₂ K < ⊤)
     (h : ∀ φ, IsTestFunction Ω φ → ∫ x, φ x ∂ρ₁ = ∫ x, φ x ∂ρ₂) : ρ₁ = ρ₂ := by
-  haveI : LocallyCompactSpace Ω := hΩ.locallyCompactSpace
+  have : LocallyCompactSpace Ω := hΩ.locallyCompactSpace
   have hΩm := hΩ.measurableSet
   -- integrals of `F ∈ C_c(Ω)` agree
   have hC : ∀ F : Rn n → ℝ, Continuous F → HasCompactSupport F → tsupport F ⊆ Ω →
@@ -571,8 +571,8 @@ theorem eq_of_integral_eq (hΩ : IsOpen Ω) {ρ₁ ρ₂ : Measure (Rn n)} (h₁
     ⟨fun C hC => by
       rw [comap_subtype_coe_apply hΩm]
       exact hρ _ (hC.image continuous_subtype_val) (by rintro _ ⟨y, -, rfl⟩; exact y.2)⟩
-  haveI := hfin ρ₁ hf₁
-  haveI := hfin ρ₂ hf₂
+  have := hfin ρ₁ hf₁
+  have := hfin ρ₂ hf₂
   have hint : ∀ ρ : Measure (Rn n), ρ Ωᶜ = 0 → ∀ f : C_c(Ω, ℝ),
       ∫ y, f y ∂(ρ.comap Subtype.val) = ∫ x, extendByZero f x ∂ρ := fun ρ hρ f => by
     conv_rhs => rw [← hmap ρ hρ]

@@ -16,15 +16,17 @@ project:
   license: "Apache-2.0"
   language: "Lean"
   theorem_prover: "Lean 4"
-  lean_toolchain: "leanprover/lean4:v4.30.0"
-  mathlib: "v4.30.0"
+  lean_toolchain: "leanprover/lean4:v4.34.1"
+  mathlib: "v4.34.1"
   dependencies:
     - name: "gmt-foundations"
       repository: "https://github.com/willmfeldman/gmt-foundations"
-      version: "v0.1.0"
+      version: "v0.2.0"
+      commit: "b913189f34b55cd0f6a1758507a7521a782bef3b"
     - name: "elliptic-bernoulli-foundations"
       repository: "https://github.com/willmfeldman/elliptic-bernoulli-foundations"
-      version: "v0.1.0"
+      version: "v0.2.0"
+      commit: "36923fa81e96f972db82d5cfc80b3f037be59ad6"
 
 source:
   reference: >-
@@ -275,12 +277,12 @@ comparator:
       Standalone comparator challenge workspaces. Statement.lean and Challenge.lean import
       Mathlib only; Solution.lean imports InnerVariational (or Sperner) and proves the same
       statements.
-    toolchain: "leanprover/lean4:v4.30.0"
-    mathlib: "v4.30.0"
+    toolchain: "leanprover/lean4:v4.34.1"
+    mathlib: "v4.34.1"
     permitted_axioms: ["propext", "Classical.choice", "Quot.sound"]
-    comparator_revision: "d03acab154d269c06e60e4de7e4cc85deebff94b"
-    lean4export_revision: "a3e35a584f59b390667db7269cd37fca8575e4bf"
-    landrun_revision: "5ed4a3db3a4ad930d577215c6b9abaa19df7f99f"
+    comparator_revision: "575674928e239f5bc452aab72d1dd7b0f1326494"
+    lean4export_revision: "076e8e57707e813375e8f9da8bf989799ace9680"
+    landrun_revision: "811cfff51ceaf3d9843708aa6d22e9b84ccac8b4"
     entries:
       - id: "main-theorem"
         path: "challenges/main-theorem"

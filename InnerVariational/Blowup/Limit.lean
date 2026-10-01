@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.Blowup.DomainVariation
 public import InnerVariational.Blowup.OneDim
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Blowup.Renormalized
 public import InnerVariational.Blowup.Sobolev
@@ -95,7 +96,7 @@ theorem exists_subseq_limit_data (v : ℕ → Rn n → ℝ) {C N : ℝ}
   set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
   have hAo : IsOpen A := isOpen_ball.sdiff isClosed_closedBall
   have hAm : MeasurableSet A := hAo.measurableSet
-  have hAB : A ⊆ B := diff_subset
+  have hAB : A ⊆ B := sdiff_subset
   have hle : ∀ {S : Set (Rn n)}, S ⊆ B → volume.restrict S ≤ volume.restrict B := fun h =>
     Measure.restrict_mono h le_rfl
   have hμA : (volume.restrict B).restrict A = volume.restrict A :=
@@ -217,7 +218,7 @@ theorem eq_one_of_renormalized (v : ℕ → Rn n → ℝ) {C N c₀ : ℝ} (hN :
   set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
   have hAo : IsOpen A := isOpen_ball.sdiff isClosed_closedBall
   have hAm : MeasurableSet A := hAo.measurableSet
-  have hAB : A ⊆ B := diff_subset
+  have hAB : A ⊆ B := sdiff_subset
   have hle : ∀ {S : Set (Rn n)}, S ⊆ B → volume.restrict S ≤ volume.restrict B := fun h =>
     Measure.restrict_mono h le_rfl
   obtain ⟨θ, hθt, ν₀, hν₀, -, F, G, hFB, hGB, hWB, hconv, -, -, heuler, htanG, hstrongK⟩ :=

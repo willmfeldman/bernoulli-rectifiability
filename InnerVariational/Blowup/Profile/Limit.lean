@@ -10,9 +10,9 @@ public import InnerVariational.Blowup.Renormalization
 public import InnerVariational.Kernel.Harmonic
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.Hom
 import InnerVariational.Blowup.ExplicitForm
 import InnerVariational.Blowup.DomainVariation
 public import InnerVariational.Blowup.Sobolev
@@ -89,7 +89,8 @@ theorem integral_mul_inner_gradient_eq_of_explicit {A : Set (Rn n)} {ν₀ : Rn 
   have hηout : ∀ y ∉ A, η y = 0 := fun y hy =>
     image_eq_zero_of_notMem_tsupport fun h => hy (hηA h)
   have hFgη : MemLp (fun y => F y • gradient η y) 2 (volume.restrict A) := by
-    refine (hF.const_mul (Lη : ℝ)).of_le (hF.1.smul hgηm) (Eventually.of_forall fun y => ?_)
+    refine (hF.const_mul (Lη : ℝ)).of_le (hF.aestronglyMeasurable.smul hgηm)
+      (Eventually.of_forall fun y => ?_)
     rw [norm_smul, Real.norm_eq_abs, Real.norm_eq_abs, abs_mul,
       abs_of_nonneg (NNReal.coe_nonneg Lη), mul_comm]
     exact mul_le_mul_of_nonneg_right (hgη y) (abs_nonneg _)

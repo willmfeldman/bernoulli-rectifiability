@@ -417,9 +417,7 @@ lemma hasFDerivAt_homogenize {x₀ : EuclideanSpace ℝ (Fin n)} (hx₀ : x₀ �
         (s⁻¹ • ContinuousLinearMap.id ℝ (EuclideanSpace ℝ (Fin n))) x :=
       (hasFDerivAt_id x).const_smul s⁻¹
     have := (hgd (s⁻¹ • x)).hasFDerivAt.comp x h1
-    convert this using 1
-    ext v
-    simp
+    convert this using 1 <;> first | rfl | (ext v; simp)
   have hmeas' : ∀ x : EuclideanSpace ℝ (Fin n), AEStronglyMeasurable
       (fun s : ℝ => s⁻¹ • fderiv ℝ g (s⁻¹ • x)) (volume.restrict (Ioi 0)) := fun x =>
     (measurable_inv.smul ((hg.contDiff.continuous_fderiv one_ne_zero).measurable.comp
@@ -485,7 +483,7 @@ lemma norm_fderiv_homogenize_le {K : ℝ≥0} (hK : LipschitzWith K g)
   set b := ‖x‖ / r
   have hab : a ≤ b := div_le_div_of_nonneg_left hn0.le hr hg.le
   have hsub : Icc a b ⊆ Ioi 0 := fun s hs => lt_of_lt_of_le (by positivity) hs.1
-  rw [setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi hsub ?_]
+  rw [setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi hsub ?_]
   · refine (norm_setIntegral_le_of_norm_le_const (C := K * (R / ‖x‖)) measure_Icc_lt_top
       fun s hs => ?_).trans ?_
     · have hs0 : 0 < s := hsub hs
@@ -542,9 +540,9 @@ lemma lipschitzWith_homogenize {K : ℝ≥0} (hK : LipschitzWith K g) :
 
 omit hg in
 lemma ae_ne_zero (hn : 1 ≤ n) : ∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin n))), x ≠ 0 := by
-  haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
+  have : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
   rw [ae_iff]
-  simp only [ne_eq, not_not, setOf_eq_eq_singleton]
+  simp only [ne_eq, not_not, ofPred_eq_eq_singleton]
   exact measure_singleton 0
 
 /-- **The first variation in the direction of `homogenize g`**, computed by Fubini in scaling
@@ -572,7 +570,7 @@ theorem gaussBilin_homogenize (hn : 1 ≤ n) {w : EuclideanSpace ℝ (Fin n) →
         exact mul_le_mul (norm_fderiv_le_of_lipschitz ℝ hK) (norm_fderiv_le_of_lipschitz ℝ hw)
           (norm_nonneg _) K.2)
       (fun y hy => hg.mem_of_fderiv_ne_zero fun h => hy (by simp only [hΦ₁, h,
-        ContinuousLinearMap.zero_apply]))
+        zero_apply]))
       hR measurable_const (j := 0) (M := 1) zero_le_one (fun y => by simp)
       (fun y t ht => by simp) (m := 1) (by omega)
     simp only [add_zero, one_mul, mul_one, pow_one, Nat.sub_add_cancel hn] at hA
@@ -661,7 +659,7 @@ lemma fderiv_normPow_mul_sub (hn : 1 ≤ n) {ζ : EuclideanSpace ℝ (Fin n) →
         ‖y‖ ^ n * fderiv ℝ ζ y (∇ w y) + ζ y * ((n * ‖y‖ ^ (n - 1)) * (‖y‖⁻¹ * w y)) := by
       rw [show (fun y : EuclideanSpace ℝ (Fin n) => ‖y‖ ^ n * ζ y) =
         (fun y => ‖y‖ ^ n) * ζ from rfl, hd.fderiv]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+      simp only [add_apply, smul_apply,
         innerSL_apply_apply, smul_eq_mul, nsmul_eq_mul]
       rw [inner_gradient_right, hhom.fderiv_apply_self hwd]
     have hc : radialMoment (n + 1) = n * radialMoment (n - 1) := by
@@ -775,7 +773,6 @@ theorem integral_mul_laplacian_eq_zero_of_minimizer (hn : 2 ≤ n)
       (fun y => by
         have hCg0 := (abs_nonneg _).trans (hCg 0)
         have hR0 : 0 ≤ R := hr.le.trans hrR
-        beta_reduce
         by_cases hy : g y = 0
         · rw [hy, mul_zero, abs_zero]
           positivity

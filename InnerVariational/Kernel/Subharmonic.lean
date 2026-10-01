@@ -161,7 +161,7 @@ theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolutionQ Ω
         one_ne_zero).hasFDerivAt
     have hsum := HasFDerivAt.fun_sum (u := Finset.univ) fun i _ => (hpi i).pow 2
     rw [hq_eq, hsum.fderiv]
-    simp only [ContinuousLinearMap.coe_sum', Finset.sum_apply, ContinuousLinearMap.smul_apply,
+    simp only [FunLike.coe_sum, Finset.sum_apply, smul_apply,
       smul_eq_mul, Kernel.fderiv_fderiv_apply hdu]
     conv_rhs => rw [Kernel.gradient_eq_sum u y]
     simp only [map_sum, map_smul, smul_eq_mul, Finset.mul_sum]
@@ -176,7 +176,7 @@ theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolutionQ Ω
       ((hpe1.contDiffAt (hV.mem_nhds hy)).differentiableAt one_ne_zero).hasFDerivAt
     have hgd : HasFDerivAt g _ y := (hφd y).hasFDerivAt.mul hpd
     rw [Kernel.inner_gradient_right, hgd.fderiv]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul, hpe]
+    simp only [add_apply, smul_apply, smul_eq_mul, hpe]
     rw [Kernel.fderiv_fderiv_apply hdu]
   have hsymm : ∀ y ∈ V, ∀ v w : Rn n,
       fderiv ℝ (fderiv ℝ u) y v w = fderiv ℝ (fderiv ℝ u) y w v := fun y hy =>
@@ -277,7 +277,7 @@ theorem laplacian_eq_zero (h : IsVariationalSolutionQ Ω C Q u χ)
     filter_upwards [hW.mem_nhds hyW] with z hz
     ext e
     have := h.fderiv_mul_laplacian_eq_zero hQ e hz.1
-    rw [ContinuousLinearMap.zero_apply]
+    rw [zero_apply]
     exact (mul_eq_zero.1 this).resolve_right hz.2
   have hD2 : fderiv ℝ (fderiv ℝ u) y = 0 := by
     rw [hDu.fderiv_eq]

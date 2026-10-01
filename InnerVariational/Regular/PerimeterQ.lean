@@ -84,7 +84,7 @@ theorem ae_hasDensity_indicator {E : Set (Rn n)} (hE : MeasurableSet E) :
   have hcb : volume (closedBall x r) = volume (ball x r) := by
     rw [Measure.addHaar_closedBall _ _ hr.le, Measure.addHaar_ball_of_pos _ _ hr]
   have hdiff : volume (closedBall x r \ ball x r) = 0 := by
-    rw [measure_diff ball_subset_closedBall measurableSet_ball.nullMeasurableSet
+    rw [measure_sdiff ball_subset_closedBall measurableSet_ball.nullMeasurableSet
       measure_ball_lt_top.ne, hcb, tsub_self]
   have hEcb : volume (E ∩ closedBall x r) = volume (E ∩ ball x r) := by
     refine le_antisymm ?_ (measure_mono (inter_subset_inter_right _ ball_subset_closedBall))
@@ -123,13 +123,13 @@ theorem isOpen_diff_sigmaHQ [NeZero n] (hQ : QBounds Ω Q L c C')
 theorem diff_sigmaHQ [NeZero n] (hQ : QBounds Ω Q L c C')
     (h : IsVariationalSolutionQ Ω C Q u χ) :
     IsVariationalSolutionQ (Ω \ sigmaHQ Ω Q u χ) C Q u χ :=
-  h.mono (h.isOpen_diff_sigmaHQ hQ) diff_subset
+  h.mono (h.isOpen_diff_sigmaHQ hQ) sdiff_subset
 
 /-- On `Ω' = Ω \ Σ^H`, the set of highest density is empty. -/
 theorem _root_.InnerVariational.sigmaHQ_diff_sigmaHQ_eq_empty (Ω : Set (Rn n))
     (Q u χ : Rn n → ℝ) : sigmaHQ (Ω \ sigmaHQ Ω Q u χ) Q u χ = ∅ := by
-  rw [← sigmaHQ_inter_of_subset diff_subset]
-  exact inter_diff_self _ _
+  rw [← sigmaHQ_inter_of_subset sdiff_subset]
+  exact inter_sdiff_self _ _
 
 /-! ### Densities on the free boundary -/
 
@@ -149,7 +149,7 @@ theorem exists_hasDensity_of_mem_frontier (hn : 2 ≤ n) (hQ : QBounds Ω Q L c 
     (h : IsVariationalSolutionQ Ω C Q u χ) (hS : sigmaHQ Ω Q u χ = ∅)
     (hx : x ∈ Ω ∩ frontier {y | 0 < u y}) :
     ∃ d : ℝ, HasDensity (Ω ∩ {y | χ y = 1}) x d ∧ 1 / 2 ≤ d ∧ d < 1 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨hxΩ, hfr⟩ := hx
   obtain ⟨hcl, hux⟩ := (h.mem_frontier_pos_iff hxΩ).1 hfr
   obtain ⟨m, hmM, hhalf, hle⟩ := h.half_le_MzeroQ_of_mem_frontier hn hQ hxΩ hfr
@@ -199,7 +199,7 @@ theorem eq_zero_or_ae_chi_eq_posIndicator (hn : 2 ≤ n) (hQ : QBounds Ω Q L c 
     (h : IsVariationalSolutionQ Ω C Q u χ) (hΩc : IsPreconnected Ω) (hS : sigmaHQ Ω Q u χ = ∅) :
     ((∀ y ∈ Ω, u y = 0) ∧ ∀ᵐ y ∂(volume.restrict Ω), χ y = 1) ∨
       ∀ᵐ y ∂(volume.restrict Ω), χ y = posIndicator u y := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   set A : Set (Rn n) := {x | ∃ δ > 0, ball x δ ⊆ Ω ∧ (∀ y ∈ ball x δ, u y = 0) ∧
     ∀ᵐ y ∂(volume.restrict (ball x δ)), χ y = 1} with hAdef
   have hAopen : IsOpen A := by
@@ -269,14 +269,14 @@ theorem eq_zero_or_ae_chi_eq_posIndicator (hn : 2 ≤ n) (hQ : QBounds Ω Q L c 
       exact hu x (mem_ball_self hδ)
     · rw [ae_restrict_iff' h.isOpen.measurableSet, ae_iff]
       refine measure_mono_null (t := Ω ∩ {y | χ y ≠ 1}) (fun y hy => ?_) ?_
-      · simp only [mem_setOf_eq, Classical.not_imp] at hy
+      · simp only [mem_ofPred_eq, Classical.not_imp] at hy
         exact hy
       · refine measure_null_of_locally_null _ fun y hy => ?_
         obtain ⟨δ, hδ, -, -, hc⟩ := hsub hy.1
         refine ⟨Ω ∩ {y | χ y ≠ 1} ∩ ball y δ, inter_mem_nhdsWithin _ (ball_mem_nhds y hδ), ?_⟩
         rw [ae_restrict_iff' measurableSet_ball, ae_iff] at hc
         refine measure_mono_null (fun z hz => ?_) hc
-        simp only [mem_setOf_eq, Classical.not_imp]
+        simp only [mem_ofPred_eq, Classical.not_imp]
         exact ⟨hz.2, hz.1.2⟩
   · -- `A = ∅`: `χ = χ_{u>0}` a.e.
     right
@@ -285,7 +285,7 @@ theorem eq_zero_or_ae_chi_eq_posIndicator (hn : 2 ≤ n) (hQ : QBounds Ω Q L c 
     have hG : ∀ᵐ y, y ∈ Ω → y ∉ closure {y | 0 < u y} → χ y = 0 := by
       rw [ae_iff]
       refine measure_null_of_locally_null _ fun x hx => ?_
-      simp only [mem_setOf_eq, Classical.not_imp] at hx
+      simp only [mem_ofPred_eq, Classical.not_imp] at hx
       obtain ⟨hxΩ, hncl, -⟩ := hx
       obtain ⟨δ, hδ, hδΩ, hu0⟩ := h.exists_ball_eq_zero hxΩ hncl
       obtain ⟨c₀, hc01, hc⟩ := h.exists_ae_eq_const_of_eq_zero hQ isOpen_ball
@@ -300,7 +300,7 @@ theorem eq_zero_or_ae_chi_eq_posIndicator (hn : 2 ≤ n) (hQ : QBounds Ω Q L c 
         inter_mem_nhdsWithin _ (ball_mem_nhds x hδ), ?_⟩
       rw [ae_restrict_iff' measurableSet_ball, ae_iff] at hc
       refine measure_mono_null (fun z hz => ?_) hc
-      simp only [mem_setOf_eq, Classical.not_imp] at hz ⊢
+      simp only [mem_ofPred_eq, Classical.not_imp] at hz ⊢
       exact ⟨hz.2, hz.1.2.2⟩
     have hF := h.volume_inter_frontier_pos_eq_zero hn hQ hS
     rw [ae_restrict_iff' h.isOpen.measurableSet]

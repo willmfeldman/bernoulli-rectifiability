@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.Basic.LipschitzFTC
 public import Mathlib.MeasureTheory.Function.AbsolutelyContinuous
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 
 /-!

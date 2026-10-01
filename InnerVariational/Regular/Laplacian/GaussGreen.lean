@@ -19,7 +19,8 @@ import Mathlib.MeasureTheory.Measure.RegularityCompacts
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Topology.EMetricSpace.Paracompact
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.HarmonicCone
 import InnerVariational.Regular.Perimeter
 import InnerVariational.Regular.Density
@@ -68,7 +69,7 @@ theorem tendsto_two_mul_nhdsGT : Tendsto (fun r : ℝ => 2 * r) (𝓝[>] 0) (�
   refine tendsto_nhdsWithin_iff.2 ⟨?_, eventually_nhdsWithin_of_forall fun r hr =>
     Set.mem_Ioi.2 (mul_pos two_pos hr)⟩
   have : Tendsto (fun r : ℝ => 2 * r) (𝓝 0) (𝓝 0) := by
-    simpa using ((continuous_const.mul continuous_id : Continuous fun r : ℝ => 2 * r).tendsto 0)
+    simpa using ((show Continuous fun r : ℝ => 2 * r by fun_prop).tendsto 0)
   exact this.mono_left nhdsWithin_le_nhds
 
 /-! ### The Laplacian measure of a subharmonic function -/
@@ -135,11 +136,11 @@ theorem isGaussGreenPair_inter_iff {Ω E : Set (Rn n)} (hΩ : IsOpen Ω) {μ : M
 theorem reducedBoundary_inter {Ω E : Set (Rn n)} (hΩ : IsOpen Ω) :
     reducedBoundary Ω (Ω ∩ E) = reducedBoundary Ω E := by
   ext x
-  simp only [reducedBoundary, mem_setOf_eq, isGaussGreenPair_inter_iff hΩ]
+  simp only [reducedBoundary, mem_ofPred_eq, isGaussGreenPair_inter_iff hΩ]
 
 theorem essentialBoundary_subset_frontier (E : Set (Rn n)) : essentialBoundary E ⊆ frontier E := by
   intro x hx
-  rw [frontier, mem_diff]
+  rw [frontier, Set.mem_sdiff]
   constructor
   · by_contra hcl
     obtain ⟨δ, hδ, hδE⟩ := Metric.isOpen_iff.1 isClosed_closure.isOpen_compl x hcl
@@ -409,7 +410,7 @@ theorem tendsto_integral_scaledBump_of_isGaussGreenPair [NeZero n] {Ω E : Set (
       (hψm.mul hνm.aestronglyMeasurable)
       (hνae.mono fun y hy => by
         rw [abs_mul, abs_of_nonneg (scaledBump_nonneg x r y)]
-        exact mul_le_one₀ (scaledBump_le_one x r y) (abs_nonneg _) hy)
+        exact (mul_le_of_le_one_left (abs_nonneg _) (scaledBump_le_one x r y)).trans hy)
       fun y hy => by rw [hψ0 y hy, zero_mul]
     have hB2 : ball x (2 * r) ⊆ closedBall x R₀ :=
       ball_subset_closedBall.trans (closedBall_subset_closedBall hrR)

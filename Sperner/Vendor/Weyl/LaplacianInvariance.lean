@@ -136,11 +136,7 @@ theorem _root_.ContDiff.laplacian_comp_norm_sq {ρ : ℝ → ℝ} (hρ : ContDif
     rw [iteratedFDeriv_two_apply, hfst, fderiv_fun_smul hc hi, hcd, hid]
     have hself : (innerSL ℝ (b i)) (b i) = (1 : ℝ) := by
       rw [innerSL_apply_apply, real_inner_self_eq_norm_sq, b.orthonormal.norm_eq_one, one_pow]
-    have h2 : ((2 • innerSL ℝ : E →L[ℝ] E →L[ℝ] ℝ) (b i)) (b i) = 2 := by
-      change (2 : ℕ) • ((innerSL ℝ (b i)) (b i)) = (2 : ℝ)
-      rw [hself]
-      norm_num
-    simp [h2]
+    simp [hself]
     ring
   rw [Finset.sum_congr rfl fun i _ => hterm i, Finset.sum_add_distrib, ← Finset.mul_sum,
     b.sum_sq_inner_left x]

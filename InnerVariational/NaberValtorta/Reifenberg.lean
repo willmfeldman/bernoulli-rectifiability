@@ -291,7 +291,7 @@ theorem rectifiable_reifenberg_ball (hn : 2 ≤ n) (C : ℝ) :
   refine ⟨fun i => T ∘ f i, fun i => ?_, ?_⟩
   · obtain ⟨K, hK⟩ := hf i
     exact ⟨_, hTlip.comp hK⟩
-  · rw [hscale, preimage_diff, preimage_inter, preimage_iUnion, ← hball01]
+  · rw [hscale, preimage_sdiff, preimage_inter, preimage_iUnion, ← hball01]
     simp_rw [range_comp, hTe.injective.preimage_image]
     rw [hnull, mul_zero]
 

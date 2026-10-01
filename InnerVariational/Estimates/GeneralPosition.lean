@@ -7,7 +7,7 @@ module
 
 public import InnerVariational.Basic.Setup
 import Mathlib.Order.CompletePartialOrder
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 public import Mathlib.Analysis.InnerProductSpace.GramSchmidtOrtho
 import Mathlib.Tactic.Monotonicity.Lemmas
 public import GMTFoundations.Defs.Setup
@@ -228,7 +228,7 @@ theorem exists_coeff_gramSchmidtNormed {δ R : ℝ} (hδ : 0 < δ) {x a₀ : Rn 
       exact Finset.sum_congr rfl fun l hl => by rw [← hce l (Finset.mem_Iio.1 hl)]
     rw [he_def, gramSchmidtNormed_eq_smul, ← hg_def, hrec']
     simp only [mul_smul, sub_smul, ← Finset.smul_sum, Finset.sum_sub_distrib, ite_smul, one_smul,
-      zero_smul, Finset.sum_ite_eq', Finset.mem_univ, if_true]
+      zero_smul, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
     congr 2
     simp only [Finset.sum_smul, Finset.smul_sum, mul_smul]
     exact Finset.sum_comm

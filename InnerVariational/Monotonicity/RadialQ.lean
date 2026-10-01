@@ -10,7 +10,8 @@ public import InnerVariational.Kernel.RellichPohozaev
 public import InnerVariational.Monotonicity.Radial
 public import InnerVariational.Defs.VariationalSolutionQ
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import InnerVariational.Kernel.Subharmonic
 import InnerVariational.Kernel.Energy

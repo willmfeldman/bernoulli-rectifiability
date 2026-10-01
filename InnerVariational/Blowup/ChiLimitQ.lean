@@ -224,7 +224,7 @@ theorem exists_blowup_limit_ae (hQ : QBounds Ω Q L c C') (h : IsVariationalSolu
       (fun y => Q (x + r (φ k) • y)) (oneHomRescale u x (r (φ k))) (chiRescale χ x (r (φ k))) :=
     (hφ.tendsto_atTop.eventually (h.eventually_rescale_ball hQ hR0 hR hr hr0
       (lt_max_of_lt_right one_pos))).mono fun k hk => hk.1
-  haveI : IsFiniteMeasure (volume.restrict K) := isFiniteMeasure_restrict.2 hK.measure_lt_top.ne
+  have : IsFiniteMeasure (volume.restrict K) := isFiniteMeasure_restrict.2 hK.measure_lt_top.ne
   have hlim := tendsto_integral_filter_of_dominated_convergence (l := atTop)
     (μ := volume.restrict K) (F := fun k y => |chiRescale χ x (r (φ k)) y - χ₀ y|)
     (f := fun _ => 0) (fun _ => (1 : ℝ)) ?_ ?_ (integrable_const 1) ?_

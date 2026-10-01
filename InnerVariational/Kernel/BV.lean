@@ -12,9 +12,9 @@ import Mathlib.MeasureTheory.Order.Group.Lattice
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.Calculus.Rademacher
 public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.Hom
 import InnerVariational.Kernel.Subharmonic
 public import InnerVariational.Defs.VariationalSolution
 import InnerVariational.Kernel.Energy
@@ -224,7 +224,7 @@ theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolutionQ Ω C Q
         rw [← Kernel.inner_gradient_left, real_inner_self_eq_norm_sq]
       have hxi : fderiv ℝ u y (ξ y) = ⟪gradient u y, ξ y⟫ :=
         (Kernel.inner_gradient_left _ _ _).symm
-      rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply, hsq, hxi, smul_eq_mul,
+      rw [smul_apply, smul_apply, hsq, hxi, smul_eq_mul,
         smul_eq_mul]
       ring
     · by_cases hyΩ : y ∈ Ω

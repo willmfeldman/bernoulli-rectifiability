@@ -67,7 +67,7 @@ theorem hausdorffN_not_isFlatAtQ_eq_zero (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C
     (h : IsVariationalSolutionQ Ω C Q u χ) :
     hausdorffN n (n - 1)
       {x | x ∈ sigmaHQ Ω Q u χ ∧ ¬ ∃ ν : Rn n, ‖ν‖ = 1 ∧ IsFlatAtQ Ω Q u χ x ν} = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hρ : ∀ x ∈ Ω, ∃ ρ, 0 < ρ ∧ closedBall x ρ ⊆ Ω ∧ weissKappa L c C' * ρ ≤ 1 / 2 :=
     fun x hx => NaberValtorta.exists_radius_of_mem h.isOpen hx (hQ.weissKappa_nonneg hx)
   choose! ρ hρpos hρsub hρκ using hρ

@@ -86,7 +86,7 @@ theorem frequencyN_eventuallyEq [NeZero n] (u χ : Rn n → ℝ) (x : Rn n) :
 theorem sigmaHr_eq [NeZero n] (Ω : Set (Rn n)) (u χ : Rn n → ℝ) {t : ℝ} (ht : 0 < t) :
     sigmaHr Ω u χ t = InnerVariational.sigmaHr Ω u χ t := by
   ext x
-  simp only [sigmaHr, InnerVariational.sigmaHr, mem_setOf_eq, monotonicityM,
+  simp only [sigmaHr, InnerVariational.sigmaHr, mem_ofPred_eq, monotonicityM,
     InnerVariational.monotonicityM, heightH_eq u x ht]
   rfl
 
@@ -121,7 +121,7 @@ open KWChallenge KWChallenge.Bridge
 
 theorem challenge_sigmaH_main (n : ℕ) : SigmaHMainClaim n := by
   intro hn Nplus
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨C, hC⟩ := InnerVariational.Statements.sigmaH_main hn Nplus
   refine ⟨C, fun Ω C_V u χ hKW hΩ hN => ?_⟩
   have h := isVariationalSolution_iff.1 hKW
@@ -136,7 +136,7 @@ theorem challenge_sigmaH_main (n : ℕ) : SigmaHMainClaim n := by
 
 theorem challenge_sigmaH_main_frequency (n : ℕ) : SigmaHFrequencyClaim n := by
   intro hn C_V u χ hKW Nplus hN h0
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have h := isVariationalSolution_iff.1 hKW
   rw [frequencyN_eq _ _ _ one_pos] at hN
   rw [sigmaH_eq h] at h0 ⊢

@@ -11,7 +11,8 @@ public import InnerVariational.Kernel.BV
 public import InnerVariational.Regular.Viscosity.Classification
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Kernel.Subharmonic
 import InnerVariational.Regular.DensityQ
 import InnerVariational.Monotonicity.HighestDensityQ
@@ -210,7 +211,7 @@ theorem exists_blowup_of_notMem_sigmaHQ (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C'
       (∀ t, 0 < t → ∀ y, u₀ (t • y) = t * u₀ y) ∧ (∃ y, 0 < u₀ y) ∧
       volume.real ({y | 0 < u₀ y} ∩ ball (0 : Rn n) 1) < unitBallVolume n ∧
       ∃ χ₀, IsVariationalSolutionQ univ C (fun _ => Q x) u₀ χ₀ := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨hcl, hux⟩ := (h.mem_frontier_pos_iff hx).1 hfr
   obtain ⟨d, hdM, hd⟩ := h.exists_MzeroQ_eq_sq_mul hQ hx hux
   have hq2 : 0 < Q x ^ 2 := pow_pos (hQ.pos_of_mem hx) 2

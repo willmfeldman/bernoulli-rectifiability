@@ -86,7 +86,7 @@ theorem iInter_sigmaHr_inter_eq {r : ℝ} (hr : 0 < r) :
     (⋂ s ∈ Ioo 0 r, sigmaHr Ω u χ s) ∩ {x | closedBall x r ⊆ Ω} =
       sigmaH Ω u χ ∩ {x | closedBall x r ⊆ Ω} := by
   ext y
-  simp only [mem_inter_iff, mem_iInter, mem_setOf_eq]
+  simp only [mem_inter_iff, mem_iInter, mem_ofPred_eq]
   constructor
   · rintro ⟨H, hy⟩
     exact ⟨(h.mem_sigmaH_iff_forall_mem_sigmaHr hr hy).2 H, hy⟩
@@ -103,7 +103,7 @@ theorem closure_sigmaHr_inter_subset {r : ℝ} (hr : 0 < r) :
   refine ⟨hyr' (mem_closedBall_self hr.le), hyr', ?_, ?_⟩
   · exact closure_minimal (fun z (hz : z ∈ sigmaHr Ω u χ r) => hz.2.2.1) isClosed_closure hycl
   · have hc := h.continuousAt_monotonicityM hr hyr'
-    haveI := mem_closure_iff_nhdsWithin_neBot.1 hycl
+    have := mem_closure_iff_nhdsWithin_neBot.1 hycl
     exact ge_of_tendsto (hc.tendsto.mono_left nhdsWithin_le_nhds)
       (eventually_nhdsWithin_of_forall fun z (hz : z ∈ sigmaHr Ω u χ r) => hz.2.2.2)
 

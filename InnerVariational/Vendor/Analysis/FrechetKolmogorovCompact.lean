@@ -82,7 +82,7 @@ theorem exists_finite_approx_on_isCompact {K : Set X} (hK : IsCompact K)
     BoundedContinuousFunction.mkOfCompact
       ⟨fun x : K => g i x, (hequi.equicontinuous.continuous i).comp continuous_subtype_val⟩
   let 𝒜 : Set (BoundedContinuousFunction K F) := Set.range φ
-  have hφcoe : ∀ i : ι, ⇑(φ i) = K.restrict (g i) := fun i => by
+  have hφcoe : ∀ i : ι, ⇑(φ i) = K.domRestrict (g i) := fun i => by
     rfl
   have hφequi : Equicontinuous fun i : ι => (φ i : K → F) := by
     rw [funext hφcoe]
@@ -103,7 +103,7 @@ theorem exists_finite_approx_on_isCompact {K : Set X} (hK : IsCompact K)
   choose idx hidx using fun q : u => hu𝒜 q.2
   refine ⟨Set.range idx, Set.finite_range idx, fun i => ?_⟩
   obtain ⟨q, hqu, hiq⟩ : ∃ q ∈ u, dist (φ i) q < η := by
-    simpa only [mem_iUnion, mem_setOf_eq, exists_prop] using hucover (Set.mem_range_self i)
+    simpa only [mem_iUnion, mem_ofPred_eq, exists_prop] using hucover (Set.mem_range_self i)
   let q' : u := ⟨q, hqu⟩
   refine ⟨idx q', Set.mem_range_self q', fun x hx => ?_⟩
   have hφdist : dist (φ i) (φ (idx q')) < η := by rw [hidx q']; exact hiq
@@ -123,7 +123,7 @@ and `A'`, and the approximants are uniformly close on `K`. -/
 theorem eLpNorm_sub_le_of_approx_of_dist_bdd_on {K : Set α}
     (hp : 1 ≤ p) (hp' : p ≠ ∞)
     (hK : MeasurableSet K) {f f' A A' : α → F} {η : ℝ}
-    (hf : AEStronglyMeasurable f mu) (hf' : AEStronglyMeasurable f' mu)
+    (_hf : AEStronglyMeasurable f mu) (_hf' : AEStronglyMeasurable f' mu)
     (hA : AEStronglyMeasurable A mu) (hA' : AEStronglyMeasurable A' mu)
     (hsupp : ∀ᵐ x ∂mu, x ∉ K → f x = 0) (hsupp' : ∀ᵐ x ∂mu, x ∉ K → f' x = 0)
     (hη : 0 ≤ η) (hmid : ∀ x ∈ K, dist (A x) (A' x) ≤ η) :
@@ -142,14 +142,13 @@ theorem eLpNorm_sub_le_of_approx_of_dist_bdd_on {K : Set α}
     congr 1
     abel
   rw [hdecomp]
-  refine (eLpNorm_add_le ((hf.sub hA).indicator hK)
-    (((hA.sub hA').indicator hK).add ((hA'.sub hf').indicator hK)) hp).trans ?_
-  refine add_le_add ?_ ((eLpNorm_add_le ((hA.sub hA').indicator hK)
-    ((hA'.sub hf').indicator hK) hp).trans (add_le_add ?_ ?_))
-  · refine (eLpNorm_indicator_le _).trans ?_
+  refine (eLpNorm_add_le hp).trans ?_
+  refine add_le_add ?_ ((eLpNorm_add_le hp).trans (add_le_add ?_ ?_))
+  · refine (eLpNorm_indicator_le _ hK).trans ?_
     rw [← neg_sub A f, eLpNorm_neg]
-  · exact eLpNorm_indicator_sub_le_of_dist_bdd mu hp' hK hη hmid
-  · exact eLpNorm_indicator_le _
+  · exact eLpNorm_indicator_sub_le_of_dist_bdd mu hp' hK.nullMeasurableSet hη
+      ((hA.sub hA').indicator hK) hmid
+  · exact eLpNorm_indicator_le _ hK
 
 end LpApproximation
 
@@ -316,11 +315,12 @@ theorem frechetKolmogorov_exists_subseq (μ : Measure V) [μ.IsAddHaarMeasure] (
     (htrans : ∀ δ > 0, ∃ ρ > 0, ∀ n, ∀ h : V, ‖h‖ < ρ → ∫ x, |f n (x + h) - f n x| ∂μ < δ) :
     ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∃ f₀ : V → ℝ, Integrable f₀ μ ∧
       Tendsto (fun n ↦ eLpNorm (f (φ n) - f₀) 1 μ) atTop (𝓝 0) := by
-  haveI : Fact ((1 : ℝ≥0∞) ≤ 1) := ⟨le_rfl⟩
+  have : Fact ((1 : ℝ≥0∞) ≤ 1) := ⟨le_rfl⟩
   -- `eLpNorm g 1 = ofReal (∫ |g|)` for integrable `g`
   have key : ∀ g : V → ℝ, Integrable g μ → eLpNorm g 1 μ = ENNReal.ofReal (∫ x, |g x| ∂μ) :=
     fun g hg ↦ by
-      rw [eLpNorm_one_eq_lintegral_enorm, ← ofReal_integral_norm_eq_lintegral_enorm hg]
+      rw [eLpNorm_one_eq_lintegral_enorm hg.aestronglyMeasurable,
+        ← ofReal_integral_norm_eq_lintegral_enorm hg]
       rfl
   have htrans' : ∀ ε : ℝ≥0∞, 0 < ε → ∃ ρ > 0, ∀ n, ∀ h : V, ‖h‖ < ρ →
       eLpNorm (fun x => f n (x + h) - f n x) 1 μ ≤ ε := by

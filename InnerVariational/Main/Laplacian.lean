@@ -80,7 +80,7 @@ ball `B ⊆ Ω`, Theorem 8.6 (`Singular.chi_eq_indicator`, applied on the connec
 needed. -/
 theorem hasLocallyFinitePerimeter_inter_pos (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
     HasLocallyFinitePerimeter Ω (Ω ∩ {y | 0 < u y}) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   refine Registry.hasLocallyFinitePerimeter_of_local hn h.isOpen h.isOpen_pos.measurableSet
     fun x hx => ?_
   obtain ⟨r, hr, h2r⟩ := exists_closedBall_two_mul_subset h.isOpen hx
@@ -105,9 +105,9 @@ theorem hasLocallyFinitePerimeter_inter_pos (hn : 2 ≤ n) (h : IsVariationalSol
         (ball x r ∩ (Ω ∩ {y | χ y = 1}) : Set (Rn n)) := by
       filter_upwards [(ae_restrict_iff' measurableSet_ball).1 hae] with y hy
       refine propext ⟨fun hy' => ⟨hy'.1, hy'.2.1, ?_⟩, fun hy' => ⟨hy'.1, hy'.2.1, ?_⟩⟩
-      · rw [mem_setOf_eq, hy hy'.1, posIndicator_of_pos hy'.2.2]
+      · rw [mem_ofPred_eq, hy hy'.1, posIndicator_of_pos hy'.2.2]
       · have h1 := hy'.2.2
-        rw [mem_setOf_eq, hy hy'.1] at h1
+        rw [mem_ofPred_eq, hy hy'.1] at h1
         by_contra hp
         rw [posIndicator_of_nonpos (not_lt.1 hp)] at h1
         exact zero_ne_one h1
@@ -138,7 +138,7 @@ theorem reducedBoundary_pos_ae_eq (hn : 2 ≤ n) (h : IsVariationalSolution Ω C
   have hsub' : reducedBoundary Ω {y | 0 < u y} ⊆ Ω ∩ essentialBoundary (Ω ∩ {y | 0 < u y}) :=
     fun y hy => ⟨reducedBoundary_subset _ _ hy, hsub hy⟩
   refine ae_eq_set.2 ⟨?_, hnull⟩
-  rw [diff_eq_empty.2 hsub', measure_empty]
+  rw [sdiff_eq_empty.2 hsub', measure_empty]
 
 /-- Essential boundaries are local: on an open `U ⊆ Ω`, `U ∩ ∂ᵉ(U ∩ {u>0}) = U ∩ ∂ᵉ(Ω ∩ {u>0})`. -/
 theorem inter_essentialBoundary_inter_pos {U : Set (Rn n)} (hU : IsOpen U) (hΩ : IsOpen Ω)
@@ -149,7 +149,7 @@ theorem inter_essentialBoundary_inter_pos {U : Set (Rn n)} (hU : IsOpen U) (hΩ 
   have e : ∀ d, HasDensity (U ∩ {y | 0 < u y}) x d ↔ HasDensity (Ω ∩ {y | 0 < u y}) x d :=
     fun d => (Singular.hasDensity_inter_iff (hU.mem_nhds hx)).trans
       (Singular.hasDensity_inter_iff (hΩ.mem_nhds (hUΩ hx))).symm
-  simp only [essentialBoundary, mem_setOf_eq, e]
+  simp only [essentialBoundary, mem_ofPred_eq, e]
 
 /-- `ℋ^{n-1}(Σ^H ∩ ∂ᵉ(Ω ∩ {u > 0})) = 0`: by Lemma 8.5 (2), `{u > 0}` has density `1` at
 `ℋ^{n-1}`-a.e. point of `Σ^H`. Hence `ℋ^{n-1}(∂*{u > 0} ∩ Σ^H) = 0`, which the proof of Theorem 8.7
@@ -189,7 +189,7 @@ theorem hasDistribLaplacianOn_laplacianMeasure [NeZero n] (hn : 2 ≤ n)
   obtain ⟨ρ, hρΩ, hρ⟩ := exists_hasDistribLaplacianOn h.isOpen h.continuousOn h.weaklySubharmonic
   -- (1) off `Σ^H`: Corollary 8.4 on `Ω'` and uniqueness
   have h1 : ρ.restrict Ω' = ℋ.restrict (reducedBoundary Ω' {y | 0 < u y}) := by
-    refine HasDistribLaplacianOn.eq hΩ'o (HasDistribLaplacianOn.restrict hρ diff_subset)
+    refine HasDistribLaplacianOn.eq hΩ'o (HasDistribLaplacianOn.restrict hρ sdiff_subset)
       (h'.laplacian_eq_of_sigmaH_empty hn hS') ?_ ?_
     · rw [Measure.restrict_apply hΩ'o.measurableSet.compl, compl_inter_self, measure_empty]
     · rw [Measure.restrict_apply hΩ'o.measurableSet.compl]
@@ -216,7 +216,7 @@ theorem hasDistribLaplacianOn_laplacianMeasure [NeZero n] (hn : 2 ≤ n)
     refine measure_mono_null hsub (measure_union_null hρΩ ?_)
     rw [← Measure.restrict_apply hSm.compl, h1, Measure.restrict_apply hSm.compl]
     exact measure_mono_null (fun y hy => hy.1 (Or.inl
-      ((reducedBoundary_pos_subset hn h').trans (inter_subset_inter_left _ diff_subset) hy.2)))
+      ((reducedBoundary_pos_subset hn h').trans (inter_subset_inter_left _ sdiff_subset) hy.2)))
       measure_empty
   obtain ⟨K, hK⟩ := exists_measure_ball_le (by omega) h hρ
   have hR12 := Registry.eq_withDensity_upperDensity hn h.isOpen hSm hSΩ hrect hfin hρS K hK
@@ -235,7 +235,7 @@ theorem hasDistribLaplacianOn_laplacianMeasure [NeZero n] (hn : 2 ≤ n)
       ℋ.restrict (reducedBoundary Ω {y | 0 < u y}) := by
     refine Measure.restrict_congr_set ?_
     have hA' := reducedBoundary_pos_ae_eq hn h'
-    rw [inter_essentialBoundary_inter_pos hΩ'o h.isOpen diff_subset] at hA'
+    rw [inter_essentialBoundary_inter_pos hΩ'o h.isOpen sdiff_subset] at hA'
     refine hA'.trans (EventuallyEq.trans ?_ (reducedBoundary_pos_ae_eq hn h).symm)
     have hnull := hausdorffN_sigmaH_inter_essentialBoundary_eq_zero hn h
     set B := essentialBoundary (Ω ∩ {y | 0 < u y})
@@ -245,10 +245,10 @@ theorem hasDistribLaplacianOn_laplacianMeasure [NeZero n] (hn : 2 ≤ n)
       by_contra hySH
       exact hyn ⟨⟨hyΩ, fun h' => hySH ⟨h', hyB⟩⟩, hyB⟩
     refine ae_eq_set.2 ⟨?_, measure_mono_null hsub2 hnull⟩
-    rw [diff_eq_empty.2 hsub1, measure_empty]
+    rw [sdiff_eq_empty.2 hsub1, measure_empty]
   -- (4) assemble
   have hρeq : ρ = laplacianMeasure Ω u χ := by
-    have hΩeq : Ω = Ω' ∪ SH := (diff_union_of_subset (sigmaH_subset Ω u χ)).symm
+    have hΩeq : Ω = Ω' ∪ SH := (sdiff_union_of_subset (sigmaH_subset Ω u χ)).symm
     calc ρ = ρ.restrict Ω := (Measure.restrict_eq_self_of_ae_mem (ae_iff.2 hρΩ)).symm
       _ = ρ.restrict Ω' + ρ.restrict SH := by
         rw [hΩeq, Measure.restrict_union disjoint_sdiff_left hSHm]

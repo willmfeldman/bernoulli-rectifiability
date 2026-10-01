@@ -19,7 +19,8 @@ import Mathlib.MeasureTheory.Measure.RegularityCompacts
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.Algebra.Order.Ring.Star
 import Mathlib.Topology.EMetricSpace.Paracompact
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.HarmonicCone
 import InnerVariational.Regular.Perimeter
 import InnerVariational.Regular.Density
@@ -140,7 +141,7 @@ theorem tendsto_setIntegral_abs_chiRescale_sub [NeZero n] (h : IsVariationalSolu
         rw [mem_ball_zero_iff, norm_smul, norm_inv, Real.norm_of_nonneg hr.1.le, mem_ball,
           dist_eq_norm, inv_mul_lt_iff₀ hr.1, mul_one]
       have hH : r⁻¹ • (y - x) ∈ H ↔ y ∈ Hx := by
-        simp only [hHdef, hHxdef, mem_setOf_eq, real_inner_smul_left]
+        simp only [hHdef, hHxdef, mem_ofPred_eq, real_inner_smul_left]
         constructor
         · intro h'
           by_contra hc
@@ -462,10 +463,10 @@ theorem exists_tendsto_integral_inner_gradient_bump [NeZero n] (hn : 2 ≤ n)
     rcases hz.lt_or_gt with hneg | hpos
     · rw [Regular.gradient_mul_max_of_neg 1 hneg, inner_zero_left,
         indicator_of_notMem (show z ∉ {z : Rn n | ⟪z, v⟫ < 0} by
-          simp only [mem_setOf_eq, not_lt]; rw [hve] at hneg; linarith)]
+          simp only [mem_ofPred_eq, not_lt]; rw [hve] at hneg; linarith)]
     · rw [Regular.gradient_mul_max_of_pos 1 hpos, one_smul,
         indicator_of_mem (show z ∈ {z : Rn n | ⟪z, v⟫ < 0} by
-          simp only [mem_setOf_eq]; rw [hve] at hpos; linarith),
+          simp only [mem_ofPred_eq]; rw [hve] at hpos; linarith),
         hedef, inner_neg_left, real_inner_comm]
   rw [integral_congr_ae hae2, integral_indicator hHm, integral_neg, Regular.halfSpaceFlux]
 
@@ -495,8 +496,8 @@ theorem eq_hausdorffN_of_absolutelyContinuous [NeZero n] (hn : 2 ≤ n)
     rw [hσdef, Measure.restrict_apply h.isOpen.measurableSet.compl,
       show Ωᶜ ∩ S = ∅ from eq_empty_of_forall_notMem fun y hy => hy.1 hy.2.1, measure_empty]
   have hρΩ : ρ Ωᶜ = 0 := hac hσΩ
-  haveI : SigmaFinite σ := Regular.sigmaFinite_of_isCompact h.isOpen hσΩ hσK
-  haveI : SigmaFinite ρ := Regular.sigmaFinite_of_isCompact h.isOpen hρΩ hρ.1
+  have : SigmaFinite σ := Regular.sigmaFinite_of_isCompact h.isOpen hσΩ hσK
+  have : SigmaFinite ρ := Regular.sigmaFinite_of_isCompact h.isOpen hρΩ hρ.1
   set θ := ρ.rnDeriv σ with hθdef
   have hθm : Measurable θ := Measure.measurable_rnDeriv ρ σ
   have hρθ : σ.withDensity θ = ρ := Measure.withDensity_rnDeriv_eq ρ σ hac
@@ -523,7 +524,7 @@ theorem eq_hausdorffN_of_absolutelyContinuous [NeZero n] (hn : 2 ≤ n)
   have hloc : ∀ c R, 0 < R → closedBall c R ⊆ Ω → ∀ᵐ x ∂σ.restrict (ball c R), θ x = 1 := by
     intro c R hR hRΩ
     set σB := σ.restrict (ball c R) with hσBdef
-    haveI : IsFiniteMeasure σB := ⟨by
+    have : IsFiniteMeasure σB := ⟨by
       rw [hσBdef, Measure.restrict_apply_univ]
       exact (measure_mono ball_subset_closedBall).trans_lt
         (hσK _ (isCompact_closedBall c R) hRΩ)⟩
@@ -645,7 +646,7 @@ theorem laplacian_eq_of_sigmaH_empty [NeZero n] (hn : 2 ≤ n) (h : IsVariationa
       exact ⟨hy.1, hsub hy⟩
     refine (ae_eq_set).2 ⟨?_, ?_⟩
     · exact hnull
-    · rw [diff_eq_empty.2 hRS, measure_empty]
+    · rw [sdiff_eq_empty.2 hRS, measure_empty]
   rw [← hσ, ← hρσ]
   exact hρ
 

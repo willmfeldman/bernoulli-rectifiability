@@ -18,19 +18,11 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      # Mathlib and its dependencies come from `lake exe cache get`. The non-Mathlib git
-      # dependencies (gmt-foundations, elliptic-bernoulli-foundations and their transitive
-      # dependencies) have no cache, so cache their checkouts and builds, keyed on the manifest.
+      # Mathlib comes from `lake exe cache get` and the other dependencies (gmt-foundations,
+      # elliptic-bernoulli-foundations and their transitive dependencies) from their prebuilt
+      # release archives, so cache only this project's own build. A restored dependency build
+      # folder stops Lake from downloading the archive, even when it is stale.
       # Never cache all of `.lake`: it exhausts runner disk.
-      - name: Restore dependency builds
-        uses: actions/cache/restore@v6
-        with:
-          path: |
-            .lake/packages/gmt_foundations
-            .lake/packages/elliptic_bernoulli_foundations
-            .lake/packages/viscosity_solns
-            .lake/packages/AleksandrovDifferentiability
-          key: lake-deps-${{ runner.os }}-${{ hashFiles('lake-manifest.json', 'lean-toolchain') }}
       - name: Restore Lake artifacts
         uses: actions/cache/restore@v6
         with:
@@ -39,22 +31,14 @@ jobs:
           key: lake-build-${{ runner.os }}-${{ hashFiles('lake-manifest.json', 'lean-toolchain') }}-${{ hashFiles('InnerVariational.lean', 'InnerVariational/**/*.lean', 'Sperner.lean', 'Sperner/**/*.lean') }}
           restore-keys: |
             lake-build-${{ runner.os }}-${{ hashFiles('lake-manifest.json', 'lean-toolchain') }}-
+            lake-build-${{ runner.os }}-${{ hashFiles('lean-toolchain') }}-
       - name: Fetch mathlib cache
         run: lake exe cache get
-      # Warnings are errors: the release gate requires a warning-free build.
+      # Warnings are errors: the release gate requires a warning-free build. The dependencies
+      # publish release archives; a failed archive fetch is a warning, so `--wfail` fails on it.
       # Default targets: InnerVariational and Sperner.
       - name: Build complete libraries
         run: lake build --wfail
-      - name: Save dependency builds
-        uses: actions/cache/save@v6
-        if: always()
-        with:
-          path: |
-            .lake/packages/gmt_foundations
-            .lake/packages/elliptic_bernoulli_foundations
-            .lake/packages/viscosity_solns
-            .lake/packages/AleksandrovDifferentiability
-          key: lake-deps-${{ runner.os }}-${{ hashFiles('lake-manifest.json', 'lean-toolchain') }}
       - name: Check trusted library source
         shell: python3 {0}
         run: |

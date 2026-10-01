@@ -140,7 +140,7 @@ theorem integral_fderiv_apply_gradient_mul_gaussWeight (hhom : IsOneHomogeneous 
         simpa using this
       rw [show F i = η * (fun z => fderiv ℝ v z (b i)) from rfl,
         (hd1.hasFDerivAt.mul hd3).fderiv]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+      simp only [add_apply, smul_apply,
         ContinuousLinearMap.flip_apply, smul_eq_mul]
       ring
     · have h1 : fderiv ℝ (F i) y = 0 := by
@@ -334,7 +334,7 @@ theorem dirichletEnergy_le_gaussL2 {v : EuclideanSpace ℝ (Fin n) → ℝ} {L :
       have hS' : 0 ≤ deriv S (k m * v x - 1) := Real.smoothTransition.monotone.deriv_nonneg
       rw [show η m = (S ∘ fun y => k m * v y - 1) * v * Z m from rfl, h3.fderiv,
         ← (hZd m x).fderiv]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul,
+      simp only [add_apply, smul_apply, smul_eq_mul,
         Function.comp, fderiv_apply_gradient, Pi.mul_apply]
       have := mul_nonneg (mul_nonneg (mul_nonneg (hZ0 m x) (hnn x)) hS')
         (mul_nonneg (hkpos m).le (sq_nonneg ‖fderiv ℝ v x‖))
@@ -373,7 +373,7 @@ theorem dirichletEnergy_le_gaussL2 {v : EuclideanSpace ℝ (Fin n) → ℝ} {L :
   have hSZ : ∀ m x, 0 ≤ S (k m * v x - 1) * Z m x ∧ S (k m * v x - 1) * Z m x ≤ 1 := by
     intro m x
     have h1 := hS01 (k m * v x - 1)
-    exact ⟨mul_nonneg h1.1 (hZ0 m x), mul_le_one₀ h1.2 (hZ0 m x) (hZ1 m x)⟩
+    exact ⟨mul_nonneg h1.1 (hZ0 m x), (mul_le_of_le_one_left (hZ0 m x) h1.2).trans (hZ1 m x)⟩
   have hAbd : ∀ m x, |A m x| ≤ L ^ 2 * gaussWeight x := by
     intro m x
     have h2 : ‖fderiv ℝ v x‖ ^ 2 ≤ L ^ 2 := pow_le_pow_left₀ (norm_nonneg _) (hDv x) 2

@@ -103,7 +103,7 @@ theorem zero_mem_closure_oneHomRescale_iff (u : Rn n → ℝ) (a : Rn n) {ρ : �
     (0 : Rn n) ∈ closure {y | 0 < oneHomRescale u a ρ y} ↔ a ∈ closure {y | 0 < u y} := by
   have hset : {y | 0 < oneHomRescale u a ρ y} = affineHomeomorph a hρ.ne' ⁻¹' {y | 0 < u y} := by
     ext y
-    simp only [mem_setOf_eq, oneHomRescale_apply, mem_preimage, affineHomeomorph_apply]
+    simp only [mem_ofPred_eq, oneHomRescale_apply, mem_preimage, affineHomeomorph_apply]
     exact div_pos_iff_of_pos_right hρ
   rw [hset, ← Homeomorph.preimage_closure, mem_preimage, affineHomeomorph_apply, smul_zero,
     add_zero]
@@ -111,11 +111,11 @@ theorem zero_mem_closure_oneHomRescale_iff (u : Rn n → ℝ) (a : Rn n) {ρ : �
 /-- `B_1 ∖ B̄_{1/2}` and `B_1 ∖ B_{1/2}` differ by a null set. -/
 theorem ball_diff_closedBall_ae_eq (x : Rn n) {a : ℝ} (ha : a ≠ 0) (b : ℝ) :
     (ball x b \ closedBall x a : Set (Rn n)) =ᵐ[volume] (ball x b \ ball x a : Set (Rn n)) := by
-  refine (ae_eq_refl (ball x b)).diff ?_
+  refine (EventuallyEqSet.refl _ (ball x b)).diff ?_
   refine ae_eq_set.2 ⟨?_, ?_⟩
-  · rw [closedBall_diff_ball]
+  · rw [closedBall_sdiff_ball]
     exact Measure.addHaar_sphere_of_ne_zero volume x ha
-  · rw [diff_eq_empty.2 ball_subset_closedBall, measure_empty]
+  · rw [sdiff_eq_empty.2 ball_subset_closedBall, measure_empty]
 
 /-- The tangential energy of `u_{a,ρ}` on `B_1 ∖ B̄_{1/2}` is `ρ^{-n}` times the tangential
 energy of `u` on `B_ρ(a) ∖ B_{ρ/2}(a)`. -/

@@ -12,7 +12,8 @@ import Mathlib.Algebra.Lie.OfAssociative
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Order.CompletePartialOrder
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.Density
 import InnerVariational.Regular.DensityQ
 public import InnerVariational.Regular.Viscosity.MainQ
@@ -146,7 +147,7 @@ theorem exists_blowup_of_notMem_sigmaH (hn : 2 ≤ n) (h : IsVariationalSolution
         (∀ᵐ y ∂(volume.restrict (ball (0 : Rn n) 1)), 0 < u₀ y → f₀ y = 1) ∧
         ∀ ξ, IsSmoothTestField (ball (0 : Rn n) 1) ξ →
           (∫ y, Kernel.gradVariation u₀ ξ y) + ∫ y, f₀ y * divergence ξ y = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   obtain ⟨r, hr, hr0, u₀, hconv, hhom, hy₀, hvol, χ₀, hsol⟩ :=
     IsVariationalSolutionQ.exists_blowup_of_notMem_sigmaHQ hn (QBounds.one Ω) h.toQ hx hfr
       (by rwa [h.sigmaHQ_one])
@@ -194,7 +195,7 @@ theorem isViscositySolution (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ)
 `(u, χ)` on `Ω`, `2 ≤ n`, `u` is a viscosity solution on the open set `Ω \ Σ^H`. -/
 theorem isViscositySolution_diff_sigmaH (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
     IsViscositySolution (Ω \ sigmaH Ω u χ) u := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   exact h.diff_sigmaH.isViscositySolution hn h.sigmaH_diff_sigmaH_eq_empty
 
 end IsVariationalSolution

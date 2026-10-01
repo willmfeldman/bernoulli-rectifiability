@@ -77,6 +77,15 @@ theorem measurable_setIntegral_ball {g : Rn n → ℝ} (hg : Measurable g) (r : 
   have hs : MeasurableSet {p : Rn n × Rn n | dist p.2 p.1 < r} :=
     measurableSet_lt (continuous_snd.dist continuous_fst).measurable measurable_const
   convert (hg.comp measurable_snd).indicator hs using 1
+  ext ⟨z, y⟩
+  change (ball z r).indicator g y =
+    {p : Rn n × Rn n | dist p.2 p.1 < r}.indicator (g ∘ Prod.snd) (z, y)
+  by_cases hzy : dist y z < r
+  · rw [Set.indicator_of_mem (Metric.mem_ball.2 hzy),
+      Set.indicator_of_mem (show (z, y) ∈ {p : Rn n × Rn n | dist p.2 p.1 < r} from hzy)]
+    rfl
+  · rw [Set.indicator_of_notMem (fun h => hzy (Metric.mem_ball.1 h)),
+      Set.indicator_of_notMem (show (z, y) ∉ {p : Rn n × Rn n | dist p.2 p.1 < r} from hzy)]
 
 /-- `z ↦ ∫_{∂B_r(z)} f` is measurable for measurable `f`. -/
 theorem measurable_sphereIntegral {f : Rn n → ℝ} (hf : Measurable f) (r : ℝ) :
@@ -270,10 +279,10 @@ theorem measurableSet_sigmaHr_inter (h : IsVariationalSolution Ω C_V u χ)
     constructor
     · rintro ⟨⟨-, -, h3, h4⟩, hz⟩
       refine ⟨⟨hz, h3⟩, ?_⟩
-      rw [mem_setOf_eq, monotonicityM_indicator h.isOpen ht (closedBall_subset_of_mem_K hΩ hz ht')]
+      rw [mem_ofPred_eq, monotonicityM_indicator h.isOpen ht (closedBall_subset_of_mem_K hΩ hz ht')]
       exact h4
     · rintro ⟨⟨hz, h3⟩, h4⟩
-      rw [mem_setOf_eq, monotonicityM_indicator h.isOpen ht
+      rw [mem_ofPred_eq, monotonicityM_indicator h.isOpen ht
         (closedBall_subset_of_mem_K hΩ hz ht')] at h4
       exact ⟨⟨closedBall_subset_of_mem_K hΩ hz (r := 0) (by norm_num) (mem_closedBall_self le_rfl),
         closedBall_subset_of_mem_K hΩ hz ht', h3, h4⟩, hz⟩
@@ -293,7 +302,7 @@ theorem measurableSet_sigmaH_inter (h : IsVariationalSolution Ω C_V u χ)
         ⋂ q ∈ {q : ℚ | 0 < q ∧ (q : ℝ) ≤ 1 / 2},
           {z | unitBallVolume n ≤ monotonicityM (Ω.indicator u) (Ω.indicator χ) z q} := by
     ext z
-    simp only [mem_inter_iff, mem_iInter, mem_setOf_eq]
+    simp only [mem_inter_iff, mem_iInter, mem_ofPred_eq]
     constructor
     · rintro ⟨⟨-, h2, h3⟩, hz⟩
       refine ⟨⟨hz, h2⟩, fun q hq => ?_⟩

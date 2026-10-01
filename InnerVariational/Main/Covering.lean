@@ -101,7 +101,7 @@ theorem isCountablyRectifiable_of_preimage_affine {k : ℕ} {p : Rn n} {σ : ℝ
   obtain ⟨f, hf, hnull⟩ := h
   set T : Rn n → Rn n := fun z => p + σ • z with hT
   have hTL : LipschitzWith (1 * ‖σ‖₊) T :=
-    (IsometryEquiv.addLeft p).isometry.lipschitz.comp (lipschitzWith_smul σ)
+    (IsometryEquiv.addLeft p).isometry.lipschitzWith.comp (lipschitzWith_smul σ)
   refine ⟨fun i => T ∘ f i, fun i => ?_, ?_⟩
   · obtain ⟨C, hC⟩ := hf i
     exact ⟨_, hTL.comp hC⟩
@@ -151,7 +151,7 @@ theorem sigmaH_inter_ball_rectifiable_and_lt_top (hn : 2 ≤ n) {Ω : Set (Rn n)
     (hx₀ : x₀ ∈ sigmaH Ω u χ) {ρ : ℝ} (hρ : 0 < ρ) (hB : closedBall x₀ ρ ⊆ Ω) :
     IsCountablyRectifiable n (n - 1) (sigmaH Ω u χ ∩ ball x₀ (ρ / 100)) ∧
       hausdorffN n (n - 1) (sigmaH Ω u χ ∩ ball x₀ (ρ / 100)) < ∞ := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have h0 : (0 : Rn n) ∈ sigmaH (ball 0 1) (oneHomRescale u x₀ ρ) (chiRescale χ x₀ ρ) :=
     mem_sigmaH_ball_oneHomRescale hρ hB (by simpa using hx₀) (by simp)
   obtain ⟨C, hC⟩ := NaberValtorta.sigmaH_main hn
@@ -193,14 +193,14 @@ theorem isCountablyRectifiable_sigmaH (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : �
 theorem hausdorffN_inter_sigmaH_lt_top (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0}
     {u χ : Rn n → ℝ} (h : IsVariationalSolution Ω C_V u χ) {K : Set (Rn n)} (hK : IsCompact K)
     (hKΩ : K ⊆ Ω) : hausdorffN n (n - 1) (K ∩ sigmaH Ω u χ) < ∞ := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   refine measure_inter_lt_top_of_forall_mem_nhds _ hK fun x hxK => ?_
   by_cases hx : x ∈ sigmaH Ω u χ
   · obtain ⟨r, hr, hB⟩ := exists_closedBall_two_mul_subset h.isOpen hx.1
     exact ⟨ball x (2 * r / 100), ball_mem_nhds x (by positivity),
       (sigmaH_inter_ball_rectifiable_and_lt_top hn h hx (by positivity) hB).2⟩
   · refine ⟨Ω \ sigmaH Ω u χ, h.isOpen_diff_sigmaH.mem_nhds ⟨hKΩ hxK, hx⟩, ?_⟩
-    rw [inter_diff_self, measure_empty]
+    rw [inter_sdiff_self, measure_empty]
     exact ENNReal.zero_lt_top
 
 end InnerVariational.Main

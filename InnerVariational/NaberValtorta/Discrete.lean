@@ -9,7 +9,8 @@ public import InnerVariational.Defs.HighestDensity
 public import Mathlib.Order.CompletePartialOrder
 import Mathlib.Topology.Separation.CompletelyRegular
 import Mathlib.Topology.EMetricSpace.Paracompact
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import GMTFoundations.Defs.GMT
 
 /-!
@@ -85,8 +86,10 @@ theorem setLIntegral_discreteMeasure (J : Finset ι) (c : ι → ℝ≥0∞) (x 
 theorem map_discreteMeasure (J : Finset ι) (c : ι → ℝ≥0∞) (x : ι → Rn n) {T : Rn n → Rn n}
     (hT : Measurable T) :
     (discreteMeasure J c x).map T = discreteMeasure J c (T ∘ x) := by
-  simp [discreteMeasure, Measure.map_finset_sum hT.aemeasurable, Measure.map_smul,
-    Measure.map_dirac' hT]
+  simp only [discreteMeasure, Measure.map_finset_sum hT.aemeasurable]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [Measure.map_smul _ hT.aemeasurable, Measure.map_dirac' hT]
+  rfl
 
 theorem smul_discreteMeasure (a : ℝ≥0∞) (J : Finset ι) (c : ι → ℝ≥0∞) (x : ι → Rn n) :
     a • discreteMeasure J c x = discreteMeasure J (fun j => a * c j) x := by

@@ -11,7 +11,8 @@ public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
 import Mathlib.Topology.UniformSpace.Uniformizable
 import Mathlib.Analysis.Normed.Lp.SmoothApprox
 import Mathlib.Analysis.Calculus.ParametricIntegral
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import Mathlib.Analysis.Calculus.Gradient.Basic
 public import GMTFoundations.Defs.Calculus
 import Mathlib.MeasureTheory.Group.Integral
@@ -63,8 +64,8 @@ theorem divergence_smul_const {φ : Rn d → ℝ} {x : Rn d} (hφ : Differentiab
 theorem divergence_smul {ζ : Rn d → ℝ} {ψ : Rn d → Rn d} {x : Rn d} (hζ : DifferentiableAt ℝ ζ x)
     (hψ : DifferentiableAt ℝ ψ x) :
     divergence (fun y ↦ ζ y • ψ y) x = ζ x * divergence ψ x + fderiv ℝ ζ x (ψ x) := by
-  rw [divergence, fderiv_fun_smul hζ hψ, ContinuousLinearMap.coe_add, map_add,
-    ContinuousLinearMap.coe_smul, map_smul, smul_eq_mul, divergence]
+  rw [divergence, fderiv_fun_smul hζ hψ, ContinuousLinearMap.toLinearMap_add, map_add,
+    ContinuousLinearMap.toLinearMap_smul, map_smul, smul_eq_mul, divergence]
   congr 1
   exact LinearMap.trace_smulRight _ _
 
@@ -119,7 +120,6 @@ theorem hasDerivAt_integral_mul_comp_sub_smul {w : Rn d → ℝ} (hw : LocallyIn
     exact (((hφ.continuous_fderiv one_ne_zero).comp (continuous_id.sub continuous_const)).clm_apply
       continuous_const).neg
   · refine Eventually.of_forall fun y t ht ↦ ?_
-    simp only
     by_cases hy : y - t • h ∈ tsupport φ
     · rw [indicator_of_mem (hmemS y t ht hy), norm_mul, norm_neg]
       gcongr
@@ -127,7 +127,7 @@ theorem hasDerivAt_integral_mul_comp_sub_smul {w : Rn d → ℝ} (hw : LocallyIn
     · have h0 : fderiv ℝ φ (y - t • h) = 0 :=
         image_eq_zero_of_notMem_tsupport fun hh ↦ hy (tsupport_fderiv_subset ℝ hh)
       rw [h0]
-      simp only [ContinuousLinearMap.zero_apply, neg_zero, mul_zero, norm_zero]
+      simp only [zero_apply, neg_zero, mul_zero, norm_zero]
       exact indicator_nonneg (fun _ _ ↦ by positivity) _
   · rw [integrable_indicator_iff hS.measurableSet]
     exact (hwS.norm.mul_const _)
@@ -216,7 +216,7 @@ theorem integral_abs_le_of_forall_integral_mul_le {g : Rn d → ℝ}
       ∫ x, g x * φ x ≤ A) :
     ∫ x, |g x| ≤ A := by
   have hMg0 : 0 ≤ Mg := (abs_nonneg _).trans (hMg 0)
-  haveI : IsFiniteMeasure (volume.restrict S) := isFiniteMeasure_restrict.2 hS.measure_lt_top.ne
+  have : IsFiniteMeasure (volume.restrict S) := isFiniteMeasure_restrict.2 hS.measure_lt_top.ne
   have hgi : Integrable g volume := by
     have h1 : IntegrableOn g S := Measure.integrableOn_of_bounded hS.measure_lt_top.ne
       hg (Eventually.of_forall fun x ↦ (Real.norm_eq_abs _).symm ▸ hMg x)
@@ -243,12 +243,12 @@ theorem integral_abs_le_of_forall_integral_mul_le {g : Rn d → ℝ}
     filter_upwards [hg.ae_eq_mk] with x hx
     simp only [hs, indicator]
     by_cases hxS : x ∈ S
-    · rw [if_pos hxS]
+    · rw [ite_eq_left hxS]
       simp only [hs0]
       split_ifs with h
       · rw [mul_one, abs_of_nonneg (by rw [hx]; exact h)]
       · rw [abs_of_neg (by rw [hx]; exact not_le.1 h)]; ring
-    · rw [if_neg hxS, hgS x hxS]; simp
+    · rw [ite_eq_right hxS, hgS x hxS]; simp
   obtain ⟨K, hK⟩ := exists_lipschitzWith_clamp
   have hcs : ∀ x, clamp (s x) = s x := fun x ↦ by
     simp only [hs, indicator, hs0]; split_ifs <;> simp [clamp_zero, clamp_one, clamp_neg_one]
@@ -266,7 +266,8 @@ theorem integral_abs_le_of_forall_integral_mul_le {g : Rn d → ℝ}
     memLp_one_iff_integrable.1 (hsL1.sub (hφ₀.continuous.memLp_of_hasCompactSupport hφ₀c))
   have hsφr : ∫ x, |s x - φ₀ x| ≤ η := by
     have h1 := hφ₀s
-    rw [eLpNorm_one_eq_lintegral_enorm, ← ofReal_integral_norm_eq_lintegral_enorm hsφ] at h1
+    rw [eLpNorm_one_eq_lintegral_enorm hsφ.aestronglyMeasurable,
+      ← ofReal_integral_norm_eq_lintegral_enorm hsφ] at h1
     simpa [Real.norm_eq_abs] using (ENNReal.ofReal_le_ofReal_iff hη.le).1 h1
   have hgsi : Integrable (fun x ↦ g x * s x) volume :=
     hgi.mul_bdd (c := 1) hsm.aestronglyMeasurable
@@ -340,7 +341,7 @@ theorem abs_integral_comp_add_sub_mul_le_of_TV {w : Rn d → ℝ} (hw : LocallyI
     have hψc : HasCompactSupport fun y ↦ φ (y - t • h) • k := (hφtc t).smul_right
     have hψ1 : ∀ y, ‖φ (y - t • h) • k‖ ≤ 1 := fun y ↦ by
       rw [norm_smul, Real.norm_eq_abs]
-      exact mul_le_one₀ (hφ1 _) (norm_nonneg _) hk
+      exact (mul_le_of_le_one_left (norm_nonneg _) (hφ1 _)).trans hk
     have := hTV _ hψ hψc hψ1
     convert this using 3 with y
     rw [divergence_smul_const, fderiv_comp_sub]
@@ -404,7 +405,8 @@ theorem integral_abs_comp_add_sub_le_of_TV {w : Rn d → ℝ} (hwm : AEStronglyM
 
 theorem eLpNorm_one_eq_ofReal_integral_abs {g : Rn d → ℝ} (hg : Integrable g volume) :
     eLpNorm g 1 volume = ENNReal.ofReal (∫ x, |g x|) := by
-  rw [eLpNorm_one_eq_lintegral_enorm, ← ofReal_integral_norm_eq_lintegral_enorm hg]
+  rw [eLpNorm_one_eq_lintegral_enorm hg.aestronglyMeasurable,
+    ← ofReal_integral_norm_eq_lintegral_enorm hg]
   rfl
 
 /-- A function bounded on a compact `T`, a.e.-strongly measurable there, times a continuous
@@ -433,7 +435,7 @@ theorem exists_tendstoLpLoc_subseq_of_TV {U : Set (Rn d)} (hU : IsOpen U) (χ : 
     ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∃ χ₀ : Rn d → ℝ, Measurable χ₀ ∧
       ∀ K ⊆ U, IsCompact K →
         Tendsto (fun n ↦ eLpNorm (χ (φ n) - χ₀) 1 (volume.restrict K)) atTop (𝓝 0) := by
-  haveI : Fact ((1 : ℝ≥0∞) ≤ 1) := ⟨le_rfl⟩
+  have : Fact ((1 : ℝ≥0∞) ≤ 1) := ⟨le_rfl⟩
   obtain ⟨M₁, hM₁⟩ := hbdd
   set M := max M₁ 0
   have hM : ∀ n, ∀ x ∈ U, |χ n x| ≤ M := fun n x hx ↦ (hM₁ n x hx).trans (le_max_left _ _)
@@ -490,7 +492,7 @@ theorem exists_tendstoLpLoc_subseq_of_TV {U : Set (Rn d)} (hU : IsOpen U) (χ : 
     have hfirst : ∫ x, χ n x * divergence ζψ x ≤ max P 0 := by
       refine (hP n ζψ hζψ hζc.smul_right hζψT fun x ↦ ?_).trans (le_max_left _ _)
       simp only [ζψ, norm_smul, Real.norm_eq_abs, abs_of_nonneg (hζ01 x).1]
-      exact mul_le_one₀ (hζ01 x).2 (norm_nonneg _) (hψ1 x)
+      exact (mul_le_of_le_one_left (norm_nonneg _) (hζ01 x).2).trans (hψ1 x)
     -- the second term is bounded by `M Z |T|`
     have hsecond : -∫ x, χ n x * fderiv ℝ ζ x (ψ x) ≤ M * Z * volume.real T := by
       have hb : ∀ x, |χ n x * fderiv ℝ ζ x (ψ x)| ≤ T.indicator (fun _ ↦ M * Z) x := by

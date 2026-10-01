@@ -8,7 +8,8 @@ module
 public import InnerVariational.Defs.VariationalSolutionQ
 public import InnerVariational.Kernel.VariationalQ
 import Mathlib.Algebra.Order.Ring.Star
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Registry.BV
 import InnerVariational.Monotonicity.Blowup
 import InnerVariational.Blowup.DomainVariation
@@ -274,7 +275,7 @@ theorem exists_subseq_limit {Q u χ : ℕ → Rn n → ℝ} {L : ℕ → ℝ≥0
     have hK : IsCompact (tsupport ξ) := hξc.isCompact
     have hmem : ∀ w : Rn n → ℝ, (∀ y ∈ U, ‖gradient w y‖ ≤ C) →
         MemLp (gradient w) 2 (volume.restrict (tsupport ξ)) := fun w hw => by
-      haveI : IsFiniteMeasure (volume.restrict (tsupport ξ)) :=
+      have : IsFiniteMeasure (volume.restrict (tsupport ξ)) :=
         isFiniteMeasure_restrict.2 hK.measure_lt_top.ne
       exact MemLp.of_bound (measurable_gradient w).aestronglyMeasurable C
         ((ae_restrict_iff' hK.measurableSet).2 (.of_forall fun y hy => hw y (hξU hy)))
@@ -306,7 +307,7 @@ theorem exists_subseq_limit {Q u χ : ℕ → Rn n → ℝ} {L : ℕ → ℝ≥0
         fderiv ℝ (fun _ : Rn n => q ^ 2) y (ξ y) * χ₀ y) =
         fun y => gradVariation v ξ y + χ₀ y * (q ^ 2 * divergence ξ y) := by
       funext y
-      simp only [gradVariation, fderiv_fun_const, Pi.zero_apply, ContinuousLinearMap.zero_apply,
+      simp only [gradVariation, fderiv_fun_const, Pi.zero_apply, zero_apply,
         zero_mul, add_zero]
       ring
     rw [innerVariationQ, e2, integral_add hJ hχint, e1]

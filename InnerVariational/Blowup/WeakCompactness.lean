@@ -51,7 +51,7 @@ theorem exists_weakly_convergent_subseq {α : Type*} [MeasurableSpace α] {μ : 
       ∀ h : α → E, MemLp h 2 μ →
         Tendsto (fun k => ∫ x, ⟪g (φ k) x, h x⟫ ∂μ) atTop (𝓝 (∫ x, ⟪G x, h x⟫ ∂μ)) := by
   classical
-  haveI : CompleteSpace E := FiniteDimensional.complete ℝ E
+  have : CompleteSpace E := FiniteDimensional.complete ℝ E
   -- `∫ ⟪f, g⟫` is the `L²` inner product.
   have hinner : ∀ {f₁ f₂ : α → E} (h₁ : MemLp f₁ 2 μ) (h₂ : MemLp f₂ 2 μ),
       ∫ x, ⟪f₁ x, f₂ x⟫ ∂μ = ⟪h₁.toLp f₁, h₂.toLp f₂⟫ := by
@@ -62,9 +62,9 @@ theorem exists_weakly_convergent_subseq {α : Type*} [MeasurableSpace α] {μ : 
     rw [e₁, e₂]
   set f : ℕ → Lp E 2 μ := fun k => (hg k).toLp (g k) with hf_def
   set K : Submodule ℝ (Lp E 2 μ) := (Submodule.span ℝ (range f)).topologicalClosure with hK
-  haveI : CompleteSpace K :=
+  have : CompleteSpace K :=
     (Submodule.isClosed_topologicalClosure _).completeSpace_coe
-  haveI : TopologicalSpace.SeparableSpace K := by
+  have : TopologicalSpace.SeparableSpace K := by
     have hsep : TopologicalSpace.IsSeparable (K : Set (Lp E 2 μ)) := by
       rw [hK, Submodule.topologicalClosure_coe]
       exact ((countable_range f).isSeparable.span (R := ℝ)).closure
@@ -90,7 +90,7 @@ theorem exists_weakly_convergent_subseq {α : Type*} [MeasurableSpace α] {μ : 
     WeakDual.isSeqCompact_closedBall (𝕜 := ℝ) (E := K) 0 √C hmem
   set GK : K := (InnerProductSpace.toDual ℝ K).symm (WeakDual.toStrongDual ℓlim) with hGK
   refine ⟨φ, hφ, ((GK : Lp E 2 μ) : α → E), Lp.memLp _, fun h hh => ?_⟩
-  set P : K := K.orthogonalProjection (hh.toLp h)
+  set P : K := K.orthogonalProjectionOnto (hh.toLp h)
   -- Evaluation at `P` is weak-* continuous.
   have hev : Tendsto (fun k => ℓ (φ k) P) atTop (𝓝 (ℓlim P)) :=
     ((WeakDual.eval_continuous P).tendsto ℓlim).comp hlim
@@ -98,14 +98,15 @@ theorem exists_weakly_convergent_subseq {α : Type*} [MeasurableSpace α] {μ : 
     intro k
     rw [hinner (hg (φ k)) hh]
     change _ = ⟪x (φ k), P⟫
-    rw [K.inner_orthogonalProjection_eq_of_mem_left]
+    rw [K.inner_orthogonalProjectionOnto_eq_of_mem_left]
   have hGint : ∫ y, ⟪((GK : Lp E 2 μ) : α → E) y, h y⟫ ∂μ = ℓlim P := by
     have e : ∫ y, ⟪((GK : Lp E 2 μ) : α → E) y, h y⟫ ∂μ = ⟪(GK : Lp E 2 μ), hh.toLp h⟫ := by
       rw [L2.inner_def]
       refine integral_congr_ae ?_
       filter_upwards [hh.coeFn_toLp] with y e₁
       rw [e₁]
-    rw [e, ← K.inner_orthogonalProjection_eq_of_mem_left, hGK, InnerProductSpace.toDual_symm_apply]
+    rw [e, ← K.inner_orthogonalProjectionOnto_eq_of_mem_left, hGK,
+      InnerProductSpace.toDual_symm_apply]
     rfl
   rw [hGint]
   simpa only [hk] using hev

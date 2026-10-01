@@ -133,7 +133,7 @@ theorem hausdorffN_not_tendsto_frequencyN_ball_eq_zero (hn : 2 ≤ n) {Ω : Set 
     (hΩ : closedBall 0 1 ⊆ Ω) (h0 : (0 : Rn n) ∈ sigmaH (ball 0 1) u χ) :
     hausdorffN n (n - 1) {x | x ∈ sigmaH (ball 0 1) u χ ∩ ball 0 (1 / 100) ∧
       ¬ Tendsto (frequencyN u χ x) (𝓝[>] 0) (𝓝 1)} = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   -- constants, with `N₊ := N_0(u; 1)`
   obtain ⟨Np, hNp⟩ := Inputs.frequencyN_change_of_point n (frequencyN u χ 0 1)
   obtain ⟨CJ, hCJ⟩ := Inputs.jonesBetaSq_le n Np
@@ -210,7 +210,7 @@ theorem hausdorffN_not_tendsto_frequencyN_inter_ball_eq_zero (hn : 2 ≤ n) {Ω 
     (hx₀ : x₀ ∈ sigmaH Ω u χ) {ρ₀ : ℝ} (hρ₀ : 0 < ρ₀) (hB : closedBall x₀ ρ₀ ⊆ Ω) :
     hausdorffN n (n - 1) {x | (x ∈ sigmaH Ω u χ ∧ ¬ Tendsto (frequencyN u χ x) (𝓝[>] 0) (𝓝 1)) ∧
       x ∈ ball x₀ (ρ₀ / 100)} = 0 := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   have hsol := h.rescale x₀ hρ₀
   have hΩ' : closedBall (0 : Rn n) 1 ⊆ (fun y => x₀ + ρ₀ • y) ⁻¹' Ω := by
     intro y hy

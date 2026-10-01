@@ -6,7 +6,8 @@ Authors: William M. Feldman
 module
 
 public import InnerVariational.NaberValtorta.Instance
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import InnerVariational.NaberValtorta.Inputs
 import InnerVariational.NaberValtorta.CoveringLimit
 import InnerVariational.NaberValtorta.Hausdorff
@@ -66,7 +67,7 @@ theorem dichotomyEps_spec (n : ℕ) [NeZero n] (hn : 2 ≤ n) (Np : ℝ) {δ : �
         {y ∈ closedBall x r ∩ sigmaHr Ω u χ t | Nmax - frequencyN u χ y r < dichotomyEps n hn Np δ}
           ⊆ thickening (δ * r) (L : Set (Rn n)) := by
   unfold dichotomyEps
-  rw [dif_pos hδ]
+  rw [dite_eq_left hδ]
   exact Classical.choose_spec (Inputs.frequency_drop_dichotomy n hn Np δ hδ)
 
 /-- Summing a volume bound over a finite cover. -/
@@ -139,7 +140,7 @@ theorem sigmaH_main (hn : 2 ≤ n) (Nplus : ℝ) :
             ENNReal.ofReal (C * s)) ∧
         hausdorffN n (n - 1) (sigmaH (ball 0 1) u χ ∩ ball 0 (1 / 100)) ≤ ENNReal.ofReal C ∧
         IsCountablyRectifiable n (n - 1) (sigmaH (ball 0 1) u χ ∩ ball 0 (1 / 100))) := by
-  haveI : NeZero n := ⟨by omega⟩
+  have : NeZero n := ⟨by omega⟩
   -- constants
   obtain ⟨Np, hNp⟩ := Inputs.frequencyN_change_of_point n Nplus
   obtain ⟨CJ, hCJ⟩ := Inputs.jonesBetaSq_le n Np

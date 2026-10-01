@@ -10,7 +10,8 @@ public import InnerVariational.Frequency.AbstractError.Doubling
 public import InnerVariational.Basic.LipschitzFTC
 import Mathlib.Analysis.Complex.ExponentialBounds
 public import Mathlib.MeasureTheory.Function.AbsolutelyContinuous
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 
 /-!

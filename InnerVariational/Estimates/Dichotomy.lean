@@ -9,7 +9,8 @@ public import InnerVariational.Estimates.Dichotomy.Setup
 public import InnerVariational.Kernel.Rescale
 public import InnerVariational.Blowup.Approx1D
 public import InnerVariational.Defs.HighestDensity
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Estimates.GeneralPosition
 import InnerVariational.Estimates.Dichotomy.Rescale

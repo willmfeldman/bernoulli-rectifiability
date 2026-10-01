@@ -7,7 +7,7 @@ module
 
 public import InnerVariational.Basic.Setup
 public import GMTFoundations.Sobolev.Lattice
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 public import GMTFoundations.Defs.Sobolev
 
 /-!

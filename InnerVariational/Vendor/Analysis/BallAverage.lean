@@ -7,6 +7,7 @@ module
 
 public import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
 public import Mathlib.MeasureTheory.Integral.Average
+public import Mathlib.MeasureTheory.Integral.Prod
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 public import Mathlib.Topology.MetricSpace.Equicontinuity
 import Mathlib.MeasureTheory.Group.Integral
@@ -134,7 +135,7 @@ theorem enorm_setAverage_le (hp : 1 ≤ p) (hp' : p ≠ ∞) (hf : AEStronglyMea
   rw [← ENNReal.rpow_mul, mul_inv_cancel₀ hq0.ne', ENNReal.rpow_one] at hroot
   refine hroot.trans_eq ?_
   rw [ENNReal.mul_rpow_of_nonneg _ _ (by positivity), ENNReal.inv_rpow, ← ENNReal.rpow_neg,
-    eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hp', one_div]
+    eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hp' hf.restrict, one_div]
 
 end SetAverage
 
@@ -330,7 +331,10 @@ private theorem eLpNorm_ballAverage_sub_le_of_stronglyMeasurable (hp : 1 ≤ p) 
       ∫⁻ x, ‖f (x + e) - f x‖ₑ ^ p.toReal ∂mu ≤ C ^ p.toReal := by
     intro e he
     have h := ENNReal.rpow_le_rpow (hC e he) hq0.le
-    rwa [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hp', ← ENNReal.rpow_mul,
+    have hm : AEStronglyMeasurable (fun y => f (y + e) - f y) mu :=
+      ((hfm.comp_measurable (measurable_add_const e)).sub hfm).aestronglyMeasurable
+    rwa [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hp' hm,
+      ← ENNReal.rpow_mul,
       one_div_mul_cancel hq0.ne', ENNReal.rpow_one] at h
   have hmain : ∫⁻ x, ‖ballAverage mu r f x - f x‖ₑ ^ p.toReal ∂mu ≤ C ^ p.toReal := by
     refine hcore.trans ?_
@@ -342,7 +346,15 @@ private theorem eLpNorm_ballAverage_sub_le_of_stronglyMeasurable (hp : 1 ≤ p) 
       _ = C ^ p.toReal := by
           rw [setLIntegral_const, ← mul_assoc, mul_comm (mu (ball (0 : E) r))⁻¹,
             mul_assoc, ENNReal.inv_mul_cancel hV0 hVt, mul_one]
-  rw [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hp']
+  -- The ball average of a strongly measurable function is strongly measurable (Fubini).
+  have hbm : StronglyMeasurable (fun x => ballAverage mu r f x) := by
+    have hG : StronglyMeasurable (Function.uncurry fun x e => f (x + e)) :=
+      hfm.comp_measurable (measurable_fst.add measurable_snd)
+    simp_rw [ballAverage_eq_setAverage_ball_zero, setAverage_eq]
+    exact (hG.integral_prod_right (ν := mu.restrict (ball (0 : E) r))).const_smul _
+  have hm : AEStronglyMeasurable (fun x => ballAverage mu r f x - f x) mu :=
+    (hbm.sub hfm).aestronglyMeasurable
+  rw [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hp' hm]
   calc (∫⁻ x, ‖ballAverage mu r f x - f x‖ₑ ^ p.toReal ∂mu) ^ (1 / p.toReal)
       ≤ (C ^ p.toReal) ^ (1 / p.toReal) := ENNReal.rpow_le_rpow hmain (by positivity)
     _ = C := by rw [← ENNReal.rpow_mul, mul_one_div_cancel hq0.ne', ENNReal.rpow_one]

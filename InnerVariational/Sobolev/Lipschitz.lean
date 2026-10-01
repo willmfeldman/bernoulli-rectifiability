@@ -8,7 +8,7 @@ module
 public import InnerVariational.Basic.Setup
 public import GMTFoundations.Sobolev.Lipschitz
 public import Mathlib.Analysis.Calculus.Gradient.Basic
-import Mathlib.Data.Real.Hom
+import Mathlib.Analysis.Real.Sqrt
 public import GMTFoundations.Defs.Sobolev
 
 /-!
@@ -175,7 +175,7 @@ theorem memLp_top_of_lipschitzOnWith (hΩ : IsOpen Ω) (hΩb : Bornology.IsBound
 open set `Ω ⊆ ℝⁿ` is in `H¹(Ω)` with weak gradient `gradient f`. -/
 theorem memH1_gradient_of_lipschitzOnWith (hΩ : IsOpen Ω) (hΩb : Bornology.IsBounded Ω)
     (hf : LipschitzOnWith C f Ω) : GMTFoundations.MemH1 Ω f (gradient f) := by
-  haveI : IsFiniteMeasure (volume.restrict Ω) :=
+  have : IsFiniteMeasure (volume.restrict Ω) :=
     isFiniteMeasure_restrict.2 hΩb.measure_lt_top.ne
   exact ⟨(memLp_top_of_lipschitzOnWith hΩ hΩb hf).mono_exponent le_top,
     (memLp_top_gradient_of_lipschitzOnWith hΩ hf).mono_exponent le_top,

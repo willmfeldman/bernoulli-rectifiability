@@ -11,7 +11,8 @@ public import InnerVariational.Frequency.AbstractError.Pinching
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 import Mathlib.Analysis.Complex.ExponentialBounds
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 import InnerVariational.Basic.Polar
 import InnerVariational.Basic.LipschitzFTC
@@ -640,6 +641,7 @@ theorem integral_annulus_sq_inner_gradient_sub_le (hx : x ∈ closure {y | 0 < u
       have h2 := (hIIMix.continuousOn_mul hNc).const_mul 2
       have h3 := hIISq.continuousOn_mul (hNc.pow 2)
       refine ((hIIRad.sub h2).add h3).congr fun s _ => ?_
+      simp only [Pi.pow_apply]
       ring
     refine h1.congr fun s hs' => (hFeq s ?_).symm
     rw [uIoc_of_le hs] at hs'

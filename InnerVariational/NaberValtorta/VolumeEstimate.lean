@@ -8,7 +8,8 @@ module
 public import InnerVariational.NaberValtorta.Data
 public import InnerVariational.NaberValtorta.Packing
 public import InnerVariational.NaberValtorta.Reifenberg
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 public import InnerVariational.NaberValtorta.Discrete
 import InnerVariational.Basic.Polar
 
@@ -68,7 +69,7 @@ variable {n : ℕ}
 
 theorem le_of_ball_subset_ball (hn : 0 < n) {y p : Rn n} {τ σ : ℝ} (hτ : 0 < τ)
     (h : ball y τ ⊆ ball p σ) : τ ≤ σ := by
-  haveI := nontrivial_rn hn
+  have := nontrivial_rn hn
   have hσ : 0 < σ := pos_of_mem_ball (h (mem_ball_self hτ))
   have := diam_mono h isBounded_ball
   rw [diam_ball_eq y hτ.le, diam_ball_eq p hσ.le] at this
@@ -341,9 +342,9 @@ theorem card_le_step (hn : 2 ≤ n) {CJ : ℝ} (J : JonesData n CJ) {δR DR C δ
             refine Finset.sum_congr rfl fun w _ => ?_
             rw [indicator_apply]
             by_cases hw : w ∈ ball z (τ / 20 ^ k)
-            · rw [if_pos hw, if_pos ⟨hzq, hw⟩]
+            · rw [ite_eq_left hw, ite_eq_left ⟨hzq, hw⟩]
               ring
-            · rw [if_neg hw, if_neg fun h => hw h.2]
+            · rw [ite_eq_right hw, ite_eq_right fun h => hw h.2]
               simp
     · rw [indicator_of_notMem hzq, mul_zero]
       exact zero_le
@@ -356,7 +357,7 @@ theorem card_le_step (hn : 2 ≤ n) {CJ : ℝ} (J : JonesData n CJ) {δR DR C δ
     have hk' := Finset.mem_range.1 hk
     rw [← Finset.sum_filter, Finset.sum_const, nsmul_eq_mul]
     by_cases hwq : w ∈ ball q (2 * τ)
-    · rw [if_pos hwq]
+    · rw [ite_eq_left hwq]
       have hsub : F.filter (fun z => z ∈ ball q τ ∧ w ∈ ball z (τ / 20 ^ k)) ⊆
           F.filter (· ∈ ball w (τ / 20 ^ k)) := by
         intro z hz
@@ -390,7 +391,7 @@ theorem card_le_step (hn : 2 ≤ n) {CJ : ℝ} (J : JonesData n CJ) {δR DR C δ
             (ENNReal.ofReal (161 ^ n * C * ((τ / 20 ^ k) / s) ^ (n - 1)) * E k * c) *
               G k w := by ring
         _ = X * G k w := by rw [hBk, hX]
-    · rw [if_neg hwq, mul_zero]
+    · rw [ite_eq_right hwq, mul_zero]
       have hempty : F.filter (fun z => z ∈ ball q τ ∧ w ∈ ball z (τ / 20 ^ k)) = ∅ := by
         refine Finset.filter_eq_empty_iff.2 fun z _ hz => hwq ?_
         rw [mem_ball] at hz ⊢

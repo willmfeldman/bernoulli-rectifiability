@@ -13,7 +13,8 @@ public import Mathlib.Analysis.InnerProductSpace.Harmonic.Basic
 import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
 public import Mathlib.Analysis.SpecialFunctions.SmoothTransition
 public import Mathlib.Analysis.Calculus.BumpFunction.Basic
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Order.Ring.Star
 import InnerVariational.Kernel.IBP
 import InnerVariational.Basic.SphereIntegral
@@ -486,8 +487,8 @@ theorem eq_zero_of_inner_eq_zero {e : Rn n} (he : ‖e‖ = 1) {u₀ : Rn n → 
   -- positivity of the limit integral
   obtain ⟨c, hc, hdc1⟩ := exists_deriv_smoothTransition_eq_one
   have hG₀c : Continuous G₀ := by
-    have hz'c : Continuous z' := continuous_id.sub
-      ((continuous_id.inner continuous_const).smul continuous_const)
+    have hz'c : Continuous z' :=
+      continuous_id.sub (by fun_prop : Continuous fun z : Rn n => ⟪z, e⟫ • e)
     exact ((hdc.comp ((continuous_id.inner continuous_const).sub continuous_const)).mul
       (hηs.continuous.comp ((continuous_norm.pow 2).comp hz'c))).mul (hLip.continuous.comp hz'c)
   have hG₀cs : HasCompactSupport G₀ := by
@@ -538,15 +539,15 @@ theorem connectedComponentIn_eq_halfSpace {u₀ : Rn n → ℝ} (hLip : ∃ L, L
   have hêê : ⟪ê, ê⟫ = 1 := by rw [real_inner_self_eq_norm_sq, hê, one_pow]
   have hH : {y : Rn n | 0 < ⟪y, e⟫} = {y : Rn n | 0 < ⟪y, ê⟫} := by
     ext y
-    simp only [mem_setOf_eq, hêdef, real_inner_smul_right]
+    simp only [mem_ofPred_eq, hêdef, real_inner_smul_right]
     exact (mul_pos_iff_of_pos_left (inv_pos.2 hne)).symm
   rw [hH] at hsub ⊢
   have hzero : ∀ y, ⟪y, ê⟫ = 0 → u₀ y = 0 := fun y hy =>
     eq_zero_of_inner_eq_zero hê hL hnn hhom (fun z hz => hharm z (hsub hz)) hy
   refine Subset.antisymm ?_ hsub
   refine isPreconnected_connectedComponentIn.subset_left_of_subset_union (isOpen_halfSpace ê)
-    (isOpen_halfSpace_neg ê) ?_ ?_ ⟨ê, hsub (by rw [mem_setOf_eq, hêê]; exact one_pos),
-      by rw [mem_setOf_eq, hêê]; exact one_pos⟩
+    (isOpen_halfSpace_neg ê) ?_ ?_ ⟨ê, hsub (by rw [mem_ofPred_eq, hêê]; exact one_pos),
+      by rw [mem_ofPred_eq, hêê]; exact one_pos⟩
   · rw [Set.disjoint_left]
     intro y hy hy'
     have h1 : 0 < ⟪y, ê⟫ := hy

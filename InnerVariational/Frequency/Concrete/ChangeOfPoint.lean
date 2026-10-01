@@ -7,7 +7,8 @@ module
 
 public import InnerVariational.Monotonicity.Radial
 import Mathlib.MeasureTheory.Function.SpecialFunctions.Inner
-import Mathlib.Data.Real.StarOrdered
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Tactic.ContinuousFunctionalCalculus
 import Mathlib.Algebra.Ring.IsFormallyReal
 public import InnerVariational.Defs.Quantities
 import InnerVariational.Kernel.BV
