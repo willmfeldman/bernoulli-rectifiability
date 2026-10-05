@@ -1,0 +1,96 @@
+# Entry metadata for the `sigma-h` workspace (format: mathlib-initiative formalization.yaml v0.4).
+# The root formalization.yaml keeps its own schema for the repository's checkers.
+# Keep comments outside block scalars (`>-`); anything inside one becomes public text.
+
+version: v0.4
+
+project:
+  name: "Minkowski and Hausdorff bounds, rectifiability and frequency one on the set of highest density of a non-minimizing Bernoulli free boundary"
+  description: >-
+    A Lean 4 formalization of Theorem 7.2 of Kriventsov and Weiss on the
+    set Σ^H of points of highest density of a variational solution (u,
+    χ) of the one-phase Bernoulli free boundary problem (a critical
+    point of the Alt–Caffarelli energy ∫(|∇u|² + χ) with respect to
+    domain variations), in every dimension n ≥ 2. The first main result
+    states that for every bound N₊ there is a constant C = C(N₊, n) such
+    that, for every variational solution on a neighbourhood of the
+    closed unit ball with frequency N_0(u; 1) ≤ N₊, if 0 ∈ Σ^H_t then
+    the s-neighbourhoods of Σ^H_t ∩ B_{1/100} have volume at most C s
+    for t ≤ s ≤ 1, and, when 0 ∈ Σ^H, Σ^H ∩ B_{1/100} has
+    ℋ^{n-1}-measure at most C and is countably ℋ^{n-1}-rectifiable. The
+    proof is the Naber–Valtorta covering argument with the discrete and
+    rectifiable Reifenberg theorems. The second main result states that
+    the frequency N_x(u; r) tends to 1 as r → 0+ at ℋ^{n-1}-almost every
+    point of Σ^H. Every notion, including the variational-solution
+    property, the Weiss energy, the frequency and Σ^H, is written out
+    from Mathlib definitions.
+  authors: ["William M. Feldman"]
+  responsible_maintainers: ["William M. Feldman"]
+  license: "Apache-2.0"
+
+classification:
+  arxiv: ["math.AP"]
+  msc2020: ["35R35", "49Q20", "28A75"]
+
+sources:
+  - title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries"
+    authors: ["Dennis Kriventsov", "Georg S. Weiss"]
+    type: paper
+    id: "doi:10.1002/cpa.22226"
+    location: "Theorem 7.2 (1)–(3) (arXiv:2306.10131v2)"
+    relationship: formalizes
+    note: >-
+      Formalizes Theorem 7.2 (1)–(3) of arXiv version 2, in every
+      dimension n ≥ 2, with the paper's quantifier order (for every N₊
+      there is C for all solutions). In (1)–(2) the solution is
+      assumed on an open set containing the closed unit ball, since
+      the hypothesis N_0(u; 1) ≤ N₊ involves the values of u on the
+      unit sphere; the differences are listed under fidelity.
+
+related_formalizations: []
+
+automation:
+  methods:
+    - method: agent
+      models: ["Claude Opus", "Claude Sonnet"]
+      framework: "Claude Code"
+  notes: >-
+    The Lean proofs were written by AI coding agents (Claude, by Anthropic)
+    under the author's mathematical direction and review. The theorem
+    statements, definitions and proof routes were reviewed by the author;
+    correctness rests on Lean's kernel check and the comparator challenges.
+
+review:
+  status: "author-verified"
+  notes: >-
+    The author reviewed the definitions and the statements of the compared
+    theorems against Kriventsov–Weiss, including every difference from the
+    printed statements recorded under fidelity, and the proof route against
+    the paper. The proofs are checked by Lean's kernel and by the comparator
+    challenges in the repository.
+
+fidelity:
+  divergences: >-
+    In (1)–(2) the solution is assumed on an open set Ω containing the
+    closed unit ball, not only on B₁, while Σ^H and Σ^H_t are still
+    taken relative to B₁: the hypothesis N_0(u; 1) ≤ N₊ involves ∫_{∂B₁}
+    u², which a solution on the open ball does not constrain, and with
+    independently prescribed boundary values the printed bound fails (u
+    = |Re z^k| in B₁ ⊆ ℝ², χ ≡ 1, with large constant boundary values).
+    B_{1/100}(x) is read as B_{1/100}, centred at 0. The neighbourhood
+    bound (1) is stated for t ≤ s ≤ 1 rather than for all s ≥ t (for
+    large s the volume grows like sⁿ). The case t = 0 is stated with
+    Σ^H, and there the neighbourhood bound is claimed for all 0 < s ≤ 1.
+    The frequency is set to 0 where H_x(u; r) = 0 (the paper uses −∞);
+    this does not affect the statements, since H_x(u; r) > 0 at points
+    of Σ^H and N₊ is arbitrary. Sphere integrals are taken against the
+    normalized Hausdorff measure ℋ^{n-1}.
+
+status:
+  main_results:
+    - declaration: "challenge_sigmaH_main"
+      file: "challenges/sigma-h/Challenge.lean"
+      comparator_config: "challenges/sigma-h/config.json"
+    - declaration: "challenge_sigmaH_main_frequency"
+      file: "challenges/sigma-h/Challenge.lean"
+      comparator_config: "challenges/sigma-h/config.json"

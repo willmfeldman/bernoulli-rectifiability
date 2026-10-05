@@ -3,8 +3,9 @@
 #
 # Metadata checks (no Lean): every target names an existing lean_file that contains the
 # declaration; the external challenge inventory equals challenges/*/config.json; each workspace
-# is complete, on the root toolchain, trusted-only by default, with a Mathlib-only Statement.lean
-# and a Challenge.lean importing only Statement; config theorem names and permitted axioms agree
+# is complete, on the root toolchain, trusted-only by default, with a Mathlib-only Vocabulary.lean,
+# a Challenge.lean importing only Mathlib, and no Statement.lean; config theorem names and permitted
+# axioms agree
 # with the manifest; every target's challenge theorem is listed; the pinned Comparator tool
 # revisions agree with scripts/release-comparator.sh. Each project dependency's version is its
 # lakefile rev and its commit is the one locked in lake-manifest.json; project.mathlib and
@@ -111,9 +112,11 @@ end
 entries.each do |entry|
   path = entry.fetch('path')
   next unless File.directory?(path)
-  %w[Statement.lean Challenge.lean Solution.lean config.json lakefile.toml lake-manifest.json lean-toolchain].each do |f|
+  %w[Vocabulary.lean Challenge.lean Solution.lean config.json lakefile.toml lake-manifest.json lean-toolchain].each do |f|
     failures << "#{path}: missing #{f}" unless File.file?(File.join(path, f))
   end
+  failures << "#{path}: Statement.lean is replaced by Vocabulary.lean" \
+    if File.exist?(File.join(path, 'Statement.lean'))
   toolchain = File.join(path, 'lean-toolchain')
   failures << "#{path}: lean-toolchain differs from the root" \
     if File.file?(toolchain) && File.read(toolchain).strip != root_toolchain
@@ -124,13 +127,14 @@ entries.each do |entry|
     failures << "#{path}: lake-manifest.json package revisions differ from the root manifest" \
       unless ws_revs == locked
   end
+  # Module files write `public import`/`meta import`; match every form.
   imports = lambda do |f|
-    File.file?(f) ? File.read(f).scan(/^\s*import\s+(\S+)/).flatten : []
+    File.file?(f) ? File.read(f).scan(/^\s*(?:public\s+)?(?:meta\s+)?import\s+(\S+)/).flatten : []
   end
-  failures << "#{path}: Statement.lean must import Mathlib only" \
-    unless imports.call(File.join(path, 'Statement.lean')) == ['Mathlib']
-  failures << "#{path}: Challenge.lean must import Statement only" \
-    unless imports.call(File.join(path, 'Challenge.lean')) == ['Statement']
+  %w[Vocabulary.lean Challenge.lean].each do |f|
+    failures << "#{path}: #{f} must import Mathlib only" \
+      unless imports.call(File.join(path, f)) == ['Mathlib']
+  end
   lakefile = File.join(path, 'lakefile.toml')
   if File.file?(lakefile)
     defaults = File.read(lakefile)[/^defaultTargets\s*=\s*\[([^\]]*)\]/, 1].to_s

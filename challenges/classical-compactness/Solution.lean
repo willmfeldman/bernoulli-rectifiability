@@ -1,10 +1,12 @@
-import Statement
-import InnerVariational
+module
+
+public import Vocabulary
+public import InnerVariational
 
 /-!
 # Solution: compactness of classical solutions
 
-The trusted vocabulary of `Statement.lean` is reconciled with the library's, then the library
+The trusted vocabulary of `Vocabulary.lean` is reconciled with the library's, then the library
 theorem `InnerVariational.Statements.classical_compactness` is applied.
 
 * `IsClassicalSolution`, `IsVariationalSolution` and `IsGaussGreenPair` have the same fields as
@@ -17,6 +19,8 @@ theorem `InnerVariational.Statements.classical_compactness` is applied.
 
 open MeasureTheory Metric Set Filter Topology
 open scoped NNReal ENNReal RealInnerProductSpace
+
+@[expose] public section
 
 noncomputable section
 

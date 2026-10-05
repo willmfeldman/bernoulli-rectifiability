@@ -4,7 +4,8 @@
   "theorem_names": [
     "challenge_main_theorem",
     "challenge_chi_eq_indicator",
-    "challenge_laplacian_measure_eq"
+    "challenge_laplacian_measure_eq",
+    "challenge_model_cases"
   ],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
   "enable_nanoda": false

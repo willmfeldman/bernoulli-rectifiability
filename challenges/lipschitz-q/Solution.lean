@@ -1,10 +1,12 @@
-import Statement
-import InnerVariational
+module
+
+public import Vocabulary
+public import InnerVariational
 
 /-!
 # Solution: variational solutions with a Lipschitz coefficient
 
-The trusted vocabulary of `Statement.lean` is reconciled with the library's, then the library
+The trusted vocabulary of `Vocabulary.lean` is reconciled with the library's, then the library
 theorems of `InnerVariational/Statements/LipschitzQ.lean` are applied.
 
 * `unitBallVolume`, `hausdorffN`, `divergence`, `posIndicator`, `energyDq`, `oneHomRescale` and
@@ -21,6 +23,8 @@ theorems of `InnerVariational/Statements/LipschitzQ.lean` are applied.
 
 open MeasureTheory Metric Set Filter Topology
 open scoped NNReal ENNReal RealInnerProductSpace
+
+@[expose] public section
 
 noncomputable section
 

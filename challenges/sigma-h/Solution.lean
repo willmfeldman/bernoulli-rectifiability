@@ -1,10 +1,12 @@
-import Statement
-import InnerVariational
+module
+
+public import Vocabulary
+public import InnerVariational
 
 /-!
 # Solution: size and frequency on the set of highest density
 
-The trusted vocabulary of `Statement.lean` is reconciled with the library's, then the library
+The trusted vocabulary of `Vocabulary.lean` is reconciled with the library's, then the library
 theorems `InnerVariational.Statements.sigmaH_main` and `sigmaH_main_frequency` are applied.
 
 * `hausdorffN`, `unitBallVolume`, `divergence`, `posIndicator`, `energyD`,
@@ -20,6 +22,8 @@ theorems `InnerVariational.Statements.sigmaH_main` and `sigmaH_main_frequency` a
 
 open MeasureTheory Metric Set Filter Topology
 open scoped NNReal ENNReal RealInnerProductSpace
+
+@[expose] public section
 
 noncomputable section
 

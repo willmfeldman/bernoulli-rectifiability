@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Trusted statements: size and frequency on the set of highest density
@@ -65,6 +67,8 @@ some `t ∈ [0, 1]` and `N_0(u; 1) ≤ N₊`. Then there is `C = C(N₊, n)` suc
 * (3) is stated, as in the paper, for a solution on `B₁`; `N_x(u; 0+) = 1` is the convergence
   `N_x(u; r) → 1` as `r → 0+`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -202,3 +206,5 @@ def SigmaHFrequencyClaim (n : ℕ) : Prop :=
       {x | x ∈ sigmaH (ball 0 1) u χ ∧ ¬ Tendsto (frequencyN u χ x) (𝓝[>] 0) (𝓝 1)} = 0
 
 end KWChallenge
+
+end

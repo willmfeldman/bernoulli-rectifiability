@@ -1,0 +1,117 @@
+# Entry metadata for the `main-theorem` workspace (format: mathlib-initiative formalization.yaml v0.4).
+# The root formalization.yaml keeps its own schema for the repository's checkers.
+# Keep comments outside block scalars (`>-`); anything inside one becomes public text.
+
+version: v0.4
+
+project:
+  name: "Structure of non-minimizing Bernoulli free boundaries: rectifiability, identification of χ and of the Laplacian"
+  description: >-
+    A Lean 4 formalization of the main theorem of Kriventsov and Weiss
+    on variational solutions (u, χ) of the one-phase Bernoulli free
+    boundary problem: critical points, with respect to domain
+    variations, of the Alt–Caffarelli energy ∫(|∇u|² + χ), which need
+    not be minimizers. Here u ≥ 0 is Lipschitz and C² in {u > 0}, χ
+    takes values in {0, 1} with χ ≥ χ_{u>0} almost everywhere, and the
+    first domain variation of the energy vanishes for every Lipschitz
+    compactly supported vector field. In every dimension n ≥ 2 and on a
+    domain Ω, the first main result (Theorem 1.2) states that either u ≡
+    0 or χ = χ_{u>0} almost everywhere; that the free boundary Ω ∩ ∂{u >
+    0} is countably ℋ^{n-1}-rectifiable with locally finite
+    ℋ^{n-1}-measure; that Δu = ℋ^{n-1}⌊∂*{u>0} + 2α(n)√(H_x(u; 0+))
+    ℋ^{n-1}⌊Σ^H in the sense of distributions, where ∂* is De Giorgi's
+    reduced boundary and Σ^H the set of points of highest density; and
+    that at ℋ^{n-1}-almost every point of the free boundary outside the
+    reduced boundary the solution is asymptotically a two-plane
+    solution. The second result is the identification of χ on a domain
+    (Theorem 8.6), and the third is the identification of the Laplacian
+    measure on an open set (Theorem 8.7), together with the existence of
+    a Gauss–Green pair for {u > 0}. Every notion, including the
+    variational-solution property, the monotonicity quantities, Σ^H, the
+    reduced boundary and the distributional Laplacian, is written out
+    from Mathlib definitions. A fourth statement is a non-vacuity check,
+    not a theorem of the paper: the half-plane solution (y_n)⁺ and the
+    two-plane solution |y_n| are variational solutions, Σ^H excludes the
+    half-plane point 0 and contains the two-plane point 0, and the
+    normalization H_0(α(n)|y_n|; r) = 1 holds.
+  authors: ["William M. Feldman"]
+  responsible_maintainers: ["William M. Feldman"]
+  license: "Apache-2.0"
+
+classification:
+  arxiv: ["math.AP"]
+  msc2020: ["35R35", "49Q05", "49Q20", "28A75"]
+
+sources:
+  - title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries"
+    authors: ["Dennis Kriventsov", "Georg S. Weiss"]
+    type: paper
+    id: "doi:10.1002/cpa.22226"
+    location: "Theorems 1.2, 8.6 and 8.7 (arXiv:2306.10131v2); model solutions of Section 3.1 and the normalization of Section 8.2"
+    relationship: formalizes
+    note: >-
+      Formalizes Theorems 1.2 (i)–(iv), 8.6 and 8.7 of arXiv version 2
+      for variational solutions in every dimension n ≥ 2. Theorem 1.2
+      (iii) and Theorem 8.7 are stated in the form of the body of the
+      paper (the set Σ^H and the unaveraged height H_x(u; r)), for
+      which α(n) is normalized; the second display of Theorem 1.2 (iv)
+      carries the factor √(H_x(u; r)) supplied by Lemma 8.5 (1). The
+      non-vacuity check uses the one-dimensional model solutions of
+      Section 3.1. The differences are listed under fidelity.
+
+related_formalizations: []
+
+automation:
+  methods:
+    - method: agent
+      models: ["Claude Opus", "Claude Sonnet"]
+      framework: "Claude Code"
+  notes: >-
+    The Lean proofs were written by AI coding agents (Claude, by Anthropic)
+    under the author's mathematical direction and review. The theorem
+    statements, definitions and proof routes were reviewed by the author;
+    correctness rests on Lean's kernel check and the comparator challenges.
+
+review:
+  status: "author-verified"
+  notes: >-
+    The author reviewed the definitions and the statements of the compared
+    theorems against Kriventsov–Weiss, including every difference from the
+    printed statements recorded under fidelity, and the proof route against
+    the paper. The proofs are checked by Lean's kernel and by the comparator
+    challenges in the repository.
+
+fidelity:
+  divergences: >-
+    Theorem 1.2 (iii) is printed in the introduction with a set Σ_** and
+    an averaged height; the statement here uses the body's form (Theorem
+    8.7), with Σ^H and the unaveraged H_x(u; r) = r^{-(n+1)} ∫_{∂B_r(x)}
+    u² dℋ^{n-1}, for which α(n) is normalized. The second display of
+    Theorem 1.2 (iv) is printed without the factor √(H_x(u; r)) in front
+    of α(n)|(y − x)·ν|; the factor is needed (for u = 2α(n)|y_n|, χ ≡ 1,
+    the printed ratio stays bounded below) and is included. The
+    statements also assert two facts the paper uses without listing them
+    in the theorems: the limit H_x(u; 0+) exists at every point of Σ^H,
+    and {u > 0} has a Gauss–Green pair (locally finite perimeter) in Ω,
+    so that the reduced boundary is defined by a genuine perimeter
+    measure. The reduced boundary is defined from a Gauss–Green pair (a
+    Radon measure and a unit normal field) rather than from the BV
+    derivative of χ_{u>0}. Sphere integrals are taken against the
+    normalized Hausdorff measure ℋ^{n-1}, and "for ℋ^{n-1}-a.e. x ∈ A"
+    means an ℋ^{n-1}-null exceptional set. The non-vacuity check is not
+    a result of the paper.
+
+status:
+  main_results:
+    - declaration: "challenge_main_theorem"
+      file: "challenges/main-theorem/Challenge.lean"
+      comparator_config: "challenges/main-theorem/config.json"
+    - declaration: "challenge_chi_eq_indicator"
+      file: "challenges/main-theorem/Challenge.lean"
+      comparator_config: "challenges/main-theorem/config.json"
+    - declaration: "challenge_laplacian_measure_eq"
+      file: "challenges/main-theorem/Challenge.lean"
+      comparator_config: "challenges/main-theorem/config.json"
+    - declaration: "challenge_model_cases"
+      file: "challenges/main-theorem/Challenge.lean"
+      comparator_config: "challenges/main-theorem/config.json"

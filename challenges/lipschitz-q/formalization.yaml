@@ -1,0 +1,136 @@
+# Entry metadata for the `lipschitz-q` workspace (format: mathlib-initiative formalization.yaml v0.4).
+# The root formalization.yaml keeps its own schema for the repository's checkers.
+# Keep comments outside block scalars (`>-`); anything inside one becomes public text.
+
+version: v0.4
+
+project:
+  name: "Variational solutions of the Bernoulli free boundary problem with a Lipschitz coefficient: highest-density set, viscosity property, blow-ups and identification of χ"
+  description: >-
+    A Lean 4 formalization of part of the theory of Kriventsov and Weiss
+    for variational solutions of the one-phase Bernoulli free boundary
+    problem, extended from the functional ∫(|∇u|² + χ) to ∫(|∇u|² + Q²
+    χ) with a coefficient Q that is Lipschitz with 0 < c ≤ Q ≤ C', in
+    every dimension n ≥ 2. A variational solution for Q is a pair (u,
+    χ), with u ≥ 0 Lipschitz and C² in {u > 0} and χ ∈ {0, 1} with χ ≥
+    χ_{u>0} almost everywhere, whose first domain variation of this
+    functional vanishes; the identity carries the extra term ∇(Q²)·ξ χ.
+    The set Σ^H of highest density is defined with the coefficient
+    frozen at the point, M^{Q(x)}_x(u; 0+) ≥ Q(x)²|B₁|, where M^q is the
+    Weiss energy with χ replaced by q²χ. The six main results state: the
+    density characterization of Σ^H (x ∈ Σ^H if and only if x is a free
+    boundary point at which {χ = 1} has density one); Σ^H is relatively
+    closed; u is a viscosity solution of |∇u| = Q on the complement of
+    Σ^H; blow-up limits exist along subsequences and are variational
+    solutions on ℝⁿ for the constant coefficient Q(x₀), with L¹_loc
+    convergence of χ; blow-up limits are homogeneous of degree one; and
+    on a connected set either u ≡ 0 and χ = 1 almost everywhere, or χ =
+    χ_{u>0} almost everywhere. For Q ≡ 1 the definitions reduce to those
+    of the paper. Every notion is written out from Mathlib definitions.
+  authors: ["William M. Feldman"]
+  responsible_maintainers: ["William M. Feldman"]
+  license: "Apache-2.0"
+
+classification:
+  arxiv: ["math.AP"]
+  msc2020: ["35R35", "35D40", "49Q20"]
+
+sources:
+  - title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries"
+    authors: ["Dennis Kriventsov", "Georg S. Weiss"]
+    type: paper
+    id: "doi:10.1002/cpa.22226"
+    location: "Theorem 8.6, Lemma 8.3, Propositions 3.4 and 3.5, Section 6 and the proof of Theorem 9.3 (arXiv:2306.10131v2), there for Q ≡ 1"
+    relationship: adapts
+    note: >-
+      Adapts results that Kriventsov and Weiss prove for the constant
+      coefficient Q ≡ 1 (Theorem 8.6, Lemma 8.3, Propositions 3.4 and
+      3.5, Section 6, and the first step of the proof of Theorem 9.3)
+      to the functional ∫(|∇u|² + Q² χ) with Q Lipschitz and 0 < c ≤ Q
+      ≤ C', in every dimension n ≥ 2. What changes: the
+      domain-variation identity carries the term ∇(Q²)·ξ χ; the Weiss
+      energy is taken with the coefficient frozen at the centre and is
+      only almost monotone; Σ^H is defined with the frozen
+      coefficient; and blow-up limits are solutions for the constant
+      coefficient Q(x₀). What is new here is a complete,
+      machine-checked proof of these six statements for a general
+      Lipschitz coefficient, based on almost-monotonicity of the
+      frozen-coefficient Weiss energy and of the frequency. A
+      literature search (October 2026) found no published detailed
+      proof of them for a general Lipschitz coefficient: Kriventsov
+      and Weiss (arXiv:2508.12159, Remark 2.3) note that the frequency
+      formula extends with straightforward modifications to a weighted
+      energy, that a detailed treatment is not available in the
+      literature, and that a generalization of their main theorem to a
+      wider class of functionals is in preparation; special cases are
+      treated by Varvaruca and Weiss (Acta Math. 206 (2011), the
+      coefficient x_n) and by Bayrami, Fotouhi and Vosooqnejad
+      (arXiv:2509.00927, an axially symmetric weight in two
+      dimensions). The novelty of the statements themselves is
+      therefore unknown and not claimed.
+
+related_formalizations: []
+
+automation:
+  methods:
+    - method: agent
+      models: ["Claude Opus", "Claude Sonnet"]
+      framework: "Claude Code"
+  notes: >-
+    The Lean proofs were written by AI coding agents (Claude, by Anthropic)
+    under the author's mathematical direction and review. The theorem
+    statements, definitions and proof routes were reviewed by the author;
+    correctness rests on Lean's kernel check and the comparator challenges.
+
+review:
+  status: "author-verified"
+  notes: >-
+    The author reviewed the definitions and the statements of the compared
+    theorems against Kriventsov–Weiss, including every difference from the
+    printed statements recorded under fidelity, and the proof route against
+    the paper. The proofs are checked by Lean's kernel and by the comparator
+    challenges in the repository.
+
+fidelity:
+  divergences: >-
+    The paper states these results for the constant coefficient Q ≡ 1
+    only; here Q is Lipschitz on Ω with 0 < c ≤ Q ≤ C', and the bounds
+    and the constant C_V are universally quantified. The
+    domain-variation identity carries the term D(Q²)(x)ξ(x)χ(x), with Q²
+    differentiable almost everywhere (Rademacher). Σ^H is defined with
+    the coefficient frozen at the point; since M^{Q(x)}_x(u; r) is only
+    almost monotone for non-constant Q, its limit exists in [−∞, ∞) and
+    the constant-coefficient characterization "M_x(u; r) ≥ |B₁| for
+    every r" is not available. The density characterization uses the
+    relative free boundary of {y ∈ Ω : u(y) > 0}. The blow-up statements
+    are made along a sequence r_k → 0+ along which the rescalings u(x +
+    r_k ·)/r_k converge locally uniformly; the limit is a solution for
+    the constant coefficient Q(x) with the same C_V, and χ(x + r_k ·)
+    converges in L¹ on compact sets along a further subsequence. The
+    identification of χ is stated for a connected set on which (u, χ) is
+    a solution near every point, with Q bounded and Lipschitz on each
+    neighbourhood, and it adds χ = 1 almost everywhere when u ≡ 0. The
+    rectifiability and Hausdorff-measure bounds, the identification of
+    the Laplacian measure and the compactness of classical solutions are
+    not part of this entry.
+
+status:
+  main_results:
+    - declaration: "challenge_sigmaHQ_density"
+      file: "challenges/lipschitz-q/Challenge.lean"
+      comparator_config: "challenges/lipschitz-q/config.json"
+    - declaration: "challenge_sigmaHQ_closed"
+      file: "challenges/lipschitz-q/Challenge.lean"
+      comparator_config: "challenges/lipschitz-q/config.json"
+    - declaration: "challenge_viscosityQ"
+      file: "challenges/lipschitz-q/Challenge.lean"
+      comparator_config: "challenges/lipschitz-q/config.json"
+    - declaration: "challenge_blowup_limitQ"
+      file: "challenges/lipschitz-q/Challenge.lean"
+      comparator_config: "challenges/lipschitz-q/config.json"
+    - declaration: "challenge_blowup_homogeneousQ"
+      file: "challenges/lipschitz-q/Challenge.lean"
+      comparator_config: "challenges/lipschitz-q/config.json"
+    - declaration: "challenge_chi_eq_indicatorQ"
+      file: "challenges/lipschitz-q/Challenge.lean"
+      comparator_config: "challenges/lipschitz-q/config.json"

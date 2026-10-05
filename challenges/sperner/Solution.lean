@@ -1,5 +1,7 @@
-import Statement
-import Sperner
+module
+
+public import Vocabulary
+public import Sperner
 
 /-!
 # Solution: Sperner's inequality
@@ -7,6 +9,8 @@ import Sperner
 The claim is literally the statement of `Sperner.sperner_half_volume`, which is proved in the
 Mathlib-only library `Sperner` of this repository.
 -/
+
+@[expose] public section
 
 open SpernerChallenge
 

@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Trusted statements: variational solutions with a Lipschitz coefficient
@@ -75,6 +77,8 @@ is `ℝⁿ = EuclideanSpace ℝ (Fin n)` with Lebesgue measure `volume`, and eve
   solution near every point, with a coefficient bounded and Lipschitz on each neighbourhood. If
   `u ≡ 0` on `U` it also asserts `χ = 1` a.e. on `U`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -274,3 +278,5 @@ def ChiIdentificationQClaim (n : ℕ) : Prop :=
       χ =ᵐ[volume.restrict U] posIndicator u
 
 end KWChallenge
+
+end

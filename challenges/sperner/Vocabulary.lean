@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Trusted statement: Sperner's inequality for one-homogeneous harmonic functions
@@ -31,6 +33,8 @@ All notions are Mathlib's: `EuclideanSpace ℝ (Fin n)` with Lebesgue measure `v
 with vanishing Laplacian nearby).
 -/
 
+@[expose] public section
+
 noncomputable section
 
 open MeasureTheory Metric Set InnerProductSpace
@@ -56,3 +60,5 @@ def SpernerHalfVolumeClaim (n : ℕ) : Prop :=
           ∃ a : ℝ, 0 < a ∧ ∀ y ∈ connectedComponentIn {y | 0 < u y} y₀, u y = a * ⟪y, e⟫)
 
 end SpernerChallenge
+
+end

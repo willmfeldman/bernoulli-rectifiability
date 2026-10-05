@@ -1,10 +1,12 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Trusted statements: the Main Theorem and the identification of `χ` and of `Δu`
 
 This file imports Mathlib only. It is the complete trusted surface of the `main-theorem`
-challenge: `Challenge.lean` and `Solution.lean` both state the three claims below.
+challenge: `Challenge.lean` and `Solution.lean` both state the four claims below.
 
 ## Source
 
@@ -16,6 +18,8 @@ DOI 10.1002/cpa.22226, arXiv:2306.10131. Numbers refer to arXiv version 2 (`[K�
 * `ChiIdentificationClaim`: [K–W, Theorem 8.6], `χ = χ_{u>0}` unless `u ≡ 0`.
 * `LaplacianMeasureClaim`: [K–W, Theorem 8.7], rectifiability of the free boundary and the formula
   for `Δu`.
+* `ModelCasesClaim`: a non-vacuity check, not a theorem of the paper (see "Non-vacuity check"
+  below).
 
 ## Vocabulary
 
@@ -45,6 +49,8 @@ the definitions and the conclusions.
 * `laplacianMeasure Ω u χ = ℋ^{n-1}⌊∂*{u>0} + 2 α(n) √(H_x(u; 0+)) ℋ^{n-1}⌊Σ^H`, and
   `HasDistribLaplacianOn Ω u μ`: `Δu = μ` in `Ω` in the sense of distributions, with `μ` a
   Radon measure on `Ω`.
+* `halfPlaneSolution n = (y_n)⁺` and `twoPlaneSolution n = |y_n|`: the model solutions of the
+  non-vacuity check.
 
 "For `ℋ^{n-1}`-a.e. `x ∈ A`, `P x`" is written `ℋ^{n-1} {x ∈ A | ¬ P x} = 0`: the exceptional set
 is `ℋ^{n-1}`-null as an outer measure, so no measurability of `A` is needed.
@@ -70,7 +76,18 @@ depends only on `u` on `Ω`.
   the limit `H_x(u; 0+)` exists at every point of `Σ^H` (stated after [K–W, Theorem 8.6]), so that
   the density of the Laplacian measure is not a junk value; and `{u > 0}` has locally finite
   perimeter in `Ω` (a Gauss–Green pair exists), so that `∂*{u > 0}` is not vacuous.
+
+## Non-vacuity check
+
+`ModelCasesClaim` is a sanity check, not a theorem of the paper (see the docstring of
+`challenge_model_cases` in `Challenge.lean`). Its model solutions are the one-dimensional examples
+of [K–W, §3.1], extended to `ℝⁿ` (`n ≥ 1`): the half-plane solution `u = (y_n)⁺`, the blow-up at
+regular free boundary points, with `M_0(u; 0+) = |B₁| / 2`, so `0 ∉ Σ^H`; and the two-plane
+solution `u = |y_n|`, a "multiplicity 2" point, with `M_0(u; 0+) = |B₁|`, so `0 ∈ Σ^H`. In both
+`χ = χ_{u>0}` and `C_V = 1`.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -180,6 +197,28 @@ def lastCoord (n : ℕ) [NeZero n] : Fin n :=
 `H_0(α(n)|y_n|; r) = 1`. -/
 def alphaN (n : ℕ) [NeZero n] : ℝ :=
   1 / √(∫ y in sphere (0 : Rn n) 1, y (lastCoord n) ^ 2 ∂hausdorffN n (n - 1))
+
+/-- The half-plane solution `u(y) = max(y_n, 0)`. -/
+def halfPlaneSolution (n : ℕ) [NeZero n] : Rn n → ℝ :=
+  fun y => max (y (lastCoord n)) 0
+
+/-- The two-plane solution `u(y) = |y_n|`. -/
+def twoPlaneSolution (n : ℕ) [NeZero n] : Rn n → ℝ :=
+  fun y => |y (lastCoord n)|
+
+/-- **Model solutions.** For every `n ≥ 1`:
+
+* `((y_n)⁺, χ_{(y_n)⁺ > 0})` is a variational solution on `ℝⁿ` with constant `1`, and
+  `0 ∉ Σ^H` for it;
+* `(|y_n|, χ_{|y_n| > 0})` is a variational solution on `ℝⁿ` with constant `1`, and `0 ∈ Σ^H`
+  for it;
+* `H_0(α(n)|y_n|; r) = 1` for every `r > 0`. -/
+def ModelCasesClaim (n : ℕ) [NeZero n] : Prop :=
+  (IsVariationalSolution univ 1 (halfPlaneSolution n) (posIndicator (halfPlaneSolution n)) ∧
+    (0 : Rn n) ∉ sigmaH univ (halfPlaneSolution n) (posIndicator (halfPlaneSolution n))) ∧
+  (IsVariationalSolution univ 1 (twoPlaneSolution n) (posIndicator (twoPlaneSolution n)) ∧
+    (0 : Rn n) ∈ sigmaH univ (twoPlaneSolution n) (posIndicator (twoPlaneSolution n))) ∧
+  ∀ r : ℝ, 0 < r → heightH (fun y => alphaN n * |y (lastCoord n)|) 0 r = 1
 
 /-- `S ⊆ ℝⁿ` is countably `ℋ^k`-rectifiable: up to an `ℋ^k`-null set it is contained in a countable
 union of Lipschitz images of `ℝ^k`. (Lipschitz images of all of `ℝ^k` rather than of subsets of
@@ -294,3 +333,5 @@ def LaplacianMeasureClaim (n : ℕ) [NeZero n] : Prop :=
     HasDistribLaplacianOn Ω u (laplacianMeasure Ω u χ)
 
 end KWChallenge
+
+end

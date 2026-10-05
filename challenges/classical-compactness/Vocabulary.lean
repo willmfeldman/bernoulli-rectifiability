@@ -1,4 +1,6 @@
-import Mathlib
+module
+
+public import Mathlib
 
 /-!
 # Trusted statement: compactness of classical solutions
@@ -61,6 +63,8 @@ with Lebesgue measure `volume`, and the claim assumes `n ≥ 2`.
 * The claim adds that `H_x(u; r) → H_x(u; 0+)` as `r → 0+` at every `x ∈ Σ^H`, so that
   `H_x(u; 0+)` is not a junk value.
 -/
+
+@[expose] public section
 
 noncomputable section
 
@@ -289,3 +293,5 @@ def ClassicalCompactnessClaim (n : ℕ) [NeZero n] : Prop :=
       HasDistribLaplacianOn (ball 0 1) v (laplacianMeasure (ball 0 1) v (posIndicator v))
 
 end KWChallenge
+
+end

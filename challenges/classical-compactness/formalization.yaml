@@ -1,0 +1,92 @@
+# Entry metadata for the `classical-compactness` workspace (format: mathlib-initiative formalization.yaml v0.4).
+# The root formalization.yaml keeps its own schema for the repository's checkers.
+# Keep comments outside block scalars (`>-`); anything inside one becomes public text.
+
+version: v0.4
+
+project:
+  name: "Limits of classical solutions of the one-phase Bernoulli problem are variational solutions with rectifiable free boundary"
+  description: >-
+    A Lean 4 formalization of the compactness theorem of Kriventsov and
+    Weiss for classical solutions of the one-phase Bernoulli free
+    boundary problem (Theorem 9.3 = Theorem 1.3). A classical solution
+    on the unit ball B₁ ⊆ ℝⁿ, n ≥ 2, is a nonnegative function, harmonic
+    in {u > 0}, whose free boundary is locally a smooth hypersurface on
+    which |∇u| = 1. The main result states that if a sequence of
+    classical solutions is bounded and uniformly Lipschitz on B₁, then
+    along a subsequence it converges locally uniformly to a limit u such
+    that (u, χ_{u>0}) is a variational solution (a critical point of the
+    Alt–Caffarelli energy with respect to domain variations); the free
+    boundaries converge locally in the Hausdorff sense and the
+    positivity sets in L¹_loc, unless u ≡ 0; α(n)√(H_x(u; 0+)) ≤ 1 at
+    ℋ^{n-1}-almost every point of the set Σ^H of highest density; and
+    the free boundary of the limit is countably ℋ^{n-1}-rectifiable with
+    locally finite ℋ^{n-1}-measure, with Δu = ℋ^{n-1}⌊∂*{u>0} +
+    2α(n)√(H_x(u; 0+)) ℋ^{n-1}⌊Σ^H. Every notion is written out from
+    Mathlib definitions.
+  authors: ["William M. Feldman"]
+  responsible_maintainers: ["William M. Feldman"]
+  license: "Apache-2.0"
+
+classification:
+  arxiv: ["math.AP"]
+  msc2020: ["35R35", "49Q20", "28A75"]
+
+sources:
+  - title: "Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries"
+    authors: ["Dennis Kriventsov", "Georg S. Weiss"]
+    type: paper
+    id: "doi:10.1002/cpa.22226"
+    location: "Theorem 9.3 = Theorem 1.3 (arXiv:2306.10131v2); classical solutions as in Definition 9.1"
+    relationship: formalizes
+    note: >-
+      Formalizes Theorem 9.3 (stated in the introduction as Theorem
+      1.3) of arXiv version 2, in every dimension n ≥ 2, with
+      classical solutions as in Definition 9.1. The hypothesis is the
+      uniform Lipschitz bound of Theorem 1.3; the differences are
+      listed under fidelity.
+
+related_formalizations: []
+
+automation:
+  methods:
+    - method: agent
+      models: ["Claude Opus", "Claude Sonnet"]
+      framework: "Claude Code"
+  notes: >-
+    The Lean proofs were written by AI coding agents (Claude, by Anthropic)
+    under the author's mathematical direction and review. The theorem
+    statements, definitions and proof routes were reviewed by the author;
+    correctness rests on Lean's kernel check and the comparator challenges.
+
+review:
+  status: "author-verified"
+  notes: >-
+    The author reviewed the definitions and the statements of the compared
+    theorems against Kriventsov–Weiss, including every difference from the
+    printed statements recorded under fidelity, and the proof route against
+    the paper. The proofs are checked by Lean's kernel and by the comparator
+    challenges in the repository.
+
+fidelity:
+  divergences: >-
+    Theorem 9.3 prints the hypothesis sup_k ‖∇u_k‖_{C^{0,1}(B₁)} < ∞;
+    the statement here uses the bound sup_k ‖u_k‖_{C^{0,1}(B₁)} ≤ C of
+    Theorem 1.3, as |u_k| ≤ C and u_k C-Lipschitz on B₁ with one
+    constant C, and the limit is a variational solution with constant
+    C_V = C. Theorem 1.3 is printed with Σ_** and an averaged height;
+    the statement uses the form of Theorem 9.3, with Σ^H and the
+    unaveraged height. "The free boundary is locally a smooth graph" is
+    stated as "locally the zero set of a smooth function with
+    nonvanishing gradient". Local Hausdorff convergence of the free
+    boundaries and L¹_loc convergence of the positivity sets are written
+    out with compact subsets of B₁. The statement also asserts that
+    H_x(u; r) → H_x(u; 0+) at every point of Σ^H, so that H_x(u; 0+) is
+    not a junk value. The reduced boundary is defined from a Gauss–Green
+    pair.
+
+status:
+  main_results:
+    - declaration: "challenge_classical_compactness"
+      file: "challenges/classical-compactness/Challenge.lean"
+      comparator_config: "challenges/classical-compactness/config.json"

@@ -16,17 +16,17 @@ project:
   license: "Apache-2.0"
   language: "Lean"
   theorem_prover: "Lean 4"
-  lean_toolchain: "leanprover/lean4:v4.34.1"
-  mathlib: "v4.34.1"
+  lean_toolchain: "leanprover/lean4:v4.35.0-rc3"
+  mathlib: "v4.35.0-rc3"
   dependencies:
     - name: "gmt-foundations"
       repository: "https://github.com/willmfeldman/gmt-foundations"
-      version: "v0.2.0"
-      commit: "b913189f34b55cd0f6a1758507a7521a782bef3b"
+      version: "v0.3.0"
+      commit: "45847e7fce2ff1c78a19a048befc3c418dd8b1fb"
     - name: "elliptic-bernoulli-foundations"
       repository: "https://github.com/willmfeldman/elliptic-bernoulli-foundations"
-      version: "v0.2.0"
-      commit: "36923fa81e96f972db82d5cfc80b3f037be59ad6"
+      version: "v0.3.0"
+      commit: "2b64e837a591b32c8ab3c7608304057e556ec0aa"
 
 source:
   reference: >-
@@ -65,7 +65,7 @@ automation:
         challenges in challenges/.
 
 # Headline theorems. `lean_name` is the hypothesis-discharged library theorem; `challenge_theorem`
-# is the matching theorem of the standalone challenge workspace, whose Statement.lean restates
+# is the matching theorem of the standalone challenge workspace, whose Vocabulary.lean restates
 # the claim in Mathlib vocabulary only. Targets of kind `sanity-check` are certified by their
 # challenge workspace alone and have no library `lean_name`.
 targets:
@@ -159,8 +159,7 @@ targets:
       C; α(n)√(H_x(u;0+)) ≤ 1 at ℋ^{n-1}-a.e. x ∈ Σ^H; either u ≡ 0 or χ_{u_k>0} → χ_{u>0} in
       L¹_loc(B₁) and ∂{u_k>0} → ∂{u>0} locally in the Hausdorff sense; and B₁ ∩ ∂{u>0} is
       countably ℋ^{n-1}-rectifiable with locally finite measure, with the Laplacian formula of
-      Theorem 8.7. The paper's hypothesis on ‖∇u_k‖_{C^{0,1}} is read as a bound on
-      ‖u_k‖_{C^{0,1}(B₁)}.
+      Theorem 8.7.
 
   - id: "sperner"
     title: "Sperner's inequality for homogeneous harmonic functions, with the equality case"
@@ -180,7 +179,7 @@ targets:
   - id: "model-cases"
     title: "Model solutions (non-vacuity check)"
     kind: "sanity-check"
-    challenge: "challenges/model-cases"
+    challenge: "challenges/main-theorem"
     challenge_theorem: "challenge_model_cases"
     source: "The one-dimensional solutions of Kriventsov–Weiss §3.1, extended to ℝⁿ."
     statement: >-
@@ -274,14 +273,14 @@ comparator:
   external_challenges:
     directory: "challenges"
     purpose: >-
-      Standalone comparator challenge workspaces. Statement.lean and Challenge.lean import
-      Mathlib only; Solution.lean imports InnerVariational (or Sperner) and proves the same
-      statements.
-    toolchain: "leanprover/lean4:v4.34.1"
-    mathlib: "v4.34.1"
+      Standalone comparator challenge workspaces. Vocabulary.lean and Challenge.lean import
+      Mathlib only (Challenge.lean inlines Vocabulary.lean); Solution.lean imports Vocabulary and
+      InnerVariational (or Sperner) and proves the same statements.
+    toolchain: "leanprover/lean4:v4.35.0-rc3"
+    mathlib: "v4.35.0-rc3"
     permitted_axioms: ["propext", "Classical.choice", "Quot.sound"]
-    comparator_revision: "575674928e239f5bc452aab72d1dd7b0f1326494"
-    lean4export_revision: "076e8e57707e813375e8f9da8bf989799ace9680"
+    comparator_revision: "fd5d5bcf14177b187f66d4502071268d877887c3"
+    lean4export_revision: "66f1fb4bc256072069767fce52d39480e4524869"
     landrun_revision: "811cfff51ceaf3d9843708aa6d22e9b84ccac8b4"
     entries:
       - id: "main-theorem"
@@ -290,10 +289,12 @@ comparator:
           - "challenge_main_theorem"
           - "challenge_chi_eq_indicator"
           - "challenge_laplacian_measure_eq"
+          - "challenge_model_cases"
         checks: >-
           Theorems 1.2, 8.6 and 8.7 with the variational-solution notion, Σ^H, the reduced
           boundary, rectifiability and the Laplacian measure all written out in Mathlib
-          vocabulary.
+          vocabulary, plus a non-vacuity check (not coverage): the model solutions satisfy the
+          definitions and Σ^H separates them.
       - id: "sigma-h"
         path: "challenges/sigma-h"
         theorem_names:
@@ -310,13 +311,6 @@ comparator:
         theorem_names:
           - "challenge_sperner_half_volume"
         checks: "Sperner's inequality with the equality case (the library is Mathlib-only)."
-      - id: "model-cases"
-        path: "challenges/model-cases"
-        theorem_names:
-          - "challenge_model_cases"
-        checks: >-
-          Sanity check, not coverage: the model solutions satisfy the challenge definitions and
-          Σ^H separates them.
       - id: "lipschitz-q"
         path: "challenges/lipschitz-q"
         theorem_names:
@@ -336,8 +330,8 @@ ci:
   workflow: ".github/workflows/ci.yml"
   expected_check: >-
     lake build --wfail (InnerVariational and Sperner), proof-integrity scan, file-size limit,
-    module check, manifest lean-name and exact axiom check, challenge hygiene, and challenge
-    elaboration
+    module check, manifest lean-name and exact axiom check, challenge hygiene, challenge
+    elaboration, and the challenge module, vocabulary-sync, import and size check
   release_workflow: ".github/workflows/release-comparator.yml"
   release_check: >-
     actual comparator execution over every challenge config, with attestation artifact; required
