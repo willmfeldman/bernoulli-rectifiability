@@ -380,17 +380,6 @@ theorem extendPositive_nonneg (hT : IsPositiveDistrib Ω T) (hΩ : IsOpen Ω) {F
             exact mul_le_of_le_one_right (by positivity) (hη01 x).2
   exact ge_of_tendsto' h fun k => hT.nonneg _ (hψ k) (hψ0 k)
 
-theorem extendPositive_congr {Ω : Set (Rn n)} {T T' : (Rn n → ℝ) → ℝ}
-    (h : ∀ φ, IsTestFunction Ω φ → T φ = T' φ) (F : Rn n → ℝ) :
-    extendPositive Ω T F = extendPositive Ω T' F := by
-  unfold extendPositive
-  split_ifs with hF
-  · congr 1
-    funext k
-    exact h _ ((exists_isTestFunction_approx hF.1 hF.2.1 hF.2.2.1
-      hF.2.2.2).choose_spec.2.2.choose_spec k).1
-  · rfl
-
 end IsPositiveDistrib
 
 /-! ### Integrals of continuous functions with compact support in `Ω` -/

@@ -43,8 +43,6 @@ kept under the renormalization `v_k = u_k / √H_0(u_k; 1)`.
 * `approx1D_limit_frequency_eq_one`: Theorem 5.3's conclusion `N_∞ = 1` in its direction-free
   form. If the tangential energy `∫_A |∇u_k − ⟪∇u_k, ν_k⟫ν_k|² / H_0(u_k; 1)` tends to `0` on
   `A = B_1 \ B̄_{1/2}` for unit vectors `ν_k`, then `N_0(u_k; 1/2) → 1`.
-* `approx1D_limit_frequency_eq_one_coord`: the paper's coordinate form (`ν = e_n`, as in the
-  statement of Theorem 5.3), derived from the direction-free form.
 * `approx1D_limit_tendsto_profile`: the refined form used in the proof of Lemma 8.5.
   `v_k − α(n)|y·ν_k| → 0` strongly in `W^{1,2}(B_{7/8} \ B̄_{5/8})`, written with `u_k` and
   `H_0(u_k; 1)` in the style of `Statements.main_theorem_iv`.
@@ -204,7 +202,7 @@ the renormalized energy on `A = B_1 \ B̄_{1/2}` vanishes in the limit:
 `∫_A |∇u_k − ⟪∇u_k, ν_k⟫ ν_k|² / H_0(u_k; 1) → 0`. Then `N_0(u_k; 1/2) → 1`.
 
 This is the paper's hypothesis `Σ_{i<n} ∫_A |∂_i v_k|² → 0` for `v_k = u_k/√H_0(u_k;1)`, with
-`e_n` replaced by `ν_k` (see `approx1D_limit_frequency_eq_one_coord`). Rotating `u_k` by an
+`e_n` replaced by `ν_k`. Rotating `u_k` by an
 isometry sending `e_n` to `ν_k` reduces this form to the paper's. The paper concludes along
 the subsequence of Lemma 5.1. The limit `1` does not depend on the subsequence, so the whole
 sequence converges.
@@ -279,90 +277,5 @@ theorem approx1D_limit_tendsto_profile [NeZero n] (hn : 2 ≤ n) {Ω : Set (Rn n
       (C' := fun _ => 1) hn hν
       (fun _ => QBounds.one Ω) (fun k => (hsol k).toQ) hΩ (fun _ => by simp [weissKappa_zero]) hcl
       hZ (fun k => (e2 k).trans_le (hN k)) (by simpa only [e2, e12] using hδ) htan).2⟩
-
-/-! ### The paper's coordinate form -/
-
-/-- The last coordinate index `n - 1 : Fin n` (the paper's `x_n`). -/
-def lastCoord (n : ℕ) [NeZero n] : Fin n :=
-  ⟨n - 1, Nat.sub_lt (Nat.pos_of_ne_zero (NeZero.ne n)) one_pos⟩
-
-/-- The tangential part of a vector with respect to `e_n` has squared norm
-`Σ_{i < n-1} vᵢ²`. -/
-theorem norm_sub_inner_single_lastCoord_sq [NeZero n] (g : Rn n) :
-    ‖g - ⟪g, EuclideanSpace.single (lastCoord n) (1 : ℝ)⟫ •
-      EuclideanSpace.single (lastCoord n) 1‖ ^ 2 =
-      ∑ i : Fin n, if (i : ℕ) < n - 1 then g i ^ 2 else 0 := by
-  rw [EuclideanSpace.real_norm_sq_eq]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  have hlast : ((lastCoord n : Fin n) : ℕ) = n - 1 := rfl
-  have hi : (i : ℕ) < n - 1 ↔ i ≠ lastCoord n := by
-    rw [Ne, Fin.ext_iff, hlast]
-    have := i.isLt
-    omega
-  simp only [EuclideanSpace.inner_single_right, one_mul, PiLp.sub_apply, PiLp.smul_apply,
-    PiLp.single_apply, smul_eq_mul, conj_trivial]
-  by_cases h : i = lastCoord n
-  · subst h
-    simp [hi]
-  · simp [h, hi]
-
-/-- **Theorem 5.3, the paper's coordinate form**: the hypothesis
-`Σ_{i<n} ∫_A |∂_i v_k|² → 0` in coordinates, the free direction being the last coordinate `x_n`,
-as in the statement of Theorem 5.3. It is derived from `approx1D_limit_frequency_eq_one` with
-`ν = e_n`. -/
-theorem approx1D_limit_frequency_eq_one_coord [NeZero n] (hn : 2 ≤ n) {Ω : Set (Rn n)}
-    {C_V : ℕ → ℝ≥0} {u χ : ℕ → Rn n → ℝ} {Nplus : ℝ}
-    (hsol : ∀ k, IsVariationalSolution Ω (C_V k) (u k) (χ k))
-    (hΩ : closedBall (0 : Rn n) 2 ⊆ Ω)
-    (hcl : ∀ k, (0 : Rn n) ∈ closure {y | 0 < u k y})
-    (hM : ∀ k, unitBallVolume n ≤ monotonicityM (u k) (χ k) 0 (1 / 2))
-    (hN : ∀ k, frequencyN (u k) (χ k) 0 2 ≤ Nplus)
-    (hδ : Tendsto (fun k => frequencyN (u k) (χ k) 0 2 - frequencyN (u k) (χ k) 0 (1 / 2))
-      atTop (𝓝 0))
-    (htan : Tendsto (fun k => (∑ i : Fin n, if (i : ℕ) < n - 1 then
-        ∫ y in ball (0 : Rn n) 1 \ closedBall 0 (1 / 2),
-          (fderiv ℝ (u k) y (EuclideanSpace.single i 1)) ^ 2 else 0) /
-        heightH (u k) 0 1) atTop (𝓝 0)) :
-    Tendsto (fun k => frequencyN (u k) (χ k) 0 (1 / 2)) atTop (𝓝 1) := by
-  set A : Set (Rn n) := ball (0 : Rn n) 1 \ closedBall 0 (1 / 2) with hA
-  set ν : Rn n := EuclideanSpace.single (lastCoord n) 1
-  have hν : ∀ _ : ℕ, ‖ν‖ = 1 := fun _ => by simp [ν]
-  refine approx1D_limit_frequency_eq_one (ν := fun _ => ν) hn hν hsol hΩ hcl hM hN hδ ?_
-  refine htan.congr fun k => ?_
-  congr 1
-  -- `A` lies in `B_2`, where `u k` is `C_V k`-Lipschitz, so the partials are bounded there.
-  have hAB : A ⊆ ball (0 : Rn n) 2 := fun y hy =>
-    mem_ball.2 ((mem_ball.1 (sdiff_subset hy)).trans (by norm_num))
-  have hlip := (hsol k).lipschitzOnWith 0 2 (ball_subset_closedBall.trans hΩ)
-  have hAfin : volume A ≠ ⊤ := (measure_mono (sdiff_subset.trans (subset_refl _))).trans_lt
-    (measure_ball_lt_top (x := (0 : Rn n)) (r := 1)) |>.ne
-  have hint : ∀ i : Fin n,
-      IntegrableOn (fun y => (fderiv ℝ (u k) y (EuclideanSpace.single i 1)) ^ 2) A := by
-    intro i
-    refine Measure.integrableOn_of_bounded (M := (C_V k : ℝ) ^ 2) hAfin
-      ((measurable_fderiv_apply_const ℝ (u k) _).pow_const 2).aestronglyMeasurable ?_
-    filter_upwards [self_mem_ae_restrict (measurableSet_ball.diff measurableSet_closedBall)]
-      with y hy
-    have h1 : ‖fderiv ℝ (u k) y (EuclideanSpace.single i 1)‖ ≤ C_V k := by
-      refine (ContinuousLinearMap.le_opNorm _ _).trans ?_
-      have : ‖EuclideanSpace.single i (1 : ℝ)‖ = 1 := by simp
-      rw [this, mul_one]
-      exact norm_fderiv_le_of_lipschitzOn ℝ (isOpen_ball.mem_nhds (hAB hy)) hlip
-    rw [Real.norm_eq_abs, abs_pow, sq_abs, ← sq_abs]
-    rw [Real.norm_eq_abs] at h1
-    exact pow_le_pow_left₀ (abs_nonneg _) h1 2
-  have hpt : ∀ y, ‖gradient (u k) y - ⟪gradient (u k) y, ν⟫ • ν‖ ^ 2 =
-      ∑ i : Fin n, if (i : ℕ) < n - 1 then
-        (fderiv ℝ (u k) y (EuclideanSpace.single i 1)) ^ 2 else 0 := by
-    intro y
-    rw [norm_sub_inner_single_lastCoord_sq]
-    simp_rw [gradient_apply_eq_fderiv]
-  simp_rw [hpt]
-  rw [integral_finsetSum _ fun i _ => ?_]
-  · refine Finset.sum_congr rfl fun i _ => ?_
-    split_ifs <;> simp [hA]
-  · split_ifs
-    · exact hint i
-    · exact integrableOn_zero
 
 end InnerVariational

@@ -26,9 +26,6 @@ variational solution on `Ω`.
   `M_x` (Proposition 3.4) the two agree.
 * `mem_sigmaH_iff_tendsto_volume` (density characterization): `x ∈ Σ^H` if and only if
   `x ∈ Ω`, `x ∈ closure{u > 0}`, `u(x) = 0`, and `|{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1`.
-  `mem_sigmaH_iff_frontier` and `mem_sigmaH_iff_frontier_inter` state it with
-  `x ∈ frontier {u > 0}`, resp. `x ∈ frontier {y ∈ Ω | u(y) > 0}` (the free boundary relative
-  to `Ω`).
 * `closure_sigmaH_inter_subset` (relative closedness, from the upper semicontinuity in
   Proposition 3.5): `closure Σ^H ∩ Ω ⊆ Σ^H`.
 
@@ -55,29 +52,6 @@ variable {n : ℕ}
 namespace IsVariationalSolution
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n}
-
-/-! ### `∫ χ` as a volume -/
-
-/-- `∫_{B_r(x)} χ = |{χ = 1} ∩ B_r(x)|` when `B_r(x) ⊆ Ω`, since `χ ∈ {0, 1}` on `Ω`. -/
-theorem setIntegral_chi_eq_measureReal (h : IsVariationalSolution Ω C u χ) {r : ℝ}
-    (hball : ball x r ⊆ Ω) :
-    ∫ y in ball x r, χ y = volume.real ({y | χ y = 1} ∩ ball x r) :=
-  h.toQ.setIntegral_chi_eq_measureReal hball
-
-/-- The density ratio `|{χ = 1} ∩ B_r(x)| / |B_r(x)| = r^{-n} ∫_{B_r(x)} χ / |B_1|`. -/
-theorem volume_inter_ball_div_volume_ball (h : IsVariationalSolution Ω C u χ) {r : ℝ}
-    (hr : 0 < r) (hball : ball x r ⊆ Ω) :
-    volume ({y | χ y = 1} ∩ ball x r) / volume (ball x r) =
-      ENNReal.ofReal ((r ^ n)⁻¹ * (∫ y in ball x r, χ y) / unitBallVolume n) :=
-  h.toQ.volume_inter_ball_div_volume_ball hr hball
-
-/-- For `u(x) = 0`: `|{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1` if and only if `M_x(0+) = |B_1|`. -/
-theorem tendsto_volume_ratio_iff [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω)
-    (hux : u x = 0) :
-    Tendsto (fun r => volume ({y | χ y = 1} ∩ ball x r) / volume (ball x r)) (𝓝[>] 0) (𝓝 1) ↔
-      Mzero u χ x = unitBallVolume n := by
-  simpa [MzeroQ_one] using
-    IsVariationalSolutionQ.tendsto_volume_ratio_iff (QBounds.one Ω) h.toQ hx hux
 
 /-! ### Characterizations of `Σ^H` -/
 
@@ -109,11 +83,6 @@ theorem eq_zero_of_mem_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ)
   rw [← h.sigmaHQ_one] at hxS
   exact IsVariationalSolutionQ.eq_zero_of_mem_sigmaHQ (QBounds.one Ω) h.toQ hxS
 
-/-- `M_x(u; 0+) = |B_1|` on `Σ^H`. -/
-theorem Mzero_eq_of_mem_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    (hxS : x ∈ sigmaH Ω u χ) : Mzero u χ x = unitBallVolume n :=
-  le_antisymm (h.Mzero_le_unitBallVolume hxS.1) (h.mem_sigmaH_iff_le_Mzero.1 hxS).2.2
-
 /-- **Density characterization of `Σ^H`** (Props 3.4, 3.5): `x ∈ Σ^H` if and only if `x ∈ Ω`,
 `x ∈ closure {u > 0}`, `u(x) = 0`, and `|{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1` as `r → 0+`. -/
 theorem mem_sigmaH_iff_tendsto_volume [NeZero n] (h : IsVariationalSolution Ω C u χ) :
@@ -132,29 +101,6 @@ theorem mem_frontier_pos_iff (h : IsVariationalSolution Ω C u χ) (hx : x ∈ �
 theorem mem_frontier_pos_inter_iff (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω) :
     x ∈ frontier {y | y ∈ Ω ∧ 0 < u y} ↔ x ∈ frontier {y | 0 < u y} :=
   h.toQ.mem_frontier_pos_inter_iff hx
-
-/-- **Density characterization of `Σ^H`**, with `frontier {u > 0}`. -/
-theorem mem_sigmaH_iff_frontier [NeZero n] (h : IsVariationalSolution Ω C u χ) :
-    x ∈ sigmaH Ω u χ ↔ x ∈ Ω ∧ x ∈ frontier {y | 0 < u y} ∧
-      Tendsto (fun r => volume ({y | χ y = 1} ∩ ball x r) / volume (ball x r)) (𝓝[>] 0)
-        (𝓝 1) := by
-  rw [h.mem_sigmaH_iff_tendsto_volume]
-  constructor
-  · rintro ⟨hx, hcl, hux, hlim⟩
-    exact ⟨hx, (h.mem_frontier_pos_iff hx).2 ⟨hcl, hux⟩, hlim⟩
-  · rintro ⟨hx, hfr, hlim⟩
-    obtain ⟨hcl, hux⟩ := (h.mem_frontier_pos_iff hx).1 hfr
-    exact ⟨hx, hcl, hux, hlim⟩
-
-/-- **Density characterization of `Σ^H`**, with the relative free boundary
-`frontier {y ∈ Ω | u(y) > 0}`: `x ∈ Σ^H` if and only if `x ∈ Ω` lies on it and
-`|{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1` as `r → 0+`. -/
-theorem mem_sigmaH_iff_frontier_inter [NeZero n] (h : IsVariationalSolution Ω C u χ) :
-    x ∈ sigmaH Ω u χ ↔ x ∈ Ω ∧ x ∈ frontier {y | y ∈ Ω ∧ 0 < u y} ∧
-      Tendsto (fun r => volume ({y | χ y = 1} ∩ ball x r) / volume (ball x r)) (𝓝[>] 0)
-        (𝓝 1) := by
-  rw [← h.sigmaHQ_one]
-  exact IsVariationalSolutionQ.mem_sigmaHQ_iff_frontier_inter' (QBounds.one Ω) h.toQ
 
 /-! ### Relative closedness -/
 

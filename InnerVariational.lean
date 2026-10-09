@@ -125,7 +125,6 @@ public import InnerVariational.Registry.Harmonic
 public import InnerVariational.Registry.Reifenberg
 public import InnerVariational.Registry.Sobolev
 public import InnerVariational.Regular.Bump
-public import InnerVariational.Regular.ChiInterior
 public import InnerVariational.Regular.ChiInteriorQ
 public import InnerVariational.Regular.Density
 public import InnerVariational.Regular.DensityQ

@@ -181,16 +181,6 @@ theorem heightH_doubling {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ 
   have : 0 ≤ κ ^ 2 * s ^ 2 := by positivity
   linarith [mul_sub (κ ^ 2) (r ^ 2) (s ^ 2)]
 
-include d in
-/-- `e^{κ² r² / 8} ≤ e^{1/32}` when `0 ≤ κ` and `κ r ≤ 1/2`, with `r ≥ 0`. -/
-theorem exp_sq_div_eight_le {r : ℝ} (hr : 0 ≤ r) (hκ : κ * r ≤ 1 / 2) :
-    Real.exp (κ ^ 2 * r ^ 2 / 8) ≤ Real.exp (1 / 32) := by
-  have hk := d.kappa_nonneg
-  refine Real.exp_le_exp.2 ?_
-  have h0 : 0 ≤ κ * r := mul_nonneg hk hr
-  have : (κ * r) ^ 2 ≤ (1 / 2) ^ 2 := pow_le_pow_left₀ h0 hκ 2
-  nlinarith
-
 /-- **Lemma 4.4 (V-doubling) with an error term**, for `t ≤ s ≤ r ≤ 2t` inside the data interval:
 `V(s) ≤ 2^n C V(r)`, under the hypotheses of `heightH_doubling`. -/
 theorem volumeV_doubling {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b) (hr2 : r ≤ 2 * t)

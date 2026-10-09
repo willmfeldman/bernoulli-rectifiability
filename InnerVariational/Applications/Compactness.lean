@@ -46,9 +46,11 @@ Both results are the case `Q ≡ 1` of their versions for Lipschitz coefficients
 * Gradients: the strong convergence of gradients from the proof of Proposition 3.5
   (`tendsto_setIntegral_norm_gradient_sub_sq`), which uses only the Lipschitz bound, harmonicity on
   `{u_k > 0}`, and interior estimates for harmonic functions.
-* `χ_k`: Lemma 3.3, in the form of the key estimate `abs_integral_gradVariation_le` with one fixed
-  Lipschitz cutoff, gives a bound on `∫ χ_k div ψ` uniform in `k` on a neighbourhood of each
-  compact set (`exists_abs_integral_chi_mul_divergence_le`); then BV compactness
+* `χ_k`: Lemma 3.3, in the form of the key estimate
+  `IsVariationalSolutionQ.abs_integral_gradVariation_le` with one fixed Lipschitz cutoff, gives a
+  bound on `∫ χ_k div ψ` uniform in `k` on a neighbourhood of each
+  compact set (`IsVariationalSolutionQ.exists_abs_integral_chi_mul_divergence_le`); then BV
+  compactness
   (`Registry.exists_subseq_tendsto_of_integral_mul_divergence_le`) gives a subsequence converging
   in `L¹_loc` and a.e. to some `f₀`. Since each `χ_k` is `{0, 1}`-valued on `U`, so is `f₀` a.e.,
   and `χ₀ := if f₀ = 1 then 1 else 0` is a `{0, 1}`-valued representative.
@@ -76,20 +78,6 @@ namespace IsVariationalSolution
 open Kernel
 
 variable {U : Set (Rn n)} {C : ℝ≥0}
-
-/-- **Uniform local BV bound for `χ`** (Lemma 3.3, uniform version). Every compact
-`K ⊆ U` has an open neighbourhood `W ⊆ U` and a bound `P` such that `|∫ χ div ψ| ≤ P` for every
-variational solution `(u, χ)` on `U` with constant `C` and every `ψ ∈ C^{0,1}_c(W; ℝⁿ)` with
-`|ψ| ≤ 1`. The bound depends only on `C`, `K` and `U`. -/
-theorem exists_abs_integral_chi_mul_divergence_le (hU : IsOpen U) {K : Set (Rn n)}
-    (hK : IsCompact K) (hKU : K ⊆ U) :
-    ∃ W, IsOpen W ∧ K ⊆ W ∧ W ⊆ U ∧ ∃ P : ℝ, ∀ u χ : Rn n → ℝ, IsVariationalSolution U C u χ →
-      ∀ ψ : Rn n → Rn n, IsLipTestField W ψ → (∀ y, ‖ψ y‖ ≤ 1) →
-        |∫ y, χ y * divergence ψ y| ≤ P := by
-  obtain ⟨W, hWo, hKW, hWU, P, hP⟩ :=
-    IsVariationalSolutionQ.exists_abs_integral_chi_mul_divergence_le (C := C) hU hK hKU 1
-  exact ⟨W, hWo, hKW, hWU, P, fun u χ h ψ hψ hψ1 =>
-    hP _ u χ 0 1 (QBounds.one U) h.toQ ψ hψ hψ1⟩
 
 /-- `(u, χ_{u>0})` is a variational solution as soon as `(u, χ)` is one and the domain variation
 of `(u, χ_{u>0})` vanishes. -/

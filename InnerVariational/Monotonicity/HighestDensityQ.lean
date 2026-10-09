@@ -22,8 +22,7 @@ The set of highest density is
   `x ∈ Ω`, `x ∈ closure {u > 0}`, `u(x) = 0`, and `|{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1`;
   `mem_sigmaHQ_iff_frontier_inter'` states it with the relative free boundary
   `frontier {y ∈ Ω | u(y) > 0}`.
-* `closure_sigmaHQ_inter_subset'`: `Σ^H` is relatively closed in `Ω`;
-  `closure_sigmaHQ_inter_subset_of_local` is the form for solutions given near each point of `U`.
+* `closure_sigmaHQ_inter_subset'`: `Σ^H` is relatively closed in `Ω`.
 
 As for `Q ≡ 1` (`Monotonicity/HighestDensity.lean`), the density characterization uses the density
 formula `M^{Q(x)}_x(0+) = Q(x)² lim r^{-n} |{χ = 1} ∩ B_r(x)|` and the bound
@@ -232,20 +231,5 @@ theorem sigmaHQ_inter_of_subset {U V : Set (Rn n)} (hVU : V ⊆ U) (Q u χ : Rn 
     sigmaHQ U Q u χ ∩ V = sigmaHQ V Q u χ := by
   ext y
   exact ⟨fun ⟨⟨_, h1, h2⟩, hy⟩ => ⟨hy, h1, h2⟩, fun ⟨hy, h1, h2⟩ => ⟨⟨hVU hy, h1, h2⟩, hy⟩⟩
-
-/-- **`Σ^H` is relatively closed**, for a variational solution with bounded Lipschitz
-coefficient near each point of `U` (the local form of `closure_sigmaHQ_inter_subset'`). -/
-theorem closure_sigmaHQ_inter_subset_of_local {U : Set (Rn n)} {Q u χ : Rn n → ℝ} [NeZero n]
-    (h : ∀ x ∈ U, ∃ V, IsOpen V ∧ x ∈ V ∧ V ⊆ U ∧ ∃ (C L : ℝ≥0) (c C' : ℝ),
-      QBounds V Q L c C' ∧ IsVariationalSolutionQ V C Q u χ) :
-    closure (sigmaHQ U Q u χ) ∩ U ⊆ sigmaHQ U Q u χ := by
-  rintro x ⟨hcl, hx⟩
-  obtain ⟨V, hVo, hxV, hVU, C, L, c, C', hQ, hV⟩ := h x hx
-  have hclV : x ∈ closure (sigmaHQ V Q u χ) := by
-    rw [← sigmaHQ_inter_of_subset hVU]
-    exact hVo.closure_inter ⟨hcl, hxV⟩
-  have := hV.closure_sigmaHQ_inter_subset' hQ ⟨hclV, hxV⟩
-  rw [← sigmaHQ_inter_of_subset hVU] at this
-  exact this.1
 
 end InnerVariational

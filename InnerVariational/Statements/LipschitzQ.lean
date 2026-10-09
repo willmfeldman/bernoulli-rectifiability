@@ -41,8 +41,8 @@ namespace IsVariationalSolutionQ
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {Q u χ : Rn n → ℝ} {x : Rn n} {L : ℝ≥0} {c C' : ℝ}
 
-/-- **Density characterization of `Σ^H`** (Theorem 7.2), Lipschitz-coefficient version of
-`IsVariationalSolution.mem_sigmaH_iff_frontier_inter`: `x ∈ Σ^H` if and only if `x ∈ Ω` lies on
+/-- **Density characterization of `Σ^H`** (Theorem 7.2), Lipschitz-coefficient version: `x ∈ Σ^H` if
+and only if `x ∈ Ω` lies on
 the relative free boundary `frontier {y ∈ Ω | u(y) > 0}` and
 `|{χ = 1} ∩ B_r(x)| / |B_r(x)| → 1` as `r → 0+`. -/
 theorem mem_sigmaHQ_iff_frontier_inter [NeZero n] (hQ : QBounds Ω Q L c C')
@@ -102,7 +102,7 @@ end IsVariationalSolutionQ
 
 namespace Singular
 
-/-- **Theorem 8.6, glued form**, Lipschitz-coefficient version of `chi_eq_indicator_of_local`.
+/-- **Theorem 8.6, glued form**, Lipschitz-coefficient version.
 Let `U` be connected and let `(u, χ)` be a `Q`-variational solution near every point of `U`,
 with bounded and Lipschitz coefficient on the neighbourhood. Then either `u ≡ 0` on `U` and
 `χ = 1` a.e. on `U`, or `χ = χ_{u>0}` a.e. on `U`. The proof is

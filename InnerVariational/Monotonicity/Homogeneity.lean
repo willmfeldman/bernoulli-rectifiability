@@ -35,13 +35,14 @@ blow-ups `u_{x, r_k} → u₀` of a variational solution (`u(x) = 0`, `u₀` Lip
 
 ## Proof
 
-`integral_annulus_sub_inner_sq_le`: integrating the derivative formula of Proposition 3.4 over
+`IsVariationalSolutionQ.integral_annulus_sub_inner_sq_le`: integrating the derivative formula of
+Proposition 3.4 over
 `(s, t)` bounds `∫_{B_t(x)∖B_s(x)} (u − ∇u·(y−x))²` by `t^{n+2}/2 (M_x(t) − M_x(s))` (the
 polar-coordinates annulus formula). For the rescalings,
 `M_0(u_{x,r_k}; t) − M_0(u_{x,r_k}; s) = M_x(r_k t) − M_x(r_k s) → 0`. The strong `L²_loc`
 convergence of gradients (`Blowup.lean`) and uniform convergence give
 `∫_{B_t∖B_s} (u₀ − ∇u₀·y)² = 0`. On the open set `{u₀ > 0}`, where `u₀` is smooth, this gives
-`∇u₀·y = u₀` everywhere (`inner_gradient_eq_of_tendsto_monotonicityM_sub`); on `{u₀ = 0}` both
+`∇u₀·y = u₀` everywhere; on `{u₀ = 0}` both
 sides vanish, since `∇u₀ = 0` there.
 
 Homogeneity then follows from Euler's identity by an ODE argument along rays
@@ -328,68 +329,6 @@ theorem inner_gradient_eq_of_tendsto_integral_annulus [NeZero n] {C : ℝ≥0} {
     hcont continuousOn_const hyP
   simp only [hF₀def, Pi.zero_apply, sub_eq_zero] at heq
   exact heq.symm
-
-namespace IsVariationalSolution
-
-variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n} {R : ℝ}
-
-/-! ### The annulus bound from the derivative of `M` -/
-
-/-- **Integrated Proposition 3.4**: for `0 < s ≤ t < R`, `B_R(x) ⊆ Ω`,
-`∫_{B_t(x) ∖ B_s(x)} (u − ∇u·(y−x))² ≤ (t^{n+2} / 2) (M_x(t) − M_x(s))`. -/
-theorem integral_annulus_sub_inner_sq_le [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    (hR : ball x R ⊆ Ω) {s t : ℝ} (hs : 0 < s) (hst : s ≤ t) (htR : t < R) :
-    ∫ y in ball x t \ ball x s, (u y - ⟪gradient u y, y - x⟫) ^ 2 ≤
-      t ^ (n + 2) / 2 * (monotonicityM u χ x t - monotonicityM u χ x s) := by
-  set F : Rn n → ℝ := fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2 with hFdef
-  have ht : 0 < t := hs.trans_le hst
-  have hK : closedBall x t ⊆ Ω := (closedBall_subset_ball htR).trans hR
-  have hFint : IntegrableOn F (ball x t) :=
-    (integrableOn_sub_inner_sq (isCompact_closedBall x t) (h.continuousOn.mono hK)
-      (fun y hy => h.norm_gradient_le (hK hy)) x).mono_set ball_subset_closedBall
-  rw [integral_ball_diff_ball hs.le hst hFint]
-  set d := h.radialData hR hs hst htR
-  have hSI0 : ∀ σ, 0 < σ → 0 ≤ sphereIntegral F x σ := fun σ hσ =>
-    sphereIntegral_nonneg hσ.le fun _ _ => sq_nonneg _
-  have key := AbsolutelyContinuousOnInterval.integral_le_sub_of_ae_le
-    (f := monotonicityM u χ x)
-    (f' := fun σ => 2 / σ ^ (n + 2) * sphereIntegral F x σ)
-    (g := fun σ => 2 / t ^ (n + 2) * sphereIntegral F x σ) hst
-    d.absolutelyContinuousOnInterval_monotonicityM
-    (ae_mem_Ioo_imp_mono hs.le htR.le (h.hasDerivAt_monotonicityM_ae hR))
-    (.of_forall fun σ hσ => mul_nonneg (by positivity) (hSI0 σ (hs.trans hσ.1)))
-    (.of_forall fun σ hσ => by
-      have hσ0 : 0 < σ := hs.trans hσ.1
-      refine mul_le_mul_of_nonneg_right ?_ (hSI0 σ hσ0)
-      exact div_le_div_of_nonneg_left zero_le_two (by positivity)
-        (pow_le_pow_left₀ hσ0.le hσ.2.le _))
-  rw [intervalIntegral.integral_const_mul] at key
-  have htp : 0 < t ^ (n + 2) := by positivity
-  rw [div_mul_eq_mul_div, div_le_iff₀ htp] at key
-  linarith
-
-/-! ### Euler's identity for limits -/
-
-/-- **Euler's identity for limits** (proof of Proposition 3.5). Let `(w_k, χ_k)` be variational
-solutions on `B_ρ` with a common constant, `w_k → w₀` locally uniformly on `B_ρ`, and
-`M_0(w_k; t) − M_0(w_k; s) → 0` for all `0 < s ≤ t < ρ`. Then `∇w₀(y)·y = w₀(y)` at every
-`y ∈ B_ρ ∖ {0}` with `w₀(y) > 0`. -/
-theorem inner_gradient_eq_of_tendsto_monotonicityM_sub [NeZero n] {w χw : ℕ → Rn n → ℝ}
-    {w₀ : Rn n → ℝ} {ρ : ℝ} (hw : ∀ k, IsVariationalSolution (ball 0 ρ) C (w k) (χw k))
-    (hconv : TendstoLocallyUniformlyOn w w₀ atTop (ball 0 ρ))
-    (hM : ∀ s t, 0 < s → s ≤ t → t < ρ → Tendsto (fun k =>
-      monotonicityM (w k) (χw k) 0 t - monotonicityM (w k) (χw k) 0 s) atTop (𝓝 0))
-    {y : Rn n} (hy : y ∈ ball 0 ρ) (hy0 : y ≠ 0) (hpos : 0 < w₀ y) :
-    ⟪gradient w₀ y, y⟫ = w₀ y := by
-  refine inner_gradient_eq_of_tendsto_integral_annulus (fun k => (hw k).isLipHarmonicPos)
-    (fun k => (hw k).lipschitzOnWith) hconv (fun s t hs hst htρ => ?_) hy hy0 hpos
-  have hlim := (hM s t hs hst htρ).const_mul (t ^ (n + 2) / 2)
-  rw [mul_zero] at hlim
-  refine squeeze_zero (fun k => setIntegral_nonneg (measurableSet_ball.diff measurableSet_ball)
-    fun _ _ => sq_nonneg _) (fun k => ?_) hlim
-  simpa [sub_zero] using (hw k).integral_annulus_sub_inner_sq_le (subset_refl _) hs hst htρ
-
-end IsVariationalSolution
 
 /-! ### The energy of a limit satisfying Euler's identity -/
 

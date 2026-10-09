@@ -123,11 +123,6 @@ theorem modMonotonicityM_one_nonneg : 0 ≤ modMonotonicityM (weissKappa L c C')
   h.modMonotonicityM_nonneg hQ hcl (t := 1 / 2) (R := 2) (by norm_num) hZ hκ hΩ
     (by norm_num : (1 : ℝ) ∈ Icc (1 / 2) 2)
 
-/-- `N_0(u; s) ≥ 1 − κ² s² / 8` for `s ∈ [1/2, 2]`. -/
-theorem one_sub_le_weightedFrequencyN_of_mem {s : ℝ} (hs : s ∈ Icc (1 / 2 : ℝ) 2) :
-    1 - weissKappa L c C' ^ 2 * s ^ 2 / 8 ≤ weightedFrequencyN Q u χ 0 s :=
-  h.one_sub_le_weightedFrequencyN hQ hcl (t := 1 / 2) (R := 2) (by norm_num) hZ hκ hΩ hs
-
 /-- **The pinching controls `κ`**: `(15/32) κ² ≤ Ñ(2) − Ñ(1/2)`. -/
 theorem weissKappa_sq_le_modFrequencyN_sub :
     15 / 32 * weissKappa L c C' ^ 2 ≤

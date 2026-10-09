@@ -33,7 +33,7 @@ and 7.
 * Lemma 4.6: `IsVariationalSolution.heightH_change_of_point_le`,
   `IsVariationalSolution.heightH_le_change_of_point` (the two bounds on `H`) and
   `IsVariationalSolution.frequencyN_change_of_point_le` (the bound on `N`), with the
-  existential forms `heightH_change_of_point`, `frequencyN_change_of_point`.
+  existential form `frequencyN_change_of_point`.
 * `IsVariationalSolution.continuousOn_frequencyN`: `y ↦ N_y(u; r)` is continuous where
   `B̄_r(y) ⊆ Ω` and `H_y(u; r) > 0`.
 
@@ -82,13 +82,6 @@ nondecreasing. -/
 theorem integral_ball_sq_le {r : ℝ} (hr : 0 < r) (hΩ : closedBall x r ⊆ Ω) :
     ∫ y in ball x r, u y ^ 2 ≤ r ^ (n + 2) * heightH u x r :=
   IsVariationalSolutionQ.integral_ball_sq_le (QBounds.one Ω) h.toQ hr hΩ
-
-/-- If `c ≤ ∫_{∂B_s(x)} u²` for every `s ∈ [ρ, ρ']`, then
-`(ρ' − ρ) c ≤ ∫_{B_{ρ'}(x) ∖ B_ρ(x)} u²`. -/
-theorem mul_le_integral_annulus_sq {ρ ρ' c : ℝ} (hρ : 0 ≤ ρ) (hρρ' : ρ ≤ ρ')
-    (hΩ : closedBall x ρ' ⊆ Ω) (hc : ∀ s ∈ Icc ρ ρ', c ≤ sphereIntegral (fun y => u y ^ 2) x s) :
-    (ρ' - ρ) * c ≤ ∫ y in ball x ρ' \ ball x ρ, u y ^ 2 :=
-  h.toQ.mul_le_integral_annulus_sq hρ hρρ' hΩ hc
 
 /-- **Lemma 4.6, upper bound on `H`**: if `0 < r`, `B̄_r(x) ⊆ Ω` and
 `y ∈ B_{r/4}(x)`, then `H_y(u; 5r/8) ≤ 8 (8/5)^{n+1} H_x(u; r)`. The constant depends only on
@@ -269,11 +262,6 @@ theorem eventually_closedBall_subset {Ω : Set (Rn n)} (hΩ : IsOpen Ω) {x : Rn
   rw [mem_closedBall] at hz
   linarith [dist_triangle z y x]
 
-/-- `Ω_r = {x : B̄_r(x) ⊆ Ω}` is open. -/
-theorem isOpen_setOf_closedBall_subset {Ω : Set (Rn n)} (hΩ : IsOpen Ω) {r : ℝ} (hr : 0 ≤ r) :
-    IsOpen {x : Rn n | closedBall x r ⊆ Ω} :=
-  isOpen_iff_mem_nhds.2 fun _ hx => eventually_closedBall_subset hΩ hr hx
-
 namespace IsVariationalSolution
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n}
@@ -371,25 +359,5 @@ theorem frequencyN_change_of_point (n : ℕ) [NeZero n] (Np : ℝ) :
         frequencyN u χ y s ≤ K :=
   ⟨frequencyNChangeConst n Np, fun _ _ _ _ _ _ h hr hΩ hx hM hN _ hy _ hs hsr =>
     h.frequencyN_change_of_point_le hx hr hΩ hM hN hy hs hsr⟩
-
-/-- **Lemma 4.6, bounds on `H`**, existential form: there is `K = K(n, N₊) > 0`
-with `K⁻¹ H_x(u; r) ≤ H_y(u; 5r/8) ≤ K H_x(u; r)` for `y ∈ B_{r/4}(x)`, under the hypotheses of
-`frequencyN_change_of_point`. The proof of Lemma 4.6 as written ends with
-`C H_y(5/8) ≥ H_0(1)`, the reverse of the stated upper bound; both bounds hold and Theorems 6.1
-and 6.3 use both. -/
-theorem heightH_change_of_point (n : ℕ) [NeZero n] (Np : ℝ) :
-    ∃ K : ℝ, 0 < K ∧ ∀ (Ω : Set (Rn n)) (C : ℝ≥0) (u χ : Rn n → ℝ) (x : Rn n) (r : ℝ),
-      IsVariationalSolution Ω C u χ → 0 < r → closedBall x r ⊆ Ω →
-      x ∈ closure {y | 0 < u y} → unitBallVolume n ≤ monotonicityM u χ x (r / 4) →
-      frequencyN u χ x r ≤ Np → ∀ y ∈ ball x (r / 4),
-        heightH u y (5 / 8 * r) ≤ K * heightH u x r ∧
-          heightH u x r ≤ K * heightH u y (5 / 8 * r) := by
-  refine ⟨max (heightHChangeConst n) (heightHChangeConst' n Np),
-    (heightHChangeConst_pos n).trans_le (le_max_left _ _),
-    fun Ω C u χ x r h hr hΩ hx hM hN y hy => ⟨?_, ?_⟩⟩
-  · exact (h.heightH_change_of_point_le hr hΩ hy).trans
-      (mul_le_mul_of_nonneg_right (le_max_left _ _) (heightH_nonneg u x hr.le))
-  · exact (h.heightH_le_change_of_point hx hr hΩ hM hN hy).trans
-      (mul_le_mul_of_nonneg_right (le_max_right _ _) (heightH_nonneg u y (by positivity)))
 
 end InnerVariational

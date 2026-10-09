@@ -48,8 +48,6 @@ paper (the frequency formula, doubling, …) follow from that file.
 * `IsVariationalSolution.hasDerivAt_monotonicityM_ae`: the derivative of `M` (Proposition 3.4).
 * `IsVariationalSolution.monotoneOn_monotonicityM`: `M` is nondecreasing on `(0, R)`.
 * `IsVariationalSolution.monotoneOn_monotonicityM_Ioc`: on `(0, R]` when `B̄_R(x) ⊆ Ω`.
-* `IsVariationalSolution.exists_lipschitzOnWith_monotonicityM`: `M` is Lipschitz on `[a, b]`,
-  `0 < a ≤ b < R` (the absolute continuity in Proposition 3.4).
 * `IsVariationalSolution.energyD_identity_ae`: identity (3.9).
 
 ## Notes
@@ -310,28 +308,11 @@ section Sphere
 
 variable {s : ℝ}
 
-theorem aestronglyMeasurable_sphere_u (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
-    (hs : 0 ≤ s) (hsR : s < R) :
-    AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => u (x + s • (ω : Rn n)))
-      (sphereMeasure n) :=
-  (h.continuousOn.comp_continuous (continuous_add_smul_sphere x s)
-    (add_smul_mem_of_lt hR hs hsR)).aestronglyMeasurable
-
 theorem aestronglyMeasurable_sphere_chi (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) :
     AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => χ (x + s • (ω : Rn n)))
       (sphereMeasure n) :=
   h.toQ.aestronglyMeasurable_sphere_chi hR hs hsR
-
-/-- `|u| ≤ |u(x)| + C s` on `∂B_s(x)`. -/
-theorem abs_le_of_mem_sphere (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
-    (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) : |u y| ≤ |u x| + C * s :=
-  h.toQ.abs_le_of_mem_sphere hR hs hsR hy
-
-theorem abs_inner_le_of_mem_sphere (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
-    (hs : 0 ≤ s) (hsR : s < R) {y : Rn n} (hy : y ∈ sphere x s) :
-    |⟪gradient u y, y - x⟫| ≤ C * s :=
-  h.toQ.abs_inner_le_of_mem_sphere hR hs hsR hy
 
 theorem sphereIntegrable_u_sq (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) : SphereIntegrable (fun y => u y ^ 2) x s :=
@@ -340,11 +321,6 @@ theorem sphereIntegrable_u_sq (h : IsVariationalSolution Ω C u χ) (hR : ball x
 theorem sphereIntegrable_inner_sq (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) : SphereIntegrable (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s :=
   h.toQ.sphereIntegrable_inner_sq hR hs hsR
-
-theorem sphereIntegrable_mix (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
-    (hs : 0 ≤ s) (hsR : s < R) :
-    SphereIntegrable (fun y => u y * ⟪gradient u y, y - x⟫) x s :=
-  h.toQ.sphereIntegrable_mix hR hs hsR
 
 theorem sphereIntegrable_energy (h : IsVariationalSolution Ω C u χ) (hR : ball x R ⊆ Ω)
     (hs : 0 ≤ s) (hsR : s < R) :
@@ -615,21 +591,6 @@ theorem radialData_volumeV {s : ℝ} (hs : s ∈ Icc a b) :
 end RadialData
 
 /-! ### Proposition 3.4: monotonicity -/
-
-/-- `M_x` is Lipschitz on `[a, b]` for `0 < a ≤ b < R` (proof of Proposition 3.4). -/
-theorem exists_lipschitzOnWith_monotonicityM [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    (hR : ball x R ⊆ Ω) {a b : ℝ} (ha : 0 < a) (hbR : b < R) :
-    ∃ K, LipschitzOnWith K (monotonicityM u χ x) (Icc a b) := by
-  rcases le_total a b with hab | hba
-  · set d := h.radialData hR ha hab hbR
-    obtain ⟨K₁, hK₁⟩ := d.lipschitzOnWith_energyD
-    obtain ⟨K₂, hK₂⟩ := d.lipschitzOnWith_heightH
-    exact ⟨K₁ + K₂, hK₁.sub hK₂⟩
-  · refine ⟨0, fun s hs t ht => ?_⟩
-    have : s = t := by
-      rcases hs with ⟨h1, h2⟩; rcases ht with ⟨h3, h4⟩
-      exact le_antisymm (h2.trans (hba.trans h3)) (h4.trans (hba.trans h1))
-    simp [this]
 
 /-- **Proposition 3.4**: `s ↦ M_x(u; s)` is nondecreasing on `(0, R)` when
 `B_R(x) ⊆ Ω`. -/

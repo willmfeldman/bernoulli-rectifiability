@@ -22,9 +22,6 @@ gmt-foundations' Sobolev layer (`GMTFoundations.HasWeakGradient`, `GMTFoundation
 * `LipschitzWith.integral_mul_fderiv_eq_neg`: integration by parts for two Lipschitz functions on a
   finite-dimensional real space, one of them compactly supported:
   `∫ f ∂ᵥg = -∫ g ∂ᵥf`, where `∂ᵥ` is the a.e. defined derivative `fderiv ℝ · x v`.
-* `LipschitzOnWith.integral_mul_fderiv_eq_neg`: the same with `f` only Lipschitz on an open set
-  `Ω ⊇ tsupport g`, and `InnerVariational.integral_mul_partial_eq_neg`, its coordinate version on
-  `ℝⁿ` (with `integral_mul_inner_gradient_eq_neg`, the directional form with gradients).
   This is the classical integration by parts for Lipschitz functions (Evans–Gariepy, Chapter 4:
   Lipschitz functions are locally `W^{1,∞}` with weak gradient the a.e. gradient).
 * `InnerVariational.hasWeakGradient_gradient_of_lipschitzOnWith`: a function Lipschitz on an open
@@ -78,28 +75,6 @@ theorem fderiv_apply_eq_zero_of_notMem_tsupport {x : E} (hx : x ∉ tsupport g) 
     image_eq_zero_of_notMem_tsupport (fun h => hx (tsupport_fderiv_subset ℝ h))
   simp [this]
 
-/-- **Integration by parts, local version.** If `f` is Lipschitz on an open set `Ω`, and `g` is
-Lipschitz with compact support in `Ω`, then `∫ f ∂ᵥg = -∫ g ∂ᵥf`, with the a.e. defined
-derivatives `fderiv ℝ · x v`. -/
-theorem LipschitzOnWith.integral_mul_fderiv_eq_neg {Ω : Set E} (hΩ : IsOpen Ω)
-    (hf : LipschitzOnWith C f Ω) (hg : LipschitzWith D g) (hg_supp : HasCompactSupport g)
-    (hgΩ : tsupport g ⊆ Ω) (v : E) :
-    ∫ x, f x * fderiv ℝ g x v ∂μ = -∫ x, g x * fderiv ℝ f x v ∂μ := by
-  obtain ⟨F, hF, hfF⟩ := hf.extend_real
-  have h1 : (fun x => f x * fderiv ℝ g x v) = fun x => F x * fderiv ℝ g x v := by
-    funext x
-    by_cases hx : x ∈ Ω
-    · rw [hfF hx]
-    · rw [fderiv_apply_eq_zero_of_notMem_tsupport (fun h => hx (hgΩ h)), mul_zero, mul_zero]
-  have h2 : (fun x => g x * fderiv ℝ f x v) = fun x => g x * fderiv ℝ F x v := by
-    funext x
-    by_cases hx : x ∈ Ω
-    · have : f =ᶠ[𝓝 x] F := Filter.eventually_of_mem (hΩ.mem_nhds hx) fun y hy => hfF hy
-      rw [this.fderiv_eq]
-    · rw [image_eq_zero_of_notMem_tsupport (fun h => hx (hgΩ h)), zero_mul, zero_mul]
-  rw [h1, h2]
-  exact hF.integral_mul_fderiv_eq_neg hg hg_supp v
-
 end General
 
 namespace InnerVariational
@@ -112,38 +87,6 @@ theorem gradient_apply_eq_fderiv (f : Rn n → ℝ) (x : Rn n) (i : Fin n) :
   rw [gradient, ← InnerProductSpace.toDual_symm_apply (𝕜 := ℝ), real_inner_comm,
     EuclideanSpace.inner_single_left]
   simp
-
-/-- **Integration by parts for Lipschitz functions.** If `f` is Lipschitz on an open set
-`Ω ⊆ ℝⁿ` and `g` is Lipschitz with compact support in `Ω`, then
-`∫_Ω f ∂ᵢg = -∫_Ω g ∂ᵢf`, with the a.e. partial derivatives `∂ᵢ = fderiv ℝ · x eᵢ`.
-(Cf. Evans–Gariepy, Chapter 4.) -/
-theorem integral_mul_partial_eq_neg (hΩ : IsOpen Ω) (hf : LipschitzOnWith C f Ω)
-    (hg : LipschitzWith D g) (hg_supp : HasCompactSupport g) (hgΩ : tsupport g ⊆ Ω)
-    (i : Fin n) :
-    ∫ x in Ω, f x * fderiv ℝ g x (EuclideanSpace.single i 1) =
-      -∫ x in Ω, g x * fderiv ℝ f x (EuclideanSpace.single i 1) := by
-  rw [setIntegral_eq_integral_of_forall_compl_eq_zero,
-    setIntegral_eq_integral_of_forall_compl_eq_zero]
-  · exact hf.integral_mul_fderiv_eq_neg hΩ hg hg_supp hgΩ _
-  · intro x hx
-    rw [image_eq_zero_of_notMem_tsupport (fun h => hx (hgΩ h)), zero_mul]
-  · intro x hx
-    rw [fderiv_apply_eq_zero_of_notMem_tsupport (fun h => hx (hgΩ h)), mul_zero]
-
-/-- Directional form of `integral_mul_partial_eq_neg`, with gradients:
-`∫_Ω f ⟪∇g, v⟫ = -∫_Ω g ⟪∇f, v⟫`. -/
-theorem integral_mul_inner_gradient_eq_neg (hΩ : IsOpen Ω) (hf : LipschitzOnWith C f Ω)
-    (hg : LipschitzWith D g) (hg_supp : HasCompactSupport g) (hgΩ : tsupport g ⊆ Ω)
-    (v : Rn n) :
-    ∫ x in Ω, f x * ⟪gradient g x, v⟫_ℝ = -∫ x in Ω, g x * ⟪gradient f x, v⟫_ℝ := by
-  simp only [gradient, InnerProductSpace.toDual_symm_apply]
-  rw [setIntegral_eq_integral_of_forall_compl_eq_zero,
-    setIntegral_eq_integral_of_forall_compl_eq_zero]
-  · exact hf.integral_mul_fderiv_eq_neg hΩ hg hg_supp hgΩ v
-  · intro x hx
-    rw [image_eq_zero_of_notMem_tsupport (fun h => hx (hgΩ h)), zero_mul]
-  · intro x hx
-    rw [fderiv_apply_eq_zero_of_notMem_tsupport (fun h => hx (hgΩ h)), mul_zero]
 
 /-- A function Lipschitz on an open set `Ω ⊆ ℝⁿ` has weak gradient `gradient f` on `Ω`. -/
 theorem hasWeakGradient_gradient_of_lipschitzOnWith (hΩ : IsOpen Ω) (hf : LipschitzOnWith C f Ω) :

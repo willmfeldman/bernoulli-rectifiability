@@ -163,17 +163,6 @@ theorem Mzero_le_of_closedBall [NeZero n] (h : IsVariationalSolution Ω C u χ) 
   obtain ⟨R', hR', hR'Ω⟩ := exists_gt_ball_subset h.isOpen hr.le hball
   exact h.Mzero_le hR'Ω hr hR'
 
-/-- `c ≤ M_x(0+)` if and only if `c ≤ M_x(r)` for all `r ∈ (0, R)`, `B_R(x) ⊆ Ω`. This is the
-form of the equivalence used for `Σ^H`: the definition of `Σ^H` in Section 6 is
-`M_x(0+) ≥ |B_1|`, and this
-library by `M_x(r) ≥ |B_1|` for every admissible radius `r`. -/
-theorem le_Mzero_iff [NeZero n] (h : IsVariationalSolution Ω C u χ) {R : ℝ} (hR0 : 0 < R)
-    (hR : ball x R ⊆ Ω) {c : EReal} :
-    c ≤ Mzero u χ x ↔ ∀ r ∈ Ioo 0 R, c ≤ monotonicityM u χ x r := by
-  refine ⟨fun hc r hr => hc.trans (h.Mzero_le hR hr.1 hr.2), fun hc => ?_⟩
-  refine ge_of_tendsto (h.tendsto_Mzero (hR (mem_ball_self hR0))) ?_
-  filter_upwards [Ioo_mem_nhdsGT hR0] with s hs using hc s hs
-
 /-- The form used for `Σ^H`: `c ≤ M_x(0+)` if and only if `c ≤ M_x(r)` for every `r > 0` with
 `B̄_r(x) ⊆ Ω` (the admissible radii in the definition of `Σ^H` in this library). -/
 theorem le_Mzero_iff_closedBall [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω)
@@ -191,46 +180,7 @@ theorem le_Mzero_iff_closedBall [NeZero n] (h : IsVariationalSolution Ω C u χ)
 theorem chi_nonneg (h : IsVariationalSolution Ω C u χ) {y : Rn n} (hy : y ∈ Ω) : 0 ≤ χ y := by
   rcases h.chi_mem y hy with h0 | h1 <;> simp [*]
 
-/-- `0 ≤ D_x(r)` when `B_r(x) ⊆ Ω`. -/
-theorem energyD_nonneg (h : IsVariationalSolution Ω C u χ) {r : ℝ} (hr : 0 < r)
-    (hball : ball x r ⊆ Ω) : 0 ≤ energyD u χ x r := by
-  simpa [energyDq_one] using h.toQ.energyDq_nonneg 1 hr hball
-
-/-- `D_x(r) ≤ (C_V² + 1) |B_1|` when `B_r(x) ⊆ Ω`. -/
-theorem energyD_le (h : IsVariationalSolution Ω C u χ) {r : ℝ} (hr : 0 < r)
-    (hball : ball x r ⊆ Ω) : energyD u χ x r ≤ ((C : ℝ) ^ 2 + 1) * unitBallVolume n := by
-  simpa [energyDq_one] using h.toQ.energyDq_le 1 hr hball
-
-/-- If `u(x) = 0`, then `H_x(r) ≤ C_V² n |B_1|` for `0 < r < R`, `B_R(x) ⊆ Ω`. -/
-theorem heightH_le_of_eq_zero [NeZero n] (h : IsVariationalSolution Ω C u χ) {R r : ℝ}
-    (hR : ball x R ⊆ Ω)
-    (hr : 0 < r) (hrR : r < R) (hux : u x = 0) :
-    heightH u x r ≤ (C : ℝ) ^ 2 * (n * unitBallVolume n) :=
-  h.toQ.heightH_le_of_eq_zero hR hr hrR hux
-
-/-- If `u(x) = 0`, then `M_x(r) ≥ −C_V² n |B_1|` for `0 < r < R`, `B_R(x) ⊆ Ω`. -/
-theorem neg_le_monotonicityM_of_eq_zero [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    {R r : ℝ} (hR : ball x R ⊆ Ω) (hr : 0 < r) (hrR : r < R) (hux : u x = 0) :
-    -((C : ℝ) ^ 2 * (n * unitBallVolume n)) ≤ monotonicityM u χ x r := by
-  have h1 := h.energyD_nonneg hr ((ball_subset_ball hrR.le).trans hR)
-  have h2 := h.heightH_le_of_eq_zero hR hr hrR hux
-  rw [monotonicityM]
-  linarith
-
 /-! ### Proposition 3.5: `M_x(0+) = −∞` if and only if `u(x) > 0` -/
-
-/-- If `u(x) > 0`, then `M_x(r) → −∞` as `r → 0+` (proof of Proposition 3.5): `D` stays bounded
-while `H_x(r) ≥ n |B_1| (u(x)/2)² / r²`. -/
-theorem tendsto_monotonicityM_atBot_of_pos [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    (hx : x ∈ Ω) (hpos : 0 < u x) :
-    Tendsto (monotonicityM u χ x) (𝓝[>] 0) atBot := by
-  simpa [monotonicityMq_one] using h.toQ.tendsto_monotonicityMq_atBot_of_pos 1 hx hpos
-
-/-- `M_x(0+) = −∞` when `u(x) > 0` (Proposition 3.5). -/
-theorem Mzero_eq_bot_of_pos [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω)
-    (hpos : 0 < u x) : Mzero u χ x = ⊥ :=
-  tendsto_nhds_unique (h.tendsto_Mzero hx)
-    (EReal.tendsto_coe_atBot.comp (h.tendsto_monotonicityM_atBot_of_pos hx hpos))
 
 /-- If `u(x) = 0`, `M_x(0+)` is finite and is the limit of `M_x(r)` in `ℝ` (proof of
 Proposition 3.5). -/
@@ -246,13 +196,6 @@ theorem Mzero_eq_bot_iff [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : 
   simpa [MzeroQ_one] using IsVariationalSolutionQ.MzeroQ_eq_bot_iff (QBounds.one Ω) h.toQ hx
 
 /-! ### Upper semicontinuity -/
-
-/-- For fixed `r > 0`, `y ↦ M_y(u; r)` is continuous at `x₀` when `B̄_r(x₀) ⊆ Ω`. -/
-theorem continuousAt_monotonicityM_center [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    {x₀ : Rn n} {r : ℝ} (hr : 0 < r) (hball : closedBall x₀ r ⊆ Ω) :
-    ContinuousAt (fun y => monotonicityM u χ y r) x₀ := by
-  simpa [monotonicityMq_one] using
-    IsVariationalSolutionQ.continuousAt_monotonicityMq_center (QBounds.one Ω) h.toQ hr hball
 
 /-- **Proposition 3.5**: `x ↦ M_x(u; 0+)` is upper semicontinuous on `Ω`. -/
 theorem upperSemicontinuousOn_Mzero [NeZero n] (h : IsVariationalSolution Ω C u χ) :

@@ -1,9 +1,9 @@
-name: Palomar preflight
+name: Challenge preflight
 
-# Runs Palomar's own mechanical verifier on this exact commit, once per submitted
-# challenge workspace. Advisory only: it runs neither review nor registration.
-# The verifier fetches the source anonymously from GitHub, so this works only on
-# a public repository.
+# Runs the pinned external mechanical verifier on this exact commit, once per
+# challenge workspace listed below. Advisory only: it checks the workspace and
+# submits nothing. The verifier fetches the source anonymously from GitHub, so
+# this works only on a public repository.
 
 on:
   workflow_dispatch:

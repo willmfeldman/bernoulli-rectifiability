@@ -33,8 +33,7 @@ cases.
   `(Ω − x) / r`.
 * `IsVariationalSolutionQ.rescale_ball`, `QBounds.rescale_ball`: the paper's statement, from
   `B_r(x)` to `B_1`.
-* `IsVariationalSolutionQ.comp_linearIsometryEquiv`, `IsVariationalSolutionQ.comp_add_left`,
-  `QBounds.comp_add_left`: rotations and translations.
+* `IsVariationalSolutionQ.comp_linearIsometryEquiv`: rotations.
 * The `IsVariationalSolution` versions (the coefficient `Q ≡ 1`) are specializations.
 
 ## Proof
@@ -317,12 +316,6 @@ theorem comp_linearIsometryEquiv (h : IsVariationalSolutionQ Ω C Q u χ)
     (T : Rn n ≃ₗᵢ[ℝ] Rn n) : IsVariationalSolutionQ (T ⁻¹' Ω) C (Q ∘ T) (u ∘ T) (χ ∘ T) := by
   simpa [Function.comp_def] using h.comp_similarity 0 one_pos T
 
-/-- **Translation invariance** with a Lipschitz coefficient. -/
-theorem comp_add_left (h : IsVariationalSolutionQ Ω C Q u χ) (x : Rn n) :
-    IsVariationalSolutionQ ((x + ·) ⁻¹' Ω) C (fun y => Q (x + y)) (fun y => u (x + y))
-      (fun y => χ (x + y)) := by
-  simpa using h.comp_similarity x one_pos (LinearIsometryEquiv.refl ℝ (Rn n))
-
 end IsVariationalSolutionQ
 
 namespace QBounds
@@ -355,11 +348,6 @@ theorem rescale (hQ : QBounds Ω Q L c C') (x : Rn n) {r : ℝ} (hr : 0 < r) :
 theorem rescale_ball {x : Rn n} {r : ℝ} (hr : 0 < r) (hQ : QBounds (ball x r) Q L c C') :
     QBounds (ball 0 1) (fun y => Q (x + r • y)) (Real.toNNReal r * L) c C' := by
   simpa only [IsVariationalSolution.preimage_add_smul_ball x hr] using hQ.rescale x hr
-
-/-- The bounds on the coefficient under a translation. -/
-theorem comp_add_left (hQ : QBounds Ω Q L c C') (x : Rn n) :
-    QBounds ((x + ·) ⁻¹' Ω) (fun y => Q (x + y)) L c C' := by
-  simpa using hQ.comp_similarity x one_pos (LinearIsometryEquiv.refl ℝ (Rn n))
 
 end QBounds
 
@@ -396,11 +384,6 @@ theorem rescale_ball {x : Rn n} {r : ℝ} (hr : 0 < r)
 theorem comp_linearIsometryEquiv (h : IsVariationalSolution Ω C u χ) (Q : Rn n ≃ₗᵢ[ℝ] Rn n) :
     IsVariationalSolution (Q ⁻¹' Ω) C (u ∘ Q) (χ ∘ Q) := by
   simpa [Function.comp_def] using h.comp_similarity 0 one_pos Q
-
-/-- **Translation invariance.** -/
-theorem comp_add_left (h : IsVariationalSolution Ω C u χ) (x : Rn n) :
-    IsVariationalSolution ((x + ·) ⁻¹' Ω) C (fun y => u (x + y)) (fun y => χ (x + y)) := by
-  simpa using h.comp_similarity x one_pos (LinearIsometryEquiv.refl ℝ (Rn n))
 
 end IsVariationalSolution
 

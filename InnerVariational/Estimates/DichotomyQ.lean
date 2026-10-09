@@ -37,7 +37,6 @@ subspace of dimension `≤ n − 2`.
 * `frequency_drop_dichotomyQ_of_subset`: for an arbitrary set `S ⊆ B̄_r(x)` of points
   `y ∈ closure {u > 0}` with `Z_y(t) ≥ 0` for some `t ∈ (0, r]`.
 * `frequency_drop_dichotomyQ`: for `Σ^H_{Q,t} = sigmaHQr Ω Q u χ κ t`, `t ∈ (0, r]`.
-* `frequency_drop_dichotomyQ_sigmaHQ`: for `Σ^H_Q = sigmaHQ Ω Q u χ` (the paper's `t = 0`).
 
 ## Proof
 
@@ -299,31 +298,5 @@ theorem frequency_drop_dichotomyQ (n : ℕ) [NeZero n] (hn : 2 ≤ n) (Np δ : �
   intro Nmax hN
   exact H Ω C_V Q u χ L c C' x r _ hQ hsol hr hκ hΩ inter_subset_left
     (fun y hy => ⟨hy.2.2.2.1, t, ht.1, ht.2, hy.2.2.2.2⟩) hN
-
-/-- **Theorem 6.3 with a Lipschitz coefficient for `Σ^H_Q`** (the paper's case `t = 0`). -/
-theorem frequency_drop_dichotomyQ_sigmaHQ (n : ℕ) [NeZero n] (hn : 2 ≤ n) (Np δ : ℝ)
-    (hδ : 0 < δ) :
-    ∃ ε ∈ Ioo (0 : ℝ) 1, ∀ (Ω : Set (Rn n)) (C_V : ℝ≥0) (Q u χ : Rn n → ℝ) (L : ℝ≥0)
-      (c C' : ℝ) (x : Rn n) (r : ℝ),
-      QBounds Ω Q L c C' → IsVariationalSolutionQ Ω C_V Q u χ → 0 < r →
-      weissKappa L c C' * (50 * r) ≤ 1 / 2 → ball x (50 * r) ⊆ Ω →
-      let Nmax := sSup ((fun y => modFrequencyN (weissKappa L c C') Q u χ y (20 * r)) ''
-        (closedBall x r ∩ sigmaHQ Ω Q u χ))
-      Nmax ≤ Np → Nmax < 1 + δ ∨ ∃ P : AffineSubspace ℝ (Rn n),
-        finrank ℝ P.direction ≤ n - 2 ∧
-        {y ∈ closedBall x r ∩ sigmaHQ Ω Q u χ |
-          Nmax - modFrequencyN (weissKappa L c C') Q u χ y r < ε} ⊆
-          thickening (δ * r) (P : Set (Rn n)) := by
-  obtain ⟨ε, hε, H⟩ := frequency_drop_dichotomyQ_of_subset n hn Np δ hδ
-  refine ⟨ε, hε, fun Ω C_V Q u χ L c C' x r hQ hsol hr hκ hΩ => ?_⟩
-  intro Nmax hN
-  refine H Ω C_V Q u χ L c C' x r _ hQ hsol hr hκ hΩ inter_subset_left
-    (fun y hy => ⟨hy.2.2.1, r, hr, le_rfl, ?_⟩) hN
-  have hk := hQ.weissKappa_nonneg hy.2.1
-  have hyr : closedBall y r ⊆ Ω := by
-    refine (closedBall_subset_ball' ?_).trans hΩ
-    have := mem_closedBall.1 hy.1
-    linarith
-  exact hsol.modMonotonicityM_nonneg_of_mem_sigmaHQ hQ hy.2 hr (by nlinarith) hyr
 
 end InnerVariational

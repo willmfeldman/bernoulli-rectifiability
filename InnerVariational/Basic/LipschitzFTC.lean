@@ -20,11 +20,10 @@ throughout the project:
 
 * `LipschitzOnWith.integral_deriv_eq_sub`: if `f` is Lipschitz on `[a, b]`, then
   `∫ x in a..b, deriv f x = f b - f a`;
-* `AbsolutelyContinuousOnInterval.integral_eq_sub_of_ae_hasDerivAt` and its Lipschitz analogue:
+* `AbsolutelyContinuousOnInterval.integral_eq_sub_of_ae_hasDerivAt`:
   the same with an a.e. derivative `f'` in place of `deriv f` (integrability of `f'` is automatic);
-* `AbsolutelyContinuousOnInterval.monotoneOn_of_ae_hasDerivAt_nonneg` and
-  `LipschitzOnWith.monotoneOn_of_ae_hasDerivAt_nonneg`: a function that is absolutely continuous
-  (resp. Lipschitz) on `[a, b]` with a.e. nonnegative derivative on `(a, b)` is monotone on
+* `AbsolutelyContinuousOnInterval.monotoneOn_of_ae_hasDerivAt_nonneg`: a function that is
+  absolutely continuous on `[a, b]` with a.e. nonnegative derivative on `(a, b)` is monotone on
   `[a, b]`;
 * comparison versions: `f' ≤ g'` a.e. implies `f y - f x ≤ g y - g x`.
 
@@ -109,25 +108,6 @@ theorem monotoneOn_of_ae_hasDerivAt_nonneg (hf : AbsolutelyContinuousOnInterval 
     exact (ht hmem).2
   linarith
 
-/-- An absolutely continuous function whose derivative is a.e. nonnegative on `(a, b)` is monotone
-on `[a, b]`. -/
-theorem monotoneOn_of_ae_deriv_nonneg (hf : AbsolutelyContinuousOnInterval f a b)
-    (hf'0 : ∀ᵐ x, x ∈ Ioo a b → 0 ≤ deriv f x) : MonotoneOn f (Icc a b) := by
-  refine hf.monotoneOn_of_ae_hasDerivAt_nonneg (f' := deriv f) ?_ hf'0
-  filter_upwards [hf.ae_differentiableAt] with x hx hmem
-  exact (hx (Icc_subset_uIcc (Ioo_subset_Icc_self hmem))).hasDerivAt
-
-/-- An absolutely continuous function whose a.e. derivative on `(a, b)` is nonpositive is
-antitone on `[a, b]`. -/
-theorem antitoneOn_of_ae_hasDerivAt_nonpos (hf : AbsolutelyContinuousOnInterval f a b)
-    (hf' : ∀ᵐ x, x ∈ Ioo a b → HasDerivAt f (f' x) x)
-    (hf'0 : ∀ᵐ x, x ∈ Ioo a b → f' x ≤ 0) : AntitoneOn f (Icc a b) := by
-  have h := hf.neg.monotoneOn_of_ae_hasDerivAt_nonneg (f' := fun x => -f' x)
-    (by filter_upwards [hf'] with x hx hmem using (hx hmem).neg)
-    (by filter_upwards [hf'0] with x hx hmem using neg_nonneg.2 (hx hmem))
-  intro x hx y hy hxy
-  simpa using h hx hy hxy
-
 /-- Comparison principle: if `f' ≤ g'` a.e. on `(a, b)`, then `f y - f x ≤ g y - g x` for
 `a ≤ x ≤ y ≤ b`. -/
 theorem sub_le_sub_of_ae_hasDerivAt_le (hf : AbsolutelyContinuousOnInterval f a b)
@@ -154,64 +134,12 @@ theorem integral_deriv_eq_sub (hf : LipschitzOnWith K f (uIcc a b)) :
     ∫ x in a..b, deriv f x = f b - f a :=
   hf.absolutelyContinuousOnInterval.integral_deriv_eq_sub
 
-/-- FTC for Lipschitz functions, with an a.e. derivative. -/
-theorem integral_eq_sub_of_ae_hasDerivAt (hf : LipschitzOnWith K f (uIcc a b))
-    (hf' : ∀ᵐ x, x ∈ uIcc a b → HasDerivAt f (f' x) x) :
-    ∫ x in a..b, f' x = f b - f a :=
-  hf.absolutelyContinuousOnInterval.integral_eq_sub_of_ae_hasDerivAt hf'
-
-/-- An a.e. derivative of a Lipschitz function is interval integrable. -/
-theorem intervalIntegrable_of_ae_hasDerivAt (hf : LipschitzOnWith K f (uIcc a b))
-    (hf' : ∀ᵐ x, x ∈ uIcc a b → HasDerivAt f (f' x) x) :
-    IntervalIntegrable f' volume a b :=
-  hf.absolutelyContinuousOnInterval.intervalIntegrable_of_ae_hasDerivAt hf'
-
 /-- A function Lipschitz on `[a, b]` is absolutely continuous on `[a, b]`. -/
 theorem absolutelyContinuousOnInterval_of_Icc (hf : LipschitzOnWith K f (Icc a b))
     (hab : a ≤ b) : AbsolutelyContinuousOnInterval f a b :=
   (hf.mono (uIcc_of_le hab).subset).absolutelyContinuousOnInterval
 
-/-- A function Lipschitz on `[a, b]` whose a.e. derivative on `(a, b)` is nonnegative is monotone
-on `[a, b]`. -/
-theorem monotoneOn_of_ae_hasDerivAt_nonneg (hf : LipschitzOnWith K f (Icc a b))
-    (hf' : ∀ᵐ x, x ∈ Ioo a b → HasDerivAt f (f' x) x)
-    (hf'0 : ∀ᵐ x, x ∈ Ioo a b → 0 ≤ f' x) : MonotoneOn f (Icc a b) := fun _ hx _ hy hxy =>
-  (hf.absolutelyContinuousOnInterval_of_Icc (hx.1.trans hx.2)).monotoneOn_of_ae_hasDerivAt_nonneg
-    hf' hf'0 hx hy hxy
-
-/-- A function Lipschitz on `[a, b]` whose derivative is a.e. nonnegative on `(a, b)` is monotone
-on `[a, b]`. -/
-theorem monotoneOn_of_ae_deriv_nonneg (hf : LipschitzOnWith K f (Icc a b))
-    (hf'0 : ∀ᵐ x, x ∈ Ioo a b → 0 ≤ deriv f x) : MonotoneOn f (Icc a b) := fun _ hx _ hy hxy =>
-  (hf.absolutelyContinuousOnInterval_of_Icc (hx.1.trans hx.2)).monotoneOn_of_ae_deriv_nonneg
-    hf'0 hx hy hxy
-
-/-- A function Lipschitz on `[a, b]` whose a.e. derivative on `(a, b)` is nonpositive is antitone
-on `[a, b]`. -/
-theorem antitoneOn_of_ae_hasDerivAt_nonpos (hf : LipschitzOnWith K f (Icc a b))
-    (hf' : ∀ᵐ x, x ∈ Ioo a b → HasDerivAt f (f' x) x)
-    (hf'0 : ∀ᵐ x, x ∈ Ioo a b → f' x ≤ 0) : AntitoneOn f (Icc a b) := fun _ hx _ hy hxy =>
-  (hf.absolutelyContinuousOnInterval_of_Icc (hx.1.trans hx.2)).antitoneOn_of_ae_hasDerivAt_nonpos
-    hf' hf'0 hx hy hxy
-
-/-- Comparison principle for Lipschitz functions: if `f' ≤ g'` a.e. on `(a, b)`, then
-`f y - f x ≤ g y - g x` for `a ≤ x ≤ y ≤ b`. -/
-theorem sub_le_sub_of_ae_hasDerivAt_le (hf : LipschitzOnWith K f (Icc a b))
-    (hg : LipschitzOnWith L g (Icc a b))
-    (hf' : ∀ᵐ x, x ∈ Ioo a b → HasDerivAt f (f' x) x)
-    (hg' : ∀ᵐ x, x ∈ Ioo a b → HasDerivAt g (g' x) x)
-    (hle : ∀ᵐ x, x ∈ Ioo a b → f' x ≤ g' x) {x y : ℝ} (hx : x ∈ Icc a b) (hy : y ∈ Icc a b)
-    (hxy : x ≤ y) : f y - f x ≤ g y - g x :=
-  (hf.absolutelyContinuousOnInterval_of_Icc (hx.1.trans hx.2)).sub_le_sub_of_ae_hasDerivAt_le
-    (hg.absolutelyContinuousOnInterval_of_Icc (hx.1.trans hx.2)) hf' hg' hle hx hy hxy
-
 end LipschitzOnWith
-
-/-- Alias of `LipschitzOnWith.monotoneOn_of_ae_deriv_nonneg` under the name used in the plan. -/
-theorem monotoneOn_of_lipschitz_ae_deriv_nonneg {f : ℝ → ℝ} {a b : ℝ} {K : ℝ≥0}
-    (hf : LipschitzOnWith K f (Icc a b)) (hf'0 : ∀ᵐ x, x ∈ Ioo a b → 0 ≤ deriv f x) :
-    MonotoneOn f (Icc a b) :=
-  hf.monotoneOn_of_ae_deriv_nonneg hf'0
 
 /-! ### Algebra of Lipschitz real functions on a set -/
 

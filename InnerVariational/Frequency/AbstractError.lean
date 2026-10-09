@@ -52,9 +52,8 @@ those of `Frequency/Abstract.lean`.
 
 ## Main results
 
-* `RadialDataErr.hasDerivAt_monotonicityM`, `RadialDataErr.monotoneOn_monotonicityM_add`,
-  `RadialDataErr.integral_monotonicityM_sq_term_le`: the Weiss formula with error; `M + κ Λ s`
-  is nondecreasing when `V H ≤ Λ`.
+* `RadialDataErr.hasDerivAt_monotonicityM`, `RadialDataErr.monotoneOn_monotonicityM_add`: the
+  Weiss formula with error; `M + κ Λ s` is nondecreasing when `V H ≤ Λ`.
 * `RadialDataErr.hasDerivAt_monotonicityM_refined`: with `l = N + V`,
   `M' = (2 / s^{n+2}) ∫_{∂B_s} (∇u·y - l u)² + (2/s) H (l - 1)² + err`.
 * `RadialDataErr.hasDerivAt_frequencyN`, `RadialDataErr.hasDerivAt_frequencyN'`: (4.12) and
@@ -255,22 +254,6 @@ theorem ae_sphMix_eq : ∀ᵐ s, s ∈ Ioo a b → d.heightH s ≠ 0 →
   field_simp
   ring
 
-/-- `N ≥ 1` if and only if `M ≥ ω` (when `H > 0`). -/
-theorem one_le_frequencyN_iff {s : ℝ} (hH : 0 < d.heightH s) :
-    1 ≤ d.frequencyN s ↔ ω ≤ d.monotonicityM s := by
-  rw [frequencyN, monotonicityM, le_div_iff₀ hH]
-  constructor <;> intro h <;> linarith
-
-/-- `N > 1` if and only if `M > ω` (when `H > 0`). -/
-theorem one_lt_frequencyN_iff {s : ℝ} (hH : 0 < d.heightH s) :
-    1 < d.frequencyN s ↔ ω < d.monotonicityM s := by
-  rw [frequencyN, monotonicityM, lt_div_iff₀ hH]
-  constructor <;> intro h <;> linarith
-
-theorem lt_monotonicityM_of_one_lt_frequencyN {s : ℝ} (hH : 0 < d.heightH s)
-    (hN : 1 < d.frequencyN s) : ω < d.monotonicityM s :=
-  (d.one_lt_frequencyN_iff hH).1 hN
-
 /-- `ω - s^{-n} chiInt = V H` (when `H ≠ 0`). -/
 theorem sub_chiInt_div_eq {s : ℝ} (hH : d.heightH s ≠ 0) :
     ω - d.chiInt s / s ^ n = d.volumeV s * d.heightH s := by
@@ -321,14 +304,6 @@ theorem ae_monotonicityM_sq_term_nonneg : ∀ᵐ s, s ∈ Ioo a b →
   simp only [mul_one, one_pow, one_mul] at hq
   exact mul_nonneg (by positivity) hq
 
-/-- The derivative of `M` is at least `(2 / s^{n+2}) ∫_{∂B_s} (u - ∇u·y)² - κ V H`. -/
-theorem ae_monotonicityM_deriv_ge : ∀ᵐ s, s ∈ Ioo a b →
-    2 / s ^ (n + 2) * (d.sphRad s - 2 * d.sphMix s + d.sphSq s) -
-        κ * (ω - d.chiInt s / s ^ n) ≤
-      2 / s ^ (n + 2) * (d.sphRad s - 2 * d.sphMix s + d.sphSq s) + d.err s := by
-  filter_upwards [d.ae_neg_le_err] with s h hs
-  linarith [h hs]
-
 theorem absolutelyContinuousOnInterval_monotonicityM :
     AbsolutelyContinuousOnInterval d.monotonicityM a b :=
   d.absolutelyContinuousOnInterval_energyD.fun_sub d.absolutelyContinuousOnInterval_heightH
@@ -361,26 +336,6 @@ theorem monotoneOn_monotonicityM_add :
   · filter_upwards [d.ae_monotonicityM_sq_term_nonneg, d.ae_monotonicityM_deriv_add_nonneg hΛ]
       with s h1 h2 hs
     exact (h1 hs).trans (h2 hs)
-
-/-- **Integrated Weiss formula**: if `V H ≤ Λ` on `(a, b)`, then
-`∫_{s₁}^{s₂} (2 / s^{n+2}) ∫_{∂B_s} (u - ∇u·y)² ≤ M(s₂) - M(s₁) + κ Λ (s₂ - s₁)`. -/
-theorem integral_monotonicityM_sq_term_le {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (hs₂ : s₂ ∈ Icc a b)
-    (h12 : s₁ ≤ s₂) :
-    ∫ s in s₁..s₂, 2 / s ^ (n + 2) * (d.sphRad s - 2 * d.sphMix s + d.sphSq s) ≤
-      d.monotonicityM s₂ - d.monotonicityM s₁ + κ * Λ * (s₂ - s₁) := by
-  have hAC : AbsolutelyContinuousOnInterval (fun s => κ * Λ * s) a b :=
-    ContDiffOn.absolutelyContinuousOnInterval
-      (by fun_prop : ContDiff ℝ 1 fun s : ℝ => κ * Λ * s).contDiffOn
-  have h := ((d.absolutelyContinuousOnInterval_monotonicityM.fun_add hAC).mono_Icc d.le hs₁ hs₂
-    ).integral_le_sub_of_ae_le h12
-    (f' := fun s => 2 / s ^ (n + 2) * (d.sphRad s - 2 * d.sphMix s + d.sphSq s) + d.err s +
-      κ * Λ)
-    (ae_mem_Ioo_imp_mono hs₁.1 hs₂.2 (by
-      filter_upwards [d.hasDerivAt_monotonicityM] with s h hs
-      exact (h hs).add (((hasDerivAt_id s).const_mul (κ * Λ)).congr_deriv (mul_one _))))
-    (ae_mem_Ioo_imp_mono hs₁.1 hs₂.2 d.ae_monotonicityM_sq_term_nonneg)
-    (ae_mem_Ioo_imp_mono hs₁.1 hs₂.2 (d.ae_monotonicityM_deriv_add_nonneg hΛ))
-  linarith
 
 end WeissBound
 

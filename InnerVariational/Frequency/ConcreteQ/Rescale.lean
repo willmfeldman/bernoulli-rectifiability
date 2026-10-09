@@ -18,7 +18,7 @@ same bounds (`QBounds.rescale`), so `κ̃ = ρ κ` (`weissKappa_toNNReal_mul`). 
 origin and radius `s` is the quantity of `u` at `a` and radius `ρ s`:
 
 * `weightedEnergyD_oneHomRescale`, `weightedMonotonicityM_oneHomRescale`,
-  `weightedFrequencyN_oneHomRescale`, `weightedVolumeV_oneHomRescale`;
+  `weightedFrequencyN_oneHomRescale`;
 * `modFrequencyN_oneHomRescale`: `Ñ` with `κ̃ = ρ κ` at radius `s` is `Ñ` with `κ` at `ρ s`;
 * `modMonotonicityM_oneHomRescale`: the same for the shifted Weiss energy `Z`.
 
@@ -76,21 +76,6 @@ theorem weightedFrequencyN_oneHomRescale [NeZero n] (s : ℝ) :
       weightedFrequencyN Q u χ a (ρ * s) := by
   rw [weightedFrequencyN, weightedFrequencyN, weightedEnergyD_oneHomRescale Q u χ a hρ,
     heightH_oneHomRescale u a hρ, smul_zero, add_zero]
-
-/-- `V_0(ũ; s) = V_a(u; ρ s)`. -/
-theorem weightedVolumeV_oneHomRescale [NeZero n] (s : ℝ) :
-    weightedVolumeV (fun y => Q (a + ρ • y)) (oneHomRescale u a ρ) (chiRescale χ a ρ) 0 s =
-      weightedVolumeV Q u χ a (ρ * s) := by
-  simp only [weightedVolumeV]
-  rw [heightH_oneHomRescale u a hρ]
-  have h := setIntegral_ball_comp_add_smul (fun w => Q w ^ 2 * (1 - χ w)) a 0 hρ s
-  simp only [smul_zero, add_zero] at h
-  have e : ∫ y in ball (0 : Rn n) s, Q (a + ρ • y) ^ 2 * (1 - chiRescale χ a ρ y) =
-      ∫ y in ball (0 : Rn n) s, Q (a + ρ • y) ^ 2 * (1 - χ (a + ρ • y)) := by
-    refine integral_congr_ae (Eventually.of_forall fun y => ?_)
-    simp only [chiRescale_apply]
-  rw [e, h, mul_pow, mul_inv]
-  ring
 
 /-- `Ñ_0(ũ; s)` with `κ̃ = ρ κ` is `Ñ_a(u; ρ s)` with `κ`. -/
 theorem modFrequencyN_oneHomRescale [NeZero n] (κ s : ℝ) :

@@ -140,12 +140,6 @@ theorem integrable_mul_of_isCompact {f h : Rn n → ℝ} {K : Set (Rn n)} (hK : 
   rw [norm_mul]
   exact mul_le_mul (hf y hy) (hh y hy) (norm_nonneg _) ((norm_nonneg _).trans (hf y hy))
 
-/-- `|∂_v g| ≤ C ‖v‖` for `g` `C`-Lipschitz. -/
-theorem norm_fderiv_apply_le {g : Rn n → ℝ} {C : ℝ≥0} (hg : LipschitzWith C g) (y v : Rn n) :
-    ‖fderiv ℝ g y v‖ ≤ C * ‖v‖ :=
-  ((fderiv ℝ g y).le_opNorm v).trans
-    (mul_le_mul_of_nonneg_right (norm_fderiv_le_of_lipschitz ℝ hg) (norm_nonneg _))
-
 theorem fderiv_eq_zero_of_notMem_tsupport {g : Rn n → ℝ} {y : Rn n} (hy : y ∉ tsupport g) :
     fderiv ℝ g y = 0 :=
   fderiv_of_notMem_tsupport (𝕜 := ℝ) hy

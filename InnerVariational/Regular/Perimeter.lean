@@ -7,7 +7,9 @@ module
 
 public import InnerVariational.Regular.Density
 import InnerVariational.Registry.GMT
-import InnerVariational.Regular.ChiInterior
+import InnerVariational.Regular.ZeroGradient
+import InnerVariational.Monotonicity.Limits
+import InnerVariational.Regular.ChiInteriorQ
 import InnerVariational.Monotonicity.HighestDensity
 public import InnerVariational.Defs.HighestDensity
 import InnerVariational.Monotonicity.Density
@@ -63,7 +65,7 @@ https://github.com/willmfeldman/gmt-foundations, v0.1.0) bounds its measure.
 * The "start of the section" step (§8.1): the set `A` of points near which `u = 0` and
   `χ = 1` a.e. is open, and relatively closed in `Ω`: at `x ∈ closure A ∩ Ω` upper
   semicontinuity gives `M_x(0+) ≥ |B_1|`, so `x ∉ closure {u > 0}` (as `Σ^H = ∅`), so `u = 0` near
-  `x`, where `χ` is constant (`Regular/ChiInterior.lean`) and hence `1`. If `A = Ω` then
+  `x`, where `χ` is constant (`Regular/ChiInteriorQ.lean`) and hence `1`. If `A = Ω` then
   `u ≡ 0`; if `A = ∅` then `χ = 0` a.e. on `Ω \ closure {u > 0}`.
 * `|∂{u > 0} ∩ Ω| = 0`: we use the Lebesgue density theorem (densities are `0` or `1` a.e.)
   instead of the paper's `ℋ^{n-1}`-finiteness, which would need the comparison of `ℋ^n` with
@@ -118,26 +120,11 @@ theorem exists_ball_eq_zero (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω
     ∃ δ > 0, ball x δ ⊆ Ω ∧ ∀ y ∈ ball x δ, u y = 0 :=
   h.toQ.exists_ball_eq_zero hx hncl
 
-/-- On `∂{u > 0} ∩ Ω`, if `Σ^H = ∅`, then `{χ = 1}` has a density `d ∈ [1/2, 1)` (proof of
-Lemma 8.2):
-`d = M_x(0+)/|B_1|` with `M_x(0+) ∈ [|B_1|/2, |B_1|)` by Lemma 8.1 and `x ∉ Σ^H`. -/
-theorem exists_hasDensity_of_mem_frontier [NeZero n] (hn : 2 ≤ n)
-    (h : IsVariationalSolution Ω C u χ) (hS : sigmaH Ω u χ = ∅)
-    (hx : x ∈ Ω ∩ frontier {y | 0 < u y}) :
-    ∃ d : ℝ, HasDensity (Ω ∩ {y | χ y = 1}) x d ∧ 1 / 2 ≤ d ∧ d < 1 :=
-  h.toQ.exists_hasDensity_of_mem_frontier hn (QBounds.one Ω) (by rwa [h.sigmaHQ_one]) hx
-
 /-- `∂{u > 0} ∩ Ω ⊆ ∂ᵉ{χ = 1}` when `Σ^H = ∅` (proof of Lemma 8.2). -/
 theorem frontier_pos_inter_subset_essentialBoundary [NeZero n] (hn : 2 ≤ n)
     (h : IsVariationalSolution Ω C u χ) (hS : sigmaH Ω u χ = ∅) :
     Ω ∩ frontier {y | 0 < u y} ⊆ essentialBoundary (Ω ∩ {y | χ y = 1}) :=
   h.toQ.frontier_pos_inter_subset_essentialBoundary hn (QBounds.one Ω) (by rwa [h.sigmaHQ_one])
-
-/-- `|∂{u > 0} ∩ Ω| = 0` when `Σ^H = ∅` (proof of Lemma 8.2), by the Lebesgue density theorem. -/
-theorem volume_inter_frontier_pos_eq_zero [NeZero n] (hn : 2 ≤ n)
-    (h : IsVariationalSolution Ω C u χ) (hS : sigmaH Ω u χ = ∅) :
-    volume (Ω ∩ frontier {y | 0 < u y}) = 0 :=
-  h.toQ.volume_inter_frontier_pos_eq_zero hn (QBounds.one Ω) (by rwa [h.sigmaHQ_one])
 
 /-! ### Lemma 8.2 -/
 

@@ -23,9 +23,6 @@ the monotonicity of `M`).
 
 ## Main results
 
-* `IsVariationalSolution.mem_sigmaHr_of_le`: `Σ^H_s ∩ Ω_r ⊆ Σ^H_r` for `0 < s ≤ r`.
-* `IsVariationalSolution.mem_sigmaH_iff_forall_mem_sigmaHr`: for `x ∈ Ω_r`,
-  `x ∈ Σ^H ↔ ∀ s ∈ (0, r), x ∈ Σ^H_s`, i.e. `⋂_{0<s<r} Σ^H_s ∩ Ω_r = Σ^H ∩ Ω_r`.
 * `IsVariationalSolution.closure_sigmaHr_inter_subset`: `Σ^H_r` is relatively closed in
   `Ω_r = {x : B̄_r(x) ⊆ Ω}`, from the continuity of `x ↦ M_x(u; r)` (as in the proof of
   Theorem 6.1).
@@ -58,40 +55,6 @@ section
 
 variable [NeZero n] (h : IsVariationalSolution Ω C u χ)
 include h
-
-/-- `Σ^H_s ∩ Ω_r ⊆ Σ^H_r` for `0 < s ≤ r`, by the monotonicity of `M` (Proposition 3.4). -/
-theorem mem_sigmaHr_of_le {s r : ℝ} (hs : 0 < s) (hsr : s ≤ r) (hx : x ∈ sigmaHr Ω u χ s)
-    (hr : closedBall x r ⊆ Ω) : x ∈ sigmaHr Ω u χ r :=
-  ⟨hx.1, hr, hx.2.2.1, hx.2.2.2.trans (h.monotonicityM_le hs hsr hr)⟩
-
-/-- `⋂_{0<s<r} Σ^H_s ∩ Ω_r = Σ^H ∩ Ω_r` (preamble of §6), pointwise: for `x ∈ Ω_r`,
-`x ∈ Σ^H ↔ ∀ s ∈ (0, r), x ∈ Σ^H_s`. -/
-theorem mem_sigmaH_iff_forall_mem_sigmaHr {r : ℝ} (hr : 0 < r) (hx : closedBall x r ⊆ Ω) :
-    x ∈ sigmaH Ω u χ ↔ ∀ s ∈ Ioo 0 r, x ∈ sigmaHr Ω u χ s := by
-  constructor
-  · intro hxH s hs
-    exact mem_sigmaHr_of_mem_sigmaH hxH hs.1 ((closedBall_subset_closedBall hs.2.le).trans hx)
-  · intro H
-    obtain ⟨hxΩ, -, hcl, -⟩ := H (r / 2) ⟨by positivity, by linarith⟩
-    refine ⟨hxΩ, hcl, fun ρ hρ hρΩ => ?_⟩
-    set s := min (ρ / 2) (r / 2) with hsdef
-    have hs0 : 0 < s := lt_min (by positivity) (by positivity)
-    have hsr : s < r := (min_le_right _ _).trans_lt (by linarith)
-    have hsρ : s ≤ ρ := (min_le_left _ _).trans (by linarith)
-    exact (H s ⟨hs0, hsr⟩).2.2.2.trans (h.monotonicityM_le hs0 hsρ hρΩ)
-
-/-- The set form of `mem_sigmaH_iff_forall_mem_sigmaHr`:
-`(⋂_{0<s<r} Σ^H_s) ∩ Ω_r = Σ^H ∩ Ω_r` (preamble of §6). -/
-theorem iInter_sigmaHr_inter_eq {r : ℝ} (hr : 0 < r) :
-    (⋂ s ∈ Ioo 0 r, sigmaHr Ω u χ s) ∩ {x | closedBall x r ⊆ Ω} =
-      sigmaH Ω u χ ∩ {x | closedBall x r ⊆ Ω} := by
-  ext y
-  simp only [mem_inter_iff, mem_iInter, mem_ofPred_eq]
-  constructor
-  · rintro ⟨H, hy⟩
-    exact ⟨(h.mem_sigmaH_iff_forall_mem_sigmaHr hr hy).2 H, hy⟩
-  · rintro ⟨H, hy⟩
-    exact ⟨(h.mem_sigmaH_iff_forall_mem_sigmaHr hr hy).1 H, hy⟩
 
 /-- **`Σ^H_r` is relatively closed in `Ω_r`** (preamble of §6): a limit point of `Σ^H_r` that
 lies in `Ω_r = {x : B̄_r(x) ⊆ Ω}` lies in `Σ^H_r`. This uses the continuity of

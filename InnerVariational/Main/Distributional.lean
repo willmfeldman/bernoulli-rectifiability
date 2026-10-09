@@ -255,30 +255,4 @@ theorem measurableSet_sigmaH (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ
   rw [e]
   exact isClosed_closure.measurableSet.inter h.isOpen.measurableSet
 
-/-- **The Laplacian measure of Theorem 8.7 is locally finite in `Ω`** (the first half of
-`HasDistribLaplacianOn`): `ℋ^{n-1}(K ∩ ∂*{u>0}) ≤ ℋ^{n-1}(K ∩ ∂{u>0}) < ∞`, and the density
-`2α(n)√(H_x(u;0+))` is bounded by `2α(n) C_V √(n|B_1|)` on `Σ^H`
-(`Singular.heightHZero_mem_Icc`). -/
-theorem laplacianMeasure_lt_top [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ)
-    {K : Set (Rn n)} (hK : IsCompact K) (hKΩ : K ⊆ Ω) : laplacianMeasure Ω u χ K < ∞ := by
-  have hKm := hK.isClosed.measurableSet
-  rw [laplacianMeasure, Measure.add_apply]
-  refine ENNReal.add_lt_top.2 ⟨?_, ?_⟩
-  · rw [Measure.restrict_apply hKm]
-    exact (measure_mono (inter_subset_inter_right _
-      ((reducedBoundary_pos_subset hn h).trans inter_subset_right))).trans_lt
-      (hausdorffN_inter_frontier_pos_lt_top hn h hK hKΩ)
-  · set B : ℝ := (C : ℝ) ^ 2 * (n * unitBallVolume n)
-    rw [withDensity_apply _ hKm, Measure.restrict_restrict hKm]
-    calc ∫⁻ x in K ∩ sigmaH Ω u χ, ENNReal.ofReal (2 * alphaN n * √(heightHZero u x))
-            ∂hausdorffN n (n - 1)
-        ≤ ∫⁻ _ in K ∩ sigmaH Ω u χ, ENNReal.ofReal (2 * alphaN n * √B) ∂hausdorffN n (n - 1) :=
-          setLIntegral_mono' (hKm.inter (measurableSet_sigmaH hn h)) fun x hx =>
-            ENNReal.ofReal_le_ofReal (mul_le_mul_of_nonneg_left
-              (Real.sqrt_le_sqrt (Singular.heightHZero_mem_Icc h hx.2).2)
-              (by have := Singular.alphaN_pos (n := n); positivity))
-      _ = ENNReal.ofReal (2 * alphaN n * √B) * hausdorffN n (n - 1) (K ∩ sigmaH Ω u χ) :=
-          setLIntegral_const _ _
-      _ < ∞ := ENNReal.mul_lt_top ENNReal.ofReal_lt_top (hausdorffN_inter_sigmaH_lt_top hn h hK hKΩ)
-
 end InnerVariational.Main

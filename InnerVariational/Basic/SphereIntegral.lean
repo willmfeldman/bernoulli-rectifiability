@@ -40,7 +40,7 @@ positivity, Cauchy–Schwarz, scaling, continuity, and differentiation in the ra
   `P(s) = ∫_{∂B_s(x)} u²`, `P' = ((n-1)/s) P + (2/s) ∫_{∂B_s(x)} u ⟪∇u, y - x⟫` for a.e. `s`.
   `LipschitzOnWith.lipschitzOnWith_sphereIntegral_sq` shows that `P` is Lipschitz on `[0, b]`
   for every `b < R`.
-* `continuous_sphereIntegral`, `continuousAt_sphereIntegral`, `continuous_integral_ball`:
+* `continuousAt_sphereIntegral`, `continuous_integral_ball`:
   continuity in the centre and radius.
 
 ## Dimension
@@ -82,20 +82,6 @@ theorem _root_.Continuous.sphereIntegrable {f : Rn n → ℝ} (hf : Continuous f
   integrableOn_univ.1 ((hf.comp (continuous_add_smul_sphere x s)).continuousOn.integrableOn_compact
     isCompact_univ)
 
-/-- If `f`, `g` are measurable on the sphere with `f²`, `g²` integrable there, then `f g` is
-integrable there. -/
-theorem SphereIntegrable.mul_of_sq {f g : Rn n → ℝ} {x : Rn n} {s : ℝ}
-    (hfm : AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => f (x + s • (ω : Rn n)))
-      (sphereMeasure n))
-    (hgm : AEStronglyMeasurable (fun ω : sphere (0 : Rn n) 1 => g (x + s • (ω : Rn n)))
-      (sphereMeasure n))
-    (hf : SphereIntegrable (fun y => f y ^ 2) x s) (hg : SphereIntegrable (fun y => g y ^ 2) x s) :
-    SphereIntegrable (fun y => f y * g y) x s := by
-  refine Integrable.mono' ((hf.add hg).div_const 2) (hfm.mul hgm) (.of_forall fun ω => ?_)
-  simp only [Real.norm_eq_abs, abs_mul, Pi.add_apply]
-  nlinarith [sq_nonneg (|f (x + s • (ω : Rn n))| - |g (x + s • (ω : Rn n))|),
-    sq_abs (f (x + s • (ω : Rn n))), sq_abs (g (x + s • (ω : Rn n)))]
-
 /-! ### Linearity and positivity -/
 
 theorem sphereIntegral_congr {f g : Rn n → ℝ} {x : Rn n} {s : ℝ} (hs : 0 ≤ s)
@@ -121,11 +107,6 @@ theorem sphereIntegral_const_mul (c : ℝ) (f : Rn n → ℝ) (x : Rn n) (s : �
   simp only [sphereIntegral]
   rw [integral_const_mul]
   ring
-
-theorem sphereIntegral_neg (f : Rn n → ℝ) (x : Rn n) (s : ℝ) :
-    sphereIntegral (fun y => -f y) x s = -sphereIntegral f x s := by
-  simp only [sphereIntegral]
-  rw [integral_neg, mul_neg]
 
 theorem sphereIntegral_nonneg {f : Rn n → ℝ} {x : Rn n} {s : ℝ} (hs : 0 ≤ s)
     (hf : ∀ y ∈ sphere x s, 0 ≤ f y) : 0 ≤ sphereIntegral f x s :=
@@ -174,10 +155,6 @@ theorem sq_sphereIntegral_mul_le {f g : Rn n → ℝ} {x : Rn n} {s : ℝ}
   nlinarith [mul_le_mul_of_nonneg_left h (sq_nonneg (s ^ (n - 1)))]
 
 /-! ### Scaling and translation -/
-
-theorem sphereIntegral_comp_add (f : Rn n → ℝ) (x z : Rn n) (s : ℝ) :
-    sphereIntegral (fun y => f (x + y)) z s = sphereIntegral f (x + z) s := by
-  simp only [sphereIntegral, add_assoc]
 
 /-- Scaling: `r^{n-1} ∫_{∂B_s} f(x + r ·) = ∫_{∂B_{rs}(x)} f`. -/
 theorem sphereIntegral_comp_add_smul (f : Rn n → ℝ) (x : Rn n) (r s : ℝ) :
@@ -314,18 +291,6 @@ theorem ae_tendsto_average_annulus [NeZero n] {f : Rn n → ℝ} {x : Rn n} {R :
     (ball_subset_ball (by rw [one_div] at hk0; linarith))]
 
 /-! ### Continuity in the centre and the radius -/
-
-/-- For `f` continuous, `(x, s) ↦ ∫_{∂B_s(x)} f` is continuous. -/
-theorem continuous_sphereIntegral {f : Rn n → ℝ} (hf : Continuous f) :
-    Continuous fun p : Rn n × ℝ => sphereIntegral f p.1 p.2 := by
-  simp only [sphereIntegral]
-  refine (continuous_snd.pow _).mul ?_
-  have h := continuous_parametric_integral_of_continuous (μ := sphereMeasure n)
-    (f := fun (p : Rn n × ℝ) (ω : sphere (0 : Rn n) 1) => f (p.1 + p.2 • (ω : Rn n)))
-    (hf.comp ((continuous_fst.comp continuous_fst).add
-      ((continuous_snd.comp continuous_fst).smul (continuous_subtype_val.comp continuous_snd))))
-    isCompact_univ
-  simpa only [Measure.restrict_univ] using h
 
 /-- For `f` continuous on an open set `U ⊇ closedBall x |s|`, `(y, t) ↦ ∫_{∂B_t(y)} f` is
 continuous at `(x, s)`. -/
@@ -514,39 +479,6 @@ theorem _root_.LipschitzWith.ae_hasDerivAt_integral_sphere_sq {u : Rn n → ℝ}
   filter_upwards [Ioi_mem_nhds hsR.1] with t ht
   rw [← (hu.integral_sphere_sq_sub x le_rfl (le_of_lt ht)).2]
   ring
-
-theorem radialSqDeriv_congr {u v : Rn n → ℝ} {x : Rn n} {R : ℝ} (huv : EqOn u v (ball x R))
-    {t : ℝ} (ht : t ∈ Ico 0 R) (ω : sphere (0 : Rn n) 1) :
-    radialSqDeriv u x ω t = radialSqDeriv v x ω t := by
-  have hmem : x + t • (ω : Rn n) ∈ ball x R := (add_smul_mem_ball_iff ht.1 ω).2 ht.2
-  rw [radialSqDeriv, radialSqDeriv, huv hmem,
-    (huv.eventuallyEq_of_mem (isOpen_ball.mem_nhds hmem)).gradient_eq]
-
-/-- **Integrated radial derivative of `∫_{∂B_s} u²`**: for `u` Lipschitz on `B_R(x)` and
-`0 ≤ a ≤ b < R`, `∫_{S} u(x + bω)² - ∫_{S} u(x + aω)² = ∫_a^b ∫_{S} 2 u(x + tω) ⟪∇u(x + tω), ω⟫`,
-and the inner integral is interval integrable. -/
-theorem _root_.LipschitzOnWith.integral_sphere_sq_sub [NeZero n] {u : Rn n → ℝ} {C : ℝ≥0}
-    {x : Rn n} {R : ℝ} (hu : LipschitzOnWith C u (ball x R)) {a b : ℝ} (ha : 0 ≤ a)
-    (hab : a ≤ b) (hbR : b < R) :
-    IntervalIntegrable (fun t => ∫ ω, radialSqDeriv u x ω t ∂sphereMeasure n) volume a b ∧
-    ∫ ω, u (x + b • (ω : Rn n)) ^ 2 ∂sphereMeasure n -
-        ∫ ω, u (x + a • (ω : Rn n)) ^ 2 ∂sphereMeasure n =
-      ∫ t in a..b, ∫ ω, radialSqDeriv u x ω t ∂sphereMeasure n := by
-  obtain ⟨v, hv, huv⟩ := hu.extend_real
-  obtain ⟨h1, h2⟩ := hv.integral_sphere_sq_sub x ha hab
-  have hG : EqOn (fun t => ∫ ω, radialSqDeriv u x ω t ∂sphereMeasure n)
-      (fun t => ∫ ω, radialSqDeriv v x ω t ∂sphereMeasure n) (uIcc a b) := by
-    intro t ht
-    rw [uIcc_of_le hab] at ht
-    exact integral_congr_ae (.of_forall fun ω =>
-      radialSqDeriv_congr huv ⟨ha.trans ht.1, ht.2.trans_lt hbR⟩ ω)
-  have hS : ∀ t ∈ Icc a b, ∫ ω, u (x + t • (ω : Rn n)) ^ 2 ∂sphereMeasure n =
-      ∫ ω, v (x + t • (ω : Rn n)) ^ 2 ∂sphereMeasure n := fun t ht =>
-    integral_congr_ae (.of_forall fun ω => by
-      simp only
-      rw [huv ((add_smul_mem_ball_iff (ha.trans ht.1) ω).2 (ht.2.trans_lt hbR))])
-  refine ⟨h1.congr (hG.symm.mono uIoc_subset_uIcc), ?_⟩
-  rw [hS b ⟨hab, le_rfl⟩, hS a ⟨le_rfl, hab⟩, h2, intervalIntegral.integral_congr hG]
 
 /-- **Derivative of `P(s) = ∫_{∂B_s(x)} u²`** for `u` Lipschitz on `B_R(x)`: for a.e.
 `s ∈ (0, R)`, `P'(s) = ((n-1)/s) P(s) + (2/s) ∫_{∂B_s(x)} u ⟪∇u, y - x⟫`. -/

@@ -188,24 +188,7 @@ theorem sq_mul_sub_sq_le_modN_sub {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (
   have e : κ ^ 2 * s₂ ^ 2 / 8 - κ ^ 2 * s₁ ^ 2 / 8 = κ ^ 2 * (s₂ ^ 2 - s₁ ^ 2) / 8 := by ring
   linarith
 
-/-- For `s₁ ≤ s₂ / 2`: `(3/32) κ² s₂² ≤ Ñ(s₂) − Ñ(s₁)`. -/
-theorem sq_mul_le_modN_sub {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (hs₂ : s₂ ∈ Icc a b)
-    (h12 : 2 * s₁ ≤ s₂) : 3 / 32 * (κ ^ 2 * s₂ ^ 2) ≤ d.modN s₂ - d.modN s₁ := by
-  have hs0 := d.pos_of_mem hs₁
-  have h := d.sq_mul_sub_sq_le_modN_sub hH hZ hκ hs₁ hs₂ (by linarith)
-  have h1 : s₁ ^ 2 ≤ s₂ ^ 2 / 4 := by nlinarith
-  have hk : 0 ≤ κ ^ 2 := sq_nonneg κ
-  nlinarith
-
 end Growth
-
-/-- Subinterval version of `sq_mul_sub_sq_le_modN_sub`: if `H > 0` on `[t, r]`, `Z(t) ≥ 0` and
-`κ r ≤ 1/2`, then `κ² (s₂² − s₁²) / 8 ≤ Ñ(s₂) − Ñ(s₁)` for `t ≤ s₁ ≤ s₂ ≤ r`. -/
-theorem sq_mul_sub_sq_le_modN_sub_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hZ : 0 ≤ d.modM t) (hκ : κ * r ≤ 1 / 2)
-    {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc t r) (hs₂ : s₂ ∈ Icc t r) (h12 : s₁ ≤ s₂) :
-    κ ^ 2 * (s₂ ^ 2 - s₁ ^ 2) / 8 ≤ d.modN s₂ - d.modN s₁ :=
-  (d.restrict ht htr hr).sq_mul_sub_sq_le_modN_sub hH hZ hκ hs₁ hs₂ h12
 
 end RadialDataErr
 

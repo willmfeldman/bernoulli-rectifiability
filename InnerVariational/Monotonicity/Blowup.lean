@@ -32,7 +32,7 @@ Let `w_k ≥ 0` be Lipschitz on the balls of an open set `U` with a common const
   (`tendsto_integral_norm_gradient_sub_sq_mul`) and `∫_K |∇w_k − ∇w₀|² → 0` for compact `K ⊆ U`
   (`tendsto_setIntegral_norm_gradient_sub_sq`).
 
-`lipschitz_blowup_tendsto` packages these. The results are used for blow-ups of variational
+The results are used for blow-ups of variational
 solutions (Propositions 3.4 and 3.5, Section 8), for Theorem 9.3, and in Section 5.
 
 ## Proof
@@ -469,19 +469,6 @@ theorem tendsto_setIntegral_norm_gradient_sub_sq {K : Set (Rn n)} (hK : IsCompac
   · rw [indicator_of_mem hy, hηK y hy, mul_one]
   · rw [indicator_of_notMem hy]
     exact mul_nonneg (sq_nonneg _) (hη0 y)
-
-include hw hL hconv in
-/-- **Compactness of Lipschitz blow-ups** (proof of Proposition 3.5), packaged: the limit is
-Lipschitz and harmonic on its positivity set, gradients converge pointwise there, and strongly in
-`L²_loc`. -/
-theorem lipschitz_blowup_tendsto :
-    IsLipHarmonicPos U w₀ ∧
-      (∀ y ∈ U, 0 < w₀ y → Tendsto (fun k => gradient (w k) y) atTop (𝓝 (gradient w₀ y))) ∧
-      ∀ K, IsCompact K → K ⊆ U →
-        Tendsto (fun k => ∫ y in K, ‖gradient (w k) y - gradient w₀ y‖ ^ 2) atTop (𝓝 0) :=
-  ⟨IsLipHarmonicPos.of_tendstoLocallyUniformlyOn hw hL hconv,
-    fun _ hy hpos => tendsto_gradient_of_tendstoLocallyUniformlyOn hw hconv hy hpos,
-    fun _ hK hKU => tendsto_setIntegral_norm_gradient_sub_sq hw hL hconv hK hKU⟩
 
 end Strong
 

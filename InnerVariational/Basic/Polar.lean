@@ -22,16 +22,15 @@ Lebesgue measure on `ℝⁿ ∖ {0}` to `σ ⊗ r^{n-1} dr` on `S^{n-1} × (0, �
 
 ## Main results
 
-* `integral_eq_integral_Ioi_sphere`: `∫ g = ∫_0^∞ t^{n-1} ∫_{S^{n-1}} g(t ω) dσ(ω) dt`, and the
-  `lintegral` version `lintegral_eq_lintegral_Ioi_sphere`.
+* `integral_eq_integral_Ioi_sphere`: `∫ g = ∫_0^∞ t^{n-1} ∫_{S^{n-1}} g(t ω) dσ(ω) dt`.
 * `integral_ball_diff_ball`, `integral_ball_eq`: the annulus and ball formulas
   `∫_{B_b(x) ∖ B_a(x)} f = ∫_a^b sphereIntegral f x s ds`.
 * `intervalIntegrable_sphereIntegral`: `s ↦ sphereIntegral f x s` is interval integrable when `f`
   is integrable on the ball.
-* `sphereMeasure_univ`, `sphereMeasure_real_univ`, `sphereIntegral_const`: `σ(S^{n-1}) = n |B_1|`.
-* `ae_sphere_ae_of_ae`, `ae_sphere_ae_notMem`: a Lebesgue-null set meets `σ`-a.e. ray
-  from `x` in a null set of radii. `ae_ae_smul_notMem` and `ae_ae_add_smul_notMem` are the analogues
-  for the lines `t ↦ t • y` and `t ↦ y + t • v`.
+* `sphereMeasure_real_univ`, `sphereIntegral_const`: `σ(S^{n-1}) = n |B_1|`.
+* `ae_sphere_ae_of_ae`: a property that holds Lebesgue-a.e. holds, along `σ`-a.e. ray from `x`,
+  for a.e. radius. `ae_ae_smul_notMem` and `ae_ae_add_smul_notMem`: a Lebesgue-null set meets a.e.
+  line `t ↦ t • y`, resp. `t ↦ y + t • v`, in a null set of parameters.
 * `LipschitzOnWith.ae_sphere_ae_hasDerivAt`: along `σ`-a.e. ray, a function Lipschitz on
   `ball x R` has radial derivative `⟪∇u(x + t ω), ω⟫` for a.e. `t ∈ (0, R)`.
 
@@ -93,13 +92,6 @@ theorem integrable_volumeIoiPow_iff [NormedSpace ℝ E] (k : ℕ) {F : ℝ → E
   refine integrable_congr (.of_forall fun t => ?_)
   simp [ENNReal.toReal_ofReal (pow_nonneg (le_of_lt t.2) _)]
 
-theorem lintegral_volumeIoiPow (k : ℕ) (F : ℝ → ℝ≥0∞) :
-    ∫⁻ t : Ioi (0 : ℝ), F t ∂Measure.volumeIoiPow k =
-      ∫⁻ t in Ioi (0 : ℝ), ENNReal.ofReal (t ^ k) * F t := by
-  rw [Measure.volumeIoiPow,
-    lintegral_withDensity_eq_lintegral_mul_non_measurable _ (by fun_prop) (by simp)]
-  exact lintegral_subtype_comap measurableSet_Ioi fun t => ENNReal.ofReal (t ^ k) * F t
-
 /-! ### Polar formulas on all of `ℝⁿ` -/
 
 /-- Polar coordinates, product form. -/
@@ -128,17 +120,6 @@ theorem integrable_iff_integrable_prod_polar [NeZero n] {g : Rn n → E} :
   rw [IntegrableOn, restrict_compl_singleton] at this
   exact this
 
-/-- Polar coordinates, product form, for the lower Lebesgue integral. -/
-theorem lintegral_eq_lintegral_prod_polar [NeZero n] (g : Rn n → ℝ≥0∞) :
-    ∫⁻ y, g y = ∫⁻ p : sphere (0 : Rn n) 1 × Ioi (0 : ℝ), g ((p.2 : ℝ) • (p.1 : Rn n))
-      ∂(sphereMeasure n).prod (Measure.volumeIoiPow (n - 1)) := by
-  have h := (measurePreserving_polar n).lintegral_comp_emb
-    (homeomorphUnitSphereProd (Rn n)).measurableEmbedding
-    (fun p => g ↑((homeomorphUnitSphereProd (Rn n)).symm p))
-  simp only [Homeomorph.symm_apply_apply, homeomorphUnitSphereProd_symm_apply_coe] at h
-  rw [← h, lintegral_subtype_comap (measurableSet_singleton _).compl,
-    restrict_compl_singleton]
-
 /-- **Polar coordinates**: `∫ g = ∫_0^∞ t^{n-1} ∫_{S^{n-1}} g(t ω) dσ(ω) dt`. -/
 theorem integral_eq_integral_Ioi_sphere [NormedSpace ℝ E] [NeZero n] {g : Rn n → E}
     (hg : Integrable g) :
@@ -155,23 +136,7 @@ theorem integrableOn_Ioi_sphere [NormedSpace ℝ E] [NeZero n] {g : Rn n → E}
   (integrable_volumeIoiPow_iff (n - 1)).1
     (integrable_iff_integrable_prod_polar.1 hg).integral_prod_right
 
-/-- **Polar coordinates** for the lower Lebesgue integral of a measurable function. -/
-theorem lintegral_eq_lintegral_Ioi_sphere [NeZero n] {g : Rn n → ℝ≥0∞} (hg : Measurable g) :
-    ∫⁻ y, g y = ∫⁻ t in Ioi (0 : ℝ),
-      ENNReal.ofReal (t ^ (n - 1)) * ∫⁻ ω, g (t • (ω : Rn n)) ∂sphereMeasure n := by
-  have hm : Measurable fun p : sphere (0 : Rn n) 1 × Ioi (0 : ℝ) => (p.2 : ℝ) • (p.1 : Rn n) :=
-    ((continuous_subtype_val.comp continuous_snd).smul
-      (continuous_subtype_val.comp continuous_fst)).measurable
-  rw [lintegral_eq_lintegral_prod_polar,
-    lintegral_prod_symm (fun p : sphere (0 : Rn n) 1 × Ioi (0 : ℝ) => g ((p.2 : ℝ) • (p.1 : Rn n)))
-      (hg.comp hm).aemeasurable]
-  exact lintegral_volumeIoiPow (n - 1) fun t => ∫⁻ ω, g (t • (ω : Rn n)) ∂sphereMeasure n
-
 /-! ### Total mass of the sphere -/
-
-/-- `σ(S^{n-1}) = n |B_1|`. -/
-theorem sphereMeasure_univ (n : ℕ) : sphereMeasure n univ = n * volume (ball (0 : Rn n) 1) := by
-  rw [sphereMeasure, Measure.toSphere_apply_univ, finrank_Rn]
 
 /-- `σ(S^{n-1}) = n |B_1|`, real version. -/
 theorem sphereMeasure_real_univ (n : ℕ) : (sphereMeasure n).real univ = n * unitBallVolume n := by
@@ -186,11 +151,6 @@ theorem sphereIntegral_const (c : ℝ) (x : Rn n) (s : ℝ) :
     sphereIntegral (fun _ => c) x s = n * unitBallVolume n * s ^ (n - 1) * c := by
   rw [sphereIntegral, integral_const, smul_eq_mul, sphereMeasure_real_univ]
   ring
-
-/-- `|∂B_s| = n |B_1| s^{n-1}`. -/
-theorem sphereIntegral_one (x : Rn n) (s : ℝ) :
-    sphereIntegral (fun _ => (1 : ℝ)) x s = n * unitBallVolume n * s ^ (n - 1) := by
-  rw [sphereIntegral_const, mul_one]
 
 /-! ### Ball and annulus formulas -/
 
@@ -313,11 +273,6 @@ theorem ae_sphere_ae_of_ae [NeZero n] {p : Rn n → Prop} (h : ∀ᵐ y, p y) (x
   rw [ae_restrict_iff' measurableSet_Ioi] at h5
   filter_upwards [h5] with t ht htpos
   exact ht htpos (ENNReal.ofReal_pos.2 (pow_pos htpos _)).ne'
-
-/-- A Lebesgue-null set meets `σ`-a.e. ray from `x` in a null set of radii. -/
-theorem ae_sphere_ae_notMem [NeZero n] {Z : Set (Rn n)} (hZ : volume Z = 0) (x : Rn n) :
-    ∀ᵐ (ω : sphere (0 : Rn n) 1) ∂sphereMeasure n, ∀ᵐ t : ℝ, 0 < t → x + t • (ω : Rn n) ∉ Z :=
-  ae_sphere_ae_of_ae (measure_eq_zero_iff_ae_notMem.1 hZ) x
 
 /-- A Lebesgue-null set `Z` meets a.e. line `t ↦ t • y` through the origin in a null set. -/
 theorem ae_ae_smul_notMem {Z : Set (Rn n)} (hZ : volume Z = 0) :

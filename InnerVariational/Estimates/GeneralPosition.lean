@@ -108,12 +108,6 @@ def IsGeneralPosition (δ : ℝ) (a₀ : Rn n) (a : Fin k → Rn n) : Prop :=
 def genPosCoeffBound (δ R : ℝ) (i : ℕ) : ℝ :=
   δ⁻¹ * (1 + 2 * R / δ) ^ i
 
-theorem genPosCoeffBound_mono {δ R : ℝ} (hδ : 0 < δ) (hR : 0 ≤ R) {i j : ℕ} (hij : i ≤ j) :
-    genPosCoeffBound δ R i ≤ genPosCoeffBound δ R j := by
-  unfold genPosCoeffBound
-  gcongr
-  · exact le_add_of_nonneg_right (by positivity)
-
 /-- The differences `a i − a₀` span the direction of the affine span. -/
 theorem span_sub_le_direction (a₀ : Rn n) (a : Fin k → Rn n) (s : Set (Fin k)) :
     Submodule.span ℝ ((fun j => a j - a₀) '' s) ≤

@@ -24,8 +24,7 @@ Kriventsov–Weiss, Proposition 3.2 (full reference below): a variational soluti
 
 * `IsVariationalSolutionQ.harmonicOn_pos`: `u` is harmonic at every `x ∈ Ω` with `u x > 0`.
 * `IsVariationalSolutionQ.isLipHarmonicPos`: `(u, Ω)` satisfies `IsLipHarmonicPos`.
-* `IsVariationalSolutionQ.weaklySubharmonic`, `IsVariationalSolutionQ.weaklySubharmonic_sq`:
-  `u` and `u²` are weakly subharmonic on `Ω`.
+* `IsVariationalSolutionQ.weaklySubharmonic`: `u` is weakly subharmonic on `Ω`.
 
 The results are proved for a Lipschitz coefficient `Q` with `0 < c ≤ Q ≤ C` (`QBounds`); the
 statements for `IsVariationalSolution` (the coefficient `Q ≡ 1`) are their specializations.
@@ -38,7 +37,8 @@ with `ξ = φ e`. Since `χ = 1` a.e. on `{u > 0}`, the quadratic part
 (`IsVariationalSolutionQ.integral_gradVariation_eq_zero_of_pos`: the remaining terms form
 `∫ div (Q² ξ) = 0`). Integrating by parts (for Lipschitz functions,
 `Registry.integral_mul_fderiv_eq_neg`) gives `∫ φ ∂_e u Δu = 0`
-(`integral_mul_fderiv_mul_laplacian_eq_zero`). The paper writes this as `∫ ξ·∇u Δu = 0`. Hence
+(`IsVariationalSolutionQ.integral_mul_fderiv_mul_laplacian_eq_zero`). The paper writes this as
+`∫ ξ·∇u Δu = 0`. Hence
 `∂_e u Δu = 0` on `{u > 0}` by the fundamental lemma of the calculus of variations and continuity.
 On the open set `{Δu ≠ 0} ∩ {u > 0}` this forces `∇u = 0`, hence `D²u = 0` and `Δu = 0`, so that set
 is empty. The paper argues through the closure of `{∇u ≠ 0}`; the two arguments are the same.
@@ -307,13 +307,6 @@ theorem weaklySubharmonic (h : IsVariationalSolutionQ Ω C Q u χ)
     (hQ : QBounds Ω Q L c C') : IsWeaklySubharmonicOn Ω u :=
   (h.isLipHarmonicPos hQ).weaklySubharmonic
 
-/-- `u²` is weakly subharmonic on `Ω`. With the sub-mean-value property of weakly
-subharmonic functions this gives the monotonicity of the spherical means of `u²`. -/
-theorem weaklySubharmonic_sq (h : IsVariationalSolutionQ Ω C Q u χ)
-    (hQ : QBounds Ω Q L c C') :
-    IsWeaklySubharmonicOn Ω fun z => u z ^ 2 :=
-  (h.isLipHarmonicPos hQ).weaklySubharmonic_sq
-
 end IsVariationalSolutionQ
 
 namespace IsVariationalSolution
@@ -327,18 +320,6 @@ theorem isOpen_pos (h : IsVariationalSolution Ω C u χ) : IsOpen (Ω ∩ {x | 0
 theorem ae_chi_eq_one (h : IsVariationalSolution Ω C u χ) :
     ∀ᵐ y, y ∈ Ω → 0 < u y → χ y = 1 :=
   h.toQ.ae_chi_eq_one
-
-/-- The identity `∫ φ ∂_e u Δu = 0` for `φ ∈ C^∞_c(Ω ∩ {u > 0})`. It comes from the inner
-variation in the direction `ξ = φ e` (proof of Proposition 3.2). -/
-theorem integral_mul_fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ)
-    {φ : Rn n → ℝ} (hφ : IsTestFunction (Ω ∩ {x | 0 < u x}) φ) (e : Rn n) :
-    ∫ y, φ y * (fderiv ℝ u y e * Δ u y) = 0 :=
-  h.toQ.integral_mul_fderiv_mul_laplacian_eq_zero (QBounds.one Ω) hφ e
-
-/-- `∂_e u Δu = 0` on `Ω ∩ {u > 0}`. -/
-theorem fderiv_mul_laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) (e : Rn n)
-    {y : Rn n} (hy : y ∈ Ω ∩ {x | 0 < u x}) : fderiv ℝ u y e * Δ u y = 0 :=
-  h.toQ.fderiv_mul_laplacian_eq_zero (QBounds.one Ω) e hy
 
 /-- `Δu = 0` on `Ω ∩ {u > 0}` (proof of Proposition 3.2). -/
 theorem laplacian_eq_zero (h : IsVariationalSolution Ω C u χ) {y : Rn n}
@@ -357,12 +338,6 @@ theorem isLipHarmonicPos (h : IsVariationalSolution Ω C u χ) : IsLipHarmonicPo
 /-- **Proposition 3.2**: a variational solution is weakly subharmonic on `Ω`. -/
 theorem weaklySubharmonic (h : IsVariationalSolution Ω C u χ) : IsWeaklySubharmonicOn Ω u :=
   h.toQ.weaklySubharmonic (QBounds.one Ω)
-
-/-- `u²` is weakly subharmonic on `Ω`. With the sub-mean-value property of weakly
-subharmonic functions this gives the monotonicity of the spherical means of `u²`. -/
-theorem weaklySubharmonic_sq (h : IsVariationalSolution Ω C u χ) :
-    IsWeaklySubharmonicOn Ω fun z => u z ^ 2 :=
-  h.toQ.weaklySubharmonic_sq (QBounds.one Ω)
 
 end IsVariationalSolution
 

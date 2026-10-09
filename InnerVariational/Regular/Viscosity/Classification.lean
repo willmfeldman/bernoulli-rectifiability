@@ -16,7 +16,8 @@ import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Tactic.ContinuousFunctionalCalculus
 import InnerVariational.Regular.Density
 import InnerVariational.Registry.BV
-import InnerVariational.Regular.ChiInterior
+import InnerVariational.Monotonicity.Limits
+import InnerVariational.Regular.ChiInteriorQ
 import InnerVariational.Regular.ZeroGradient
 import InnerVariational.Monotonicity.HighestDensity
 public import InnerVariational.Defs.HighestDensity

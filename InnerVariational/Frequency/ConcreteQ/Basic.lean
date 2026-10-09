@@ -48,11 +48,10 @@ The hypothesis `M_x(u; t) ≥ |B_1|` of the constant-coefficient theory is repla
 * Lemma 4.1: `monotoneOn_modFrequencyN`, `one_le_modFrequencyN`,
   `one_sub_le_weightedFrequencyN` (`N ≥ 1 − κ² s² / 8`), `modMonotonicityM_nonneg` (`Z ≥ 0`
   propagates outwards), `heightH_le_exp_mul` (`H(s) ≤ e^{κ² (r² − s²) / 8} H(r)`).
-* Lemma 4.3: `heightH_doubling`; Lemma 4.4: `weightedVolumeV_doubling`; Lemma 4.5:
-  `weightedVolumeV_le_sqrt`.
+* Lemma 4.3: `heightH_doubling`; Lemma 4.5: `weightedVolumeV_le_sqrt`.
 * The growth of `Ñ`: `sq_mul_sub_sq_le_modFrequencyN_sub`, `κ² (s₂² − s₁²) / 8 ≤ Ñ(s₂) − Ñ(s₁)`.
-* The integrated form of (4.13): `integral_frequency_sq_term_le`, and the annulus estimate
-  `integral_annulus_sq_inner_gradient_sub_le`.
+* The annulus estimate `integral_annulus_sq_inner_gradient_sub_le` (the integrated form of
+  (4.13)).
 
 ## Differences from the paper
 
@@ -428,22 +427,6 @@ theorem heightH_doubling (hx : x ∈ closure {y | 0 < u y}) {t r : ℝ} (ht : 0 
     h.heightH_pos hQ hx (ht.trans_le hs.1) ((closedBall_subset_closedBall hs.2).trans hΩ)
   exact d.heightH_doubling le_rfl htr le_rfl hr2 hH hZ hκ hNp hN hs
 
-/-- **Lemma 4.4 with a Lipschitz coefficient**, for `t ≤ s ≤ r ≤ 2t`: under the hypotheses of
-`heightH_doubling`, `V_x(s) ≤ 2ⁿ C V_x(r)`. -/
-theorem weightedVolumeV_doubling (hx : x ∈ closure {y | 0 < u y}) {t r : ℝ} (ht : 0 < t)
-    (htr : t ≤ r) (hr2 : r ≤ 2 * t) (hZ : 0 ≤ modMonotonicityM (weissKappa L c C') Q u χ x t)
-    (hκ : weissKappa L c C' * r ≤ 1 / 2) (hΩ : closedBall x r ⊆ Ω) {Np : ℝ} (hNp : 1 < Np)
-    (hN : modFrequencyN (weissKappa L c C') Q u χ x r ≤ Np) {s : ℝ} (hs : s ∈ Icc t r) :
-    weightedVolumeV Q u χ x s ≤
-      2 ^ n * Abstract.RadialData.doublingConst Np * weightedVolumeV Q u χ x r := by
-  obtain ⟨R', hRR', hR'⟩ := exists_gt_ball_subset h.isOpen (ht.le.trans htr) hΩ
-  let d := h.radialDataErr hQ hR' ht htr hRR'
-  have hH : ∀ s ∈ Icc t r, 0 < d.heightH s := fun s hs =>
-    h.heightH_pos hQ hx (ht.trans_le hs.1) ((closedBall_subset_closedBall hs.2).trans hΩ)
-  have := d.volumeV_doubling le_rfl htr le_rfl hr2 hH hZ hκ hNp hN hs
-  rwa [h.radialDataErr_volumeV hQ hR' ht htr hRR' (ht.trans_le hs.1),
-    h.radialDataErr_volumeV hQ hR' ht htr hRR' (ht.trans_le htr)] at this
-
 /-- **Lemma 4.5 with a Lipschitz coefficient**: if `x ∈ closure {u > 0}`, `0 < t`, `2t ≤ r`,
 `Z_x(t) ≥ 0`, `κ r ≤ 1/2`, `B̄_r(x) ⊆ Ω`, `Ñ_x(r) < N₊` and `Ñ_x(r) − Ñ_x(t) < δ`, then
 `V_x(t) ≤ 2ⁿ C(N₊) √(3δ)`. -/
@@ -536,36 +519,6 @@ theorem integrableOn_ball_inner_gradient (h : IsVariationalSolutionQ Ω C Q u χ
 
 variable [NeZero n] (hQ : QBounds Ω Q L c C') (h : IsVariationalSolutionQ Ω C Q u χ)
 include hQ h
-
-/-- **Integrated form of (4.13) with a Lipschitz coefficient**: for `0 < t ≤ s₁ ≤ s₂`, if
-`x ∈ closure {u > 0}`, `Z_x(t) ≥ 0`, `κ s₂ ≤ 1/2` and `B̄_{s₂}(x) ⊆ Ω`, then
-`∫_{s₁}^{s₂} (1 / (H_x(s) s^{n+2})) ∫_{∂B_s(x)} (∇u·(y−x) − N_x(s) u)² ds ≤ Ñ_x(s₂) − Ñ_x(s₁)`. -/
-theorem integral_frequency_sq_term_le (hx : x ∈ closure {y | 0 < u y}) {t s₁ s₂ : ℝ}
-    (ht : 0 < t) (hts : t ≤ s₁) (hs : s₁ ≤ s₂)
-    (hZ : 0 ≤ modMonotonicityM (weissKappa L c C') Q u χ x t)
-    (hκ : weissKappa L c C' * s₂ ≤ 1 / 2) (hΩ : closedBall x s₂ ⊆ Ω) :
-    ∫ s in s₁..s₂, 1 / (heightH u x s * s ^ (n + 2)) *
-        sphereIntegral (fun y => (⟪gradient u y, y - x⟫ -
-          weightedFrequencyN Q u χ x s * u y) ^ 2) x s ≤
-      modFrequencyN (weissKappa L c C') Q u χ x s₂ -
-        modFrequencyN (weissKappa L c C') Q u χ x s₁ := by
-  obtain ⟨R', hRR', hR'⟩ := exists_gt_ball_subset h.isOpen (ht.le.trans (hts.trans hs)) hΩ
-  let d := h.radialDataErr hQ hR' ht (hts.trans hs) hRR'
-  have hH : ∀ s ∈ Icc t s₂, 0 < d.heightH s := fun s hs' =>
-    h.heightH_pos hQ hx (ht.trans_le hs'.1) ((closedBall_subset_closedBall hs'.2).trans hΩ)
-  refine AbsolutelyContinuousOnInterval.integral_le_sub_of_ae_le hs
-    ((d.absolutelyContinuousOnInterval_modN hH).mono_Icc d.le ⟨hts, hs⟩ ⟨hts.trans hs, le_rfl⟩)
-    (ae_mem_Ioo_imp_mono hts le_rfl (d.ae_hasDerivAt_deriv_modN hH)) ?_ ?_
-  · refine .of_forall fun s hs' => ?_
-    have hs0 : 0 < s := ht.trans_le (hts.trans hs'.1.le)
-    have hHs := hH s ⟨hts.trans hs'.1.le, hs'.2.le⟩
-    exact mul_nonneg (by positivity) (sphereIntegral_nonneg hs0.le fun y _ => sq_nonneg _)
-  · filter_upwards [ae_mem_Ioo_imp_mono hts le_rfl
-      (d.ae_frequency_sq_term_le_deriv_modN hH hZ hκ)] with s hs1 hs'
-    refine le_of_eq_of_le ?_ (hs1 hs')
-    have hs0 : 0 < s := ht.trans_le (hts.trans hs'.1.le)
-    rw [h.sphereIntegral_inner_sub_mul_sq hR' hs0.le (hs'.2.trans hRR')]
-    rfl
 
 /-- **The annulus homogeneity estimate with a Lipschitz coefficient** (proofs of Theorems 6.1
 and 6.3), for any degree `λ`: if `x ∈ closure {u > 0}`, `Z_x(t) ≥ 0`, `0 < t ≤ s₁ ≤ s₂`,

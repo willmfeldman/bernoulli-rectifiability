@@ -36,8 +36,7 @@ For `Q ≡ 1` we have `κ = 0` and `Z_x(r) = M_x(r) − |B_1|`, so this is `Σ^H
   `κ r ≤ 1/2`.
 * `IsVariationalSolutionQ.closure_sigmaHQr_inter_subset`: `Σ^H_{Q,r}` is relatively closed in
   `Ω_r = {x : B̄_r(x) ⊆ Ω}`.
-* On `Σ^H_Q`: `N_x ≥ 1 − κ² s² / 8`, `Ñ_x ≥ 1`, `Ñ_x` is nondecreasing, and
-  `Ñ_x(0+) = N_x(0+) ≥ 1` exists (`exists_tendsto_modFrequencyN_zero`).
+* On `Σ^H_Q`: `N_x ≥ 1 − κ² s² / 8`, `Ñ_x ≥ 1`, and `Ñ_x` is nondecreasing.
 -/
 
 open MeasureTheory Metric Set Filter Topology
@@ -55,10 +54,6 @@ Weiss energy `modMonotonicityM κ`. -/
 def sigmaHQr (Ω : Set (Rn n)) (Q u χ : Rn n → ℝ) (κ r : ℝ) : Set (Rn n) :=
   {x | x ∈ Ω ∧ closedBall x r ⊆ Ω ∧ x ∈ closure {y | 0 < u y} ∧
     0 ≤ modMonotonicityM κ Q u χ x r}
-
-theorem sigmaHQr_subset (Ω : Set (Rn n)) (Q u χ : Rn n → ℝ) (κ r : ℝ) :
-    sigmaHQr Ω Q u χ κ r ⊆ Ω :=
-  fun _ hx => hx.1
 
 namespace IsVariationalSolutionQ
 
@@ -169,41 +164,6 @@ theorem frequency_bounds_of_mem_sigmaHQ (hx : x ∈ sigmaHQ Ω Q u χ) {s : ℝ}
   have hb := h.frequency_bounds hQ hx.2.1 hs
     (h.modMonotonicityM_nonneg_of_mem_sigmaHQ hQ hx hs hκ hΩ) hκ hΩ ⟨le_rfl, le_rfl⟩
   exact ⟨hb.2.2.1, hb.2.2.2⟩
-
-/-- **`Ñ_x(0+) = N_x(0+)` exists and is `≥ 1`** on `Σ^H_Q`. -/
-theorem exists_tendsto_modFrequencyN_zero (hx : x ∈ sigmaHQ Ω Q u χ) :
-    ∃ N₀, 1 ≤ N₀ ∧ Tendsto (modFrequencyN (weissKappa L c C') Q u χ x) (𝓝[>] 0) (𝓝 N₀) ∧
-      Tendsto (weightedFrequencyN Q u χ x) (𝓝[>] 0) (𝓝 N₀) := by
-  set κ := weissKappa L c C' with hκdef
-  have hk : 0 ≤ κ := hQ.weissKappa_nonneg hx.1
-  obtain ⟨R₀, hR₀, hΩ₀⟩ := Metric.nhds_basis_closedBall.mem_iff.1 (h.isOpen.mem_nhds hx.1)
-  set R := min R₀ (1 / (2 * (κ + 1))) with hRdef
-  have hR : 0 < R := lt_min hR₀ (by positivity)
-  have hΩ : closedBall x R ⊆ Ω := (closedBall_subset_closedBall (min_le_left _ _)).trans hΩ₀
-  have hκR : κ * R ≤ 1 / 2 := by
-    calc κ * R ≤ κ * (1 / (2 * (κ + 1))) := mul_le_mul_of_nonneg_left (min_le_right _ _) hk
-      _ ≤ 1 / 2 := by
-        rw [mul_one_div, div_le_iff₀ (by positivity)]
-        linarith
-  have hmono := (h.monotoneOn_modFrequencyN_of_mem_sigmaHQ hQ hx hκR hΩ).mono Ioo_subset_Ioc_self
-  have hne : (Ioo (0 : ℝ) R).Nonempty := nonempty_Ioo.2 hR
-  have hge : ∀ b ∈ modFrequencyN κ Q u χ x '' Ioo 0 R, 1 ≤ b := by
-    rintro _ ⟨s, hs, rfl⟩
-    exact (h.frequency_bounds_of_mem_sigmaHQ hQ hx hs.1
-      ((mul_le_mul_of_nonneg_left hs.2.le hk).trans hκR)
-      ((closedBall_subset_closedBall hs.2.le).trans hΩ)).2
-  set N₀ := sInf (modFrequencyN κ Q u χ x '' Ioo 0 R)
-  have hlim : Tendsto (modFrequencyN κ Q u χ x) (𝓝[>] 0) (𝓝 N₀) :=
-    hmono.tendsto_nhdsWithin_Ioo_right hne ⟨1, hge⟩
-  refine ⟨N₀, le_csInf (hne.image _) hge, hlim, ?_⟩
-  have hq : Tendsto (fun s : ℝ => κ ^ 2 * s ^ 2 / 2) (𝓝[>] 0) (𝓝 0) := by
-    have : Tendsto (fun s : ℝ => κ ^ 2 * s ^ 2 / 2) (𝓝 0) (𝓝 (κ ^ 2 * 0 ^ 2 / 2)) :=
-      ((continuous_const.mul (continuous_pow 2)).div_const 2).tendsto 0
-    simpa using this.mono_left nhdsWithin_le_nhds
-  have := hlim.sub hq
-  rw [sub_zero] at this
-  refine this.congr fun s => ?_
-  simp [modFrequencyN]
 
 end IsVariationalSolutionQ
 

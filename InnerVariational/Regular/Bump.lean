@@ -68,15 +68,6 @@ theorem bump_eq_one_of_sq_norm_le {z : Rn n} (hz : ‖z‖ ^ 2 ≤ 1 / 2) : bump
   refine Real.smoothTransition.one_of_one_le ?_
   linarith
 
-theorem tsupport_bump_subset : tsupport (bump (n := n)) ⊆ closedBall 0 1 := by
-  refine closure_minimal (fun z hz => ?_) isClosed_closedBall
-  rw [mem_closedBall_zero_iff]
-  by_contra hlt
-  exact hz (bump_eq_zero_of_one_le_norm (not_le.1 hlt).le)
-
-theorem hasCompactSupport_bump : HasCompactSupport (bump (n := n)) :=
-  (isCompact_closedBall 0 1).of_isClosed_subset (isClosed_tsupport _) tsupport_bump_subset
-
 /-- `∇bump(z) = −4 s'(2(1 − |z|²)) z`. -/
 theorem gradient_bump (z : Rn n) :
     gradient bump z = (-4 * deriv Real.smoothTransition (2 * (1 - ‖z‖ ^ 2))) • z := by

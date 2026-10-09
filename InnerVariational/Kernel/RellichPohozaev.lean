@@ -28,8 +28,8 @@ We prove it for a Lipschitz coefficient `Q` with `0 < c ≤ Q ≤ C'` (`QBounds`
 `(n − 2) ∫_{B_s} |∇u|² + n ∫_{B_s} Q² χ + ∫_{B_s} χ ∇(Q²) · (y − x)
   = s ∫_{∂B_s} (|∇u|² + Q² χ − 2 (∇u · ν)²)`
 (`IsVariationalSolutionQ.rellich_pohozaev_ae`). The same argument applied to
-`∫ div (Q² ξ) = 0` gives `n ∫_{B_s} Q² + ∫_{B_s} ∇(Q²) · (y − x) = s ∫_{∂B_s} Q²`
-(`QBounds.rellich_pohozaev_ae`), and the difference of the two is the weighted form
+`∫ div (Q² ξ) = 0` gives `n ∫_{B_s} Q² + ∫_{B_s} ∇(Q²) · (y − x) = s ∫_{∂B_s} Q²`, and the
+difference of the two is the weighted form
 `s ∫_{∂B_s} (|∇u|² − 2 (∇u · ν)² − Q² (1 − χ))
   = (n − 2) ∫_{B_s} |∇u|² − n ∫_{B_s} Q² (1 − χ) − ∫_{B_s} (1 − χ) ∇(Q²) · (y − x)`
 (`IsVariationalSolutionQ.rellich_pohozaev_weighted_ae`), in which every coefficient term lives on
@@ -264,50 +264,6 @@ theorem integral_rellich_mul_radialCutoff [NeZero n] (hQ : QBounds Ω Q L c C') 
   rw [integral_congr_ae hpt, integral_sub hI1 (hI2.const_mul _), integral_const_mul,
     integral_indicator (measurableSet_ball.diff measurableSet_ball)] at h0
   linarith
-
-/-- **The ball identity for `Q²`.** If `Q` is Lipschitz with `0 < c ≤ Q ≤ C'` on the open set
-`Ω` and `B_R(x) ⊆ Ω`, then for a.e. `s ∈ (0, R)`,
-`n ∫_{B_s(x)} Q² + ∫_{B_s(x)} ∇(Q²) · (y − x) = s ∫_{∂B_s(x)} Q²`. This is the divergence
-theorem for the field `Q² (y − x)`. -/
-theorem rellich_pohozaev_ae [NeZero n] (hQ : QBounds Ω Q L c C') (hΩ : IsOpen Ω) {R : ℝ}
-    (hR : ball x R ⊆ Ω) :
-    ∀ᵐ s, s ∈ Ioo 0 R →
-      n * (∫ y in ball x s, Q y ^ 2) + ∫ y in ball x s, fderiv ℝ (fun z => Q z ^ 2) y (y - x) =
-        s * sphereIntegral (fun y => Q y ^ 2) x s := by
-  have hGb : ∀ y ∈ ball x R, |n * Q y ^ 2 + fderiv ℝ (fun z => Q z ^ 2) y (y - x)| ≤
-      n * C' ^ 2 + 2 * C' * L * R := fun y hy => by
-    refine (hQ.abs_rellich_le hΩ (hR hy)).trans ?_
-    have := hQ.nonneg_of_mem (hR hy)
-    rw [mem_ball, dist_eq_norm] at hy
-    gcongr
-  have hae := ae_setIntegral_ball_eq_of_radialCutoff
-    (hQ.aestronglyMeasurable_rellich (x := x) measurableSet_ball hR) hGb
-    ((show ContinuousOn (fun y => Q y ^ 2) _ from
-      (hQ.continuousOn.mono hR).pow 2).aestronglyMeasurable
-      measurableSet_ball)
-    (B' := C' ^ 2) (fun y hy => by
-      rw [abs_of_nonneg (sq_nonneg _)]; exact hQ.sq_le (hR hy))
-    fun s δ hs hδ hsδ => hQ.integral_rellich_mul_radialCutoff hΩ hs hδ
-      ((closedBall_subset_ball hsδ).trans hR)
-  filter_upwards [hae] with s hs hsR
-  rw [← hs hsR]
-  have hsub : ball x s ⊆ ball x R := ball_subset_ball hsR.2.le
-  have hi1 : IntegrableOn (fun y => Q y ^ 2) (ball x s) :=
-    IntegrableOn.of_bound measure_ball_lt_top
-      (((hQ.continuousOn.mono (hsub.trans hR)).pow 2).aestronglyMeasurable measurableSet_ball)
-      (C' ^ 2) ((ae_restrict_iff' measurableSet_ball).2 (.of_forall fun y hy => by
-        rw [Real.norm_eq_abs, abs_of_nonneg (sq_nonneg _)]; exact hQ.sq_le (hR (hsub hy))))
-  have hi2 : IntegrableOn (fun y => fderiv ℝ (fun z => Q z ^ 2) y (y - x)) (ball x s) :=
-    IntegrableOn.of_bound measure_ball_lt_top
-      (measurable_fderiv_apply _ (measurable_id.sub_const x)).aestronglyMeasurable
-      (2 * C' * L * R) ((ae_restrict_iff' measurableSet_ball).2 (.of_forall fun y hy => by
-        rw [Real.norm_eq_abs]
-        refine (hQ.abs_fderiv_sq_apply_le hΩ (hR (hsub hy)) _).trans ?_
-        have := hQ.nonneg_of_mem (hR (hsub hy))
-        have h1 : ‖y - x‖ ≤ R := by
-          rw [← dist_eq_norm]; exact (mem_ball.1 (hsub hy)).le
-        gcongr))
-  rw [integral_add (hi1.const_mul _) hi2, integral_const_mul]
 
 end QBounds
 
@@ -548,8 +504,8 @@ theorem rellich_pohozaev_ae [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
 /-- **The weighted Rellich–Pohozaev identity.** If `B_R(x) ⊆ Ω`, then for a.e. `s ∈ (0, R)`,
 `s ∫_{∂B_s(x)} (|∇u|² − 2 (∇u · ν)² − Q² (1 − χ))
   = (n − 2) ∫_{B_s(x)} |∇u|² − n ∫_{B_s(x)} Q² (1 − χ) − ∫_{B_s(x)} (1 − χ) ∇(Q²) · (y − x)`,
-with `ν(y) = (y − x) / |y − x|`. This is `rellich_pohozaev_ae` minus the ball identity for `Q²`
-(`QBounds.rellich_pohozaev_ae`); every coefficient term is supported on `{χ = 0}`, and for
+with `ν(y) = (y − x) / |y − x|`. This is `rellich_pohozaev_ae` minus the ball identity for `Q²`;
+every coefficient term is supported on `{χ = 0}`, and for
 `Q ≡ 1` the last term vanishes. -/
 theorem rellich_pohozaev_weighted_ae [NeZero n] {L : ℝ≥0} {c C' : ℝ}
     (hQ : QBounds Ω Q L c C') (h : IsVariationalSolutionQ Ω C Q u χ) {x : Rn n} {R : ℝ}

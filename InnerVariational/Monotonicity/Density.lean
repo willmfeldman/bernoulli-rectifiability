@@ -33,7 +33,8 @@ Proposition 3.5, including the density formula (3.10). Let `(u, χ)` be a variat
 Let `r_k → 0+` and `u_{x, r_k} → u₀` locally uniformly on `ℝⁿ`. Then `u(x) = 0`
 (`IsVariationalSolution.eq_zero_of_tendstoLocallyUniformly_rescale`), `u₀` is `C_V`-Lipschitz and
 harmonic on `{u₀ > 0}` (`blowup_lipschitzWith`, `blowup_isLipHarmonicPos`), it satisfies Euler's
-identity `∇u₀(y)·y = u₀(y)` (`blowup_inner_gradient_eq`), and it is homogeneous of degree one
+identity `∇u₀(y)·y = u₀(y)` (`IsVariationalSolutionQ.blowup_inner_gradient_eq`), and it is
+homogeneous of degree one
 (`blowup_homogeneous`). Such limits exist along a subsequence of any `r_k → 0+`
 (`exists_blowup_subseq`, `Blowup.lean`). The paper's `W^{1,2}` bound is immediate from the
 Lipschitz bound.
@@ -45,7 +46,6 @@ of a locally uniform limit, which forces `u(x) = 0`.
 
 ## Proposition 3.5
 
-* `tendsto_monotonicityM_zero_of_pos`: if `u(x) > 0`, then `M_x(r) → −∞`.
 * `tendsto_monotonicityM_zero`, formula (3.10): if `u(x) = 0`, then `M_x(0+)` is a real number
   `m`, `M_x(r) → m`, and `r^{-n} ∫_{B_r(x)} χ → m`. The existence of the second limit is part of
   the statement, as in the paper.
@@ -53,7 +53,7 @@ of a locally uniform limit, which forces `u(x) = 0`.
 * `upperSemicontinuousOn_Mzero` (`Limits.lean`): `x ↦ M_x(0+)` is upper semicontinuous on `Ω`.
 
 `χ` takes values in `{0, 1}` on `Ω`, so `∫_{B_r(x)} χ = |{χ = 1} ∩ B_r(x)|`
-(`setIntegral_chi_eq_measureReal`); (3.10) is stated with `∫ χ`.
+(`IsVariationalSolutionQ.setIntegral_chi_eq_measureReal`); (3.10) is stated with `∫ χ`.
 
 ## Proof of (3.10)
 
@@ -131,30 +131,12 @@ theorem blowup_window [NeZero n] (h : IsVariationalSolution Ω C u χ) (hR0 : 0 
       ((tendstoLocallyUniformlyOn_univ.2 hconv).mono (subset_univ _)) k₀
   · exact (tendsto_add_atTop_iff_nat k₀).2 (tendsto_monotonicityM_rescale hm hr hr0 ht)
 
-/-- On the window `B_ρ`, a blow-up is Lipschitz, harmonic on its positivity set, and satisfies
-Euler's identity away from `0`. -/
-theorem blowup_ball [NeZero n] (h : IsVariationalSolution Ω C u χ) (hR0 : 0 < R)
-    (hR : ball x R ⊆ Ω) {m : ℝ} (hm : Tendsto (monotonicityM u χ x) (𝓝[>] 0) (𝓝 m))
-    {r : ℕ → ℝ} (hr : ∀ k, 0 < r k) (hr0 : Tendsto r atTop (𝓝 0)) {u₀ : Rn n → ℝ}
-    (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop) {ρ : ℝ}
-    (hρ : 0 < ρ) :
-    IsLipHarmonicPos (ball 0 ρ) u₀ ∧ LipschitzOnWith C u₀ (ball 0 ρ) ∧
-      ∀ y ∈ ball (0 : Rn n) ρ, y ≠ 0 → 0 < u₀ y → ⟪gradient u₀ y, y⟫ = u₀ y :=
-  IsVariationalSolutionQ.blowup_ball (QBounds.one Ω) h.toQ hR0 hR
-    (by simpa [monotonicityMq_one] using hm) hr hr0 hconv hρ
-
 section Blowup
 
 variable [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω) {r : ℕ → ℝ}
   (hr : ∀ k, 0 < r k) (hr0 : Tendsto r atTop (𝓝 0)) {u₀ : Rn n → ℝ}
   (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop)
 include h hx hr hr0 hconv
-
-/-- `blowup_ball` for any window, with the hypotheses of the section. -/
-theorem blowup_ball' {ρ : ℝ} (hρ : 0 < ρ) :
-    IsLipHarmonicPos (ball 0 ρ) u₀ ∧ LipschitzOnWith C u₀ (ball 0 ρ) ∧
-      ∀ y ∈ ball (0 : Rn n) ρ, y ≠ 0 → 0 < u₀ y → ⟪gradient u₀ y, y⟫ = u₀ y :=
-  IsVariationalSolutionQ.blowup_ball' (QBounds.one Ω) h.toQ hx hr hr0 hconv hρ
 
 /-- **Blow-ups are Lipschitz** (proof of Proposition 3.5): `u₀` is `C_V`-Lipschitz on `ℝⁿ`. -/
 theorem blowup_lipschitzWith : LipschitzWith C u₀ :=
@@ -163,11 +145,6 @@ theorem blowup_lipschitzWith : LipschitzWith C u₀ :=
 /-- **Blow-ups are harmonic on their positivity set** (proof of Proposition 3.5). -/
 theorem blowup_isLipHarmonicPos : IsLipHarmonicPos univ u₀ :=
   IsVariationalSolutionQ.blowup_isLipHarmonicPos (QBounds.one Ω) h.toQ hx hr hr0 hconv
-
-/-- **Euler's identity for blow-ups** (proof of Proposition 3.5): `∇u₀(y)·y = u₀(y)` for every
-`y`. -/
-theorem blowup_inner_gradient_eq (y : Rn n) : ⟪gradient u₀ y, y⟫ = u₀ y :=
-  IsVariationalSolutionQ.blowup_inner_gradient_eq (QBounds.one Ω) h.toQ hx hr hr0 hconv y
 
 /-- **Proposition 3.4, last claim**: blow-up limits are homogeneous of degree one,
 `u₀(t y) = t u₀(y)` for `t > 0`. As in the proof of Proposition 3.5, this comes after the strong
@@ -179,17 +156,6 @@ end Blowup
 
 /-! ### The density formula (3.10) -/
 
-/-- **Formula (3.10) along a blow-up sequence** (proof of Proposition 3.5): if `u(x) = 0`,
-`M_x(r) → m`, and `u_{x,r_k} → u₀` locally uniformly, then `r_k^{-n} ∫_{B_{r_k}(x)} χ → m`. -/
-theorem tendsto_density_of_tendstoLocallyUniformly [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    (hR0 : 0 < R) (hR : ball x R ⊆ Ω) (hux : u x = 0) {m : ℝ}
-    (hm : Tendsto (monotonicityM u χ x) (𝓝[>] 0) (𝓝 m)) {r : ℕ → ℝ} (hr : ∀ k, 0 < r k)
-    (hr0 : Tendsto r atTop (𝓝 0)) {u₀ : Rn n → ℝ}
-    (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop) :
-    Tendsto (fun k => (r k ^ n)⁻¹ * ∫ y in ball x (r k), χ y) atTop (𝓝 m) := by
-  simpa using IsVariationalSolutionQ.tendsto_density_of_tendstoLocallyUniformly (QBounds.one Ω)
-    h.toQ hR0 hR hux (by simpa [monotonicityMq_one] using hm) hr hr0 hconv
-
 /-- **Proposition 3.5, formula (3.10)**: if `u(x) = 0`, then
 `M_x(u; 0+)` is a real number `m`, `M_x(r) → m`, and `r^{-n} ∫_{B_r(x)} χ → m` as `r → 0+`. -/
 theorem tendsto_monotonicityM_zero [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω)
@@ -198,11 +164,6 @@ theorem tendsto_monotonicityM_zero [NeZero n] (h : IsVariationalSolution Ω C u 
       Tendsto (fun r => (r ^ n)⁻¹ * ∫ y in ball x r, χ y) (𝓝[>] 0) (𝓝 m) := by
   simpa [monotonicityMq_one, MzeroQ_one] using
     IsVariationalSolutionQ.tendsto_monotonicityMq_zero (QBounds.one Ω) h.toQ hx hux
-
-/-- **Proposition 3.5**: if `u(x) > 0`, then `M_x(r) → −∞` as `r → 0+`. -/
-theorem tendsto_monotonicityM_zero_of_pos [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    (hx : x ∈ Ω) (hpos : 0 < u x) : Tendsto (monotonicityM u χ x) (𝓝[>] 0) atBot :=
-  h.tendsto_monotonicityM_atBot_of_pos hx hpos
 
 /-! ### Bounds on `M_x(0+)` -/
 

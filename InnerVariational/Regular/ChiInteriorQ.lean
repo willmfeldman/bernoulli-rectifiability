@@ -29,13 +29,10 @@ subset of `{u = 0}°`, and `M^{Q(x)}_x(u; 0+) ∈ {0, Q(x)² |B_1|}` there.
   supported in an open set where `u = 0`.
 * `IsVariationalSolutionQ.exists_ae_eq_const_of_eq_zero`: if `u = 0` on a preconnected open
   `U ⊆ Ω`, then `χ = c` a.e. on `U` with `c ∈ {0, 1}`.
-* `IsVariationalSolutionQ.chi_ae_eq_const_connectedComponentIn`: the paper's form, on each
-  connected component of `Ω ∩ {u = 0}°`.
-* `IsVariationalSolutionQ.MzeroQ_eq_of_ae_eq_const`,
-  `IsVariationalSolutionQ.MzeroQ_mem_of_mem_interior`: `M^{Q(x)}_x(u; 0+) = Q(x)² c |B_1|` when
+* `IsVariationalSolutionQ.MzeroQ_eq_of_ae_eq_const`: `M^{Q(x)}_x(u; 0+) = Q(x)² c |B_1|` when
   `χ = c` a.e. near `x`.
 
-The case `Q ≡ 1` is `Regular/ChiInterior.lean`.
+The paper treats the case `Q ≡ 1`.
 -/
 
 open MeasureTheory Metric Set Filter Topology
@@ -124,18 +121,6 @@ theorem exists_ae_eq_const_of_eq_zero (h : IsVariationalSolutionQ Ω C Q u χ)
   rw [← hy]
   exact h.chi_mem y (hUΩ hyU)
 
-/-- **`χ` on `{u = 0}°`** (start of §8.1): `χ` is a.e. constant, equal to `0` or `1`, on each
-connected component of `Ω ∩ {u = 0}°`. (For `x ∉ Ω ∩ {u = 0}°` the component is empty.) -/
-theorem chi_ae_eq_const_connectedComponentIn (h : IsVariationalSolutionQ Ω C Q u χ)
-    (hQ : QBounds Ω Q L c C') (x : Rn n) :
-    ∃ c₀ : ℝ, (c₀ = 0 ∨ c₀ = 1) ∧ ∀ᵐ y ∂(volume.restrict
-      (connectedComponentIn (Ω ∩ interior {y | u y = 0}) x)), χ y = c₀ := by
-  have hWo : IsOpen (Ω ∩ interior {y | u y = 0}) := h.isOpen.inter isOpen_interior
-  exact h.exists_ae_eq_const_of_eq_zero hQ hWo.connectedComponentIn
-    isPreconnected_connectedComponentIn
-    ((connectedComponentIn_subset _ _).trans inter_subset_left)
-    fun y hy => (interior_subset (s := {y | u y = 0}) (connectedComponentIn_subset _ _ hy).2 :)
-
 /-- `M^{Q(x)}_x(u; 0+) = Q(x)² c |B_1|` when `u(x) = 0` and `χ = c` a.e. near `x` (the analogue of
 Proposition 3.5, (3.10)). -/
 theorem MzeroQ_eq_of_ae_eq_const [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
@@ -145,20 +130,6 @@ theorem MzeroQ_eq_of_ae_eq_const [NeZero n] (h : IsVariationalSolutionQ Ω C Q u
   obtain ⟨m, hm, -, hd⟩ := h.tendsto_monotonicityMq_zero hQ hx hux
   rw [hm, tendsto_nhds_unique hd
     ((Regular.tendsto_density_of_ae_eq_const hδ hc).const_mul (Q x ^ 2))]
-
-/-- `M^{Q(x)}_x(u; 0+) ∈ {0, Q(x)² |B_1|}` on `Ω ∩ {u = 0}°` (start of §8.1). -/
-theorem MzeroQ_mem_of_mem_interior [NeZero n] (h : IsVariationalSolutionQ Ω C Q u χ)
-    (hQ : QBounds Ω Q L c C') {x : Rn n} (hx : x ∈ Ω) (hint : x ∈ interior {y | u y = 0}) :
-    MzeroQ (Q x) u χ x = 0 ∨
-      MzeroQ (Q x) u χ x = ((Q x ^ 2 * unitBallVolume n : ℝ) : EReal) := by
-  obtain ⟨δ, hδ, hδsub⟩ := Metric.isOpen_iff.1 (h.isOpen.inter isOpen_interior) x ⟨hx, hint⟩
-  obtain ⟨c₀, hc01, hc⟩ := h.exists_ae_eq_const_of_eq_zero hQ isOpen_ball
-    (convex_ball x δ).isPreconnected (hδsub.trans inter_subset_left)
-    fun y hy => (interior_subset (s := {y | u y = 0}) (hδsub hy).2 :)
-  rw [h.MzeroQ_eq_of_ae_eq_const hQ hx (interior_subset (s := {y | u y = 0}) hint :) hδ hc]
-  rcases hc01 with rfl | rfl
-  · left; simp
-  · right; simp
 
 end IsVariationalSolutionQ
 

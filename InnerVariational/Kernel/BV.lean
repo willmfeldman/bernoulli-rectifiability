@@ -526,42 +526,6 @@ theorem integral_chi_mul_divergence_eq (h : IsVariationalSolution Ω C u χ) {ξ
     ∫ y, χ y * divergence ξ y = -∫ y, gradVariation u ξ y := by
   simpa using h.toQ.integral_chi_mul_divergence_sq_smul_eq (QBounds.one Ω) hξ
 
-/-- **Step 1 of Lemma 3.3.** Testing the inner variation with `ζ_k = F_k(u) ξ`:
-`∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) = ∫ F_k'(u) (∇u · ξ) |∇u|²`. -/
-theorem integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u χ)
-    {ξ : Rn n → Rn n} (hξ : IsLipTestField Ω ξ) (k : ℕ) :
-    ∫ y, smoothStep k (u y) * gradVariation u ξ y =
-      ∫ y, smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2) :=
-  h.toQ.integral_smoothStep_mul_gradVariation (QBounds.one Ω) hξ k
-
-/-- **Step 2 of Lemma 3.3.** With `|ξ| ≤ M`, `η ≥ 0` a Lipschitz cutoff with compact support in
-`Ω` and `η = 1` on `spt ξ`: `|∫ F_k'(u) (∇u · ξ) |∇u|²| ≤ C_V M ∫ |∇u · ∇η|`. -/
-theorem abs_integral_smoothStep'_le (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
-    (hξ : IsLipTestField Ω ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) {η : Rn n → ℝ}
-    (hη : ∃ L, LipschitzWith L η) (hηc : HasCompactSupport η) (hηΩ : tsupport η ⊆ Ω)
-    (hη0 : ∀ y, 0 ≤ η y) (hη1 : ∀ y ∈ tsupport ξ, η y = 1) (k : ℕ) :
-    |∫ y, smoothStep' k (u y) * (⟪gradient u y, ξ y⟫ * ‖gradient u y‖ ^ 2)| ≤
-      C * M * ∫ y, |⟪gradient u y, gradient η y⟫| :=
-  h.toQ.abs_integral_smoothStep'_le (QBounds.one Ω) hξ hM hη hηc hηΩ hη0 hη1 k
-
-/-- **Step 3 of Lemma 3.3.**
-`∫ F_k(u) (|∇u|² div ξ − 2 ∇u·Dξ∇u) → ∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)`. -/
-theorem tendsto_integral_smoothStep_mul_gradVariation (h : IsVariationalSolution Ω C u χ)
-    {ξ : Rn n → Rn n} (hξ : IsLipTestField Ω ξ) :
-    Tendsto (fun k : ℕ => ∫ y, smoothStep k (u y) * gradVariation u ξ y) atTop
-      (𝓝 (∫ y, gradVariation u ξ y)) :=
-  h.toQ.tendsto_integral_smoothStep_mul_gradVariation (QBounds.one Ω) hξ
-
-/-- **The key estimate of Lemma 3.3.** Let `ξ ∈ C^{0,1}_c(Ω; ℝⁿ)` with `|ξ| ≤ M`, and let `η ≥ 0`
-be Lipschitz with compact support in `Ω` and `η = 1` on `spt ξ`. Then
-`|∫ (|∇u|² div ξ − 2 ∇u·Dξ∇u)| ≤ C_V M ∫ |∇u · ∇η|`. -/
-theorem abs_integral_gradVariation_le (h : IsVariationalSolution Ω C u χ) {ξ : Rn n → Rn n}
-    (hξ : IsLipTestField Ω ξ) {M : ℝ} (hM : ∀ y, ‖ξ y‖ ≤ M) {η : Rn n → ℝ}
-    (hη : ∃ L, LipschitzWith L η) (hηc : HasCompactSupport η) (hηΩ : tsupport η ⊆ Ω)
-    (hη0 : ∀ y, 0 ≤ η y) (hη1 : ∀ y ∈ tsupport ξ, η y = 1) :
-    |∫ y, gradVariation u ξ y| ≤ C * M * ∫ y, |⟪gradient u y, gradient η y⟫| :=
-  h.toQ.abs_integral_gradVariation_le (QBounds.one Ω) hξ hM hη hηc hηΩ hη0 hη1
-
 /-- **Lemma 3.3**, the estimate that the paper proves. If `B̄_{2r}(x) ⊆ Ω` and
 `ξ ∈ C^{0,1}_c(B_{3r/2}(x); ℝⁿ)` with `|ξ| ≤ M`, then
 `|∫ χ div ξ| ≤ 2^{n+1} |B_1| C_V² M r^{n-1}`.
@@ -575,15 +539,6 @@ theorem chi_divergence_bound [NeZero n] (h : IsVariationalSolution Ω C u χ) {x
     |∫ y, χ y * divergence ξ y| ≤
       2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * M * r ^ (n - 1) := by
   simpa using h.toQ.chi_divergence_bound (QBounds.one Ω) hr hΩ hξ hM
-
-/-- **Lemma 3.3** with `sup |ξ|` written as `⨆ y, ‖ξ y‖`, the form used with the BV structure
-theorem. -/
-theorem chi_divergence_bound_iSup [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
-    {r : ℝ} (hr : 0 < r) (hΩ : closedBall x (2 * r) ⊆ Ω) {ξ : Rn n → Rn n}
-    (hξ : IsLipTestField (ball x (3 * r / 2)) ξ) :
-    |∫ y, χ y * divergence ξ y| ≤
-      2 ^ (n + 1) * volume.real (ball (0 : Rn n) 1) * C ^ 2 * (⨆ y, ‖ξ y‖) * r ^ (n - 1) := by
-  simpa using h.toQ.chi_divergence_bound_iSup (QBounds.one Ω) hr hΩ hξ
 
 /-- The set `{χ = 1}` in `Ω` is measurable. -/
 theorem measurableSet_chi_eq_one (h : IsVariationalSolution Ω C u χ) :

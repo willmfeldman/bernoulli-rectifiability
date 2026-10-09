@@ -311,20 +311,6 @@ theorem hausdorffN_not_tendsto_weightedFrequencyN_eq_zero (hn : 2 ≤ n)
   rintro x ⟨hx1, hx2⟩
   exact ⟨hx1, fun hT => hx2 (tendsto_weightedFrequencyN_of_tendsto_modFrequencyN hT)⟩
 
-/-- **Theorem 7.2 (3) with a Lipschitz coefficient, rescaled local form**, for the frequency
-`N = weightedFrequencyN`. -/
-theorem hausdorffN_not_tendsto_weightedFrequencyN_inter_ball_eq_zero (hn : 2 ≤ n)
-    (hQ : QBounds Ω Q L c C') (h : IsVariationalSolutionQ Ω C_V Q u χ) {x₀ : Rn n}
-    (hx₀ : x₀ ∈ sigmaHQ Ω Q u χ) {ρ₀ : ℝ} (hρ₀ : 0 < ρ₀) (hB : closedBall x₀ ρ₀ ⊆ Ω)
-    (hκ : weissKappa L c C' * ρ₀ ≤ 1 / 2) :
-    hausdorffN n (n - 1) {x | (x ∈ sigmaHQ Ω Q u χ ∧
-      ¬ Tendsto (weightedFrequencyN Q u χ x) (𝓝[>] 0) (𝓝 1)) ∧
-      x ∈ ball x₀ (ρ₀ / 100)} = 0 := by
-  refine measure_mono_null ?_
-    (hausdorffN_not_tendsto_modFrequencyN_inter_ball_eq_zero hn hQ h hx₀ hρ₀ hB hκ)
-  rintro x ⟨⟨hx1, hx2⟩, hx3⟩
-  exact ⟨⟨hx1, fun hT => hx2 (tendsto_weightedFrequencyN_of_tendsto_modFrequencyN hT)⟩, hx3⟩
-
 end Frequency
 
 /-! ### Local structure of `Σ^H_Q` -/

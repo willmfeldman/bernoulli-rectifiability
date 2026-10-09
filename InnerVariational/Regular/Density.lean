@@ -5,7 +5,7 @@ Authors: William M. Feldman
 -/
 module
 
-public import InnerVariational.Regular.ChiInterior
+public import InnerVariational.Regular.ChiInteriorQ
 public import InnerVariational.Registry.BV
 public import InnerVariational.Registry.Harmonic
 public import InnerVariational.Registry.GMT
@@ -56,11 +56,13 @@ variational solution on `ℝⁿ` and `∫_{B_1} χ₀ = M_x(0+)`.
 * If `u₀ ≢ 0`, Sperner's inequality (E. Sperner, Jr., *Zur Symmetrisierung von Funktionen auf
   Sphären*, Math. Z. 134 (1973), 317–327; `Registry.sperner_half_volume`, proved in the
   `Sperner` library) gives `|{u₀ > 0} ∩ B_1| ≥ |B_1|/2`, and `χ₀ ≥ χ_{u₀>0}` gives
-  `|{u₀ > 0} ∩ B_1| ≤ ∫_{B_1} χ₀ = M_x(0+)` (`measureReal_pos_inter_ball_le`; the second
+  `|{u₀ > 0} ∩ B_1| ≤ ∫_{B_1} χ₀ = M_x(0+)` (`IsVariationalSolutionQ.measureReal_pos_inter_ball_le`;
+  the second
   paragraph of the proof of Lemma 8.1).
 * If `u₀ ≡ 0`, the inner variation of `(0, χ₀)` gives `∫ χ₀ div ξ = 0`, so `χ₀` is a constant
   `c ∈ {0, 1}` on `B_1`, and `M_x(0+) = c |B_1| ∈ {0, |B_1|}`
-  (`eq_zero_or_eq_of_tendsto_rescale_zero`; the last paragraph of the proof of Lemma 8.1).
+  (`IsVariationalSolutionQ.eq_zero_or_eq_of_tendsto_rescale_zero`; the last paragraph of the proof
+  of Lemma 8.1).
 
 The openness argument (third paragraph of the proof): `M` is upper semicontinuous
 (Proposition 3.5), so `{M_y(0+) < |B_1|/4}` is a neighbourhood `B_δ(x)` of a point with
@@ -77,7 +79,7 @@ The paper's second paragraph gives `M_x(0+) ≥ |B_1|/2` whenever some blow-up i
 where *every* blow-up vanishes, which the openness argument needs at every point of `B_δ(x)`, is
 proved at the end of the paper's argument (the limit of `χ(x + r ·)` is constant, using the
 `L¹_loc` compactness of `χ(x + r_k ·)` from Lemma 3.3 and BV compactness). Here it is proved first
-(`eq_zero_or_eq_of_tendsto_rescale_zero`), and then the dichotomy.
+(`IsVariationalSolutionQ.eq_zero_or_eq_of_tendsto_rescale_zero`), and then the dichotomy.
 -/
 
 open MeasureTheory Metric Set Filter Topology
@@ -93,20 +95,6 @@ namespace IsVariationalSolution
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n}
 
-/-! ### Densities of `{χ = 1}` -/
-
-/-- The Lebesgue density of `Ω ∩ {χ = 1}` at `x` is `d / |B_1|` when `r^{-n} ∫_{B_r(x)} χ → d`. -/
-theorem hasDensity_of_tendsto (h : IsVariationalSolution Ω C u χ) {δ : ℝ} (hδ : 0 < δ)
-    (hδΩ : ball x δ ⊆ Ω) {d : ℝ}
-    (hd : Tendsto (fun r => (r ^ n)⁻¹ * ∫ y in ball x r, χ y) (𝓝[>] 0) (𝓝 d)) :
-    HasDensity (Ω ∩ {y | χ y = 1}) x (d / unitBallVolume n) :=
-  h.toQ.hasDensity_of_tendsto hδ hδΩ hd
-
-/-- Near a point with `u > 0`, `{χ = 1}` has density `1`. -/
-theorem hasDensity_one_of_pos (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω)
-    (hpos : 0 < u x) : HasDensity (Ω ∩ {y | χ y = 1}) x 1 :=
-  h.toQ.hasDensity_one_of_pos hx hpos
-
 /-! ### Blow-ups at a zero of `u` -/
 
 /-- Every sequence `r_k → 0+` has a subsequence along which `u_{x,r_k}` converges locally
@@ -116,46 +104,6 @@ theorem exists_tendsto_rescale (h : IsVariationalSolution Ω C u χ) (hx : x ∈
     ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∃ u₀ : Rn n → ℝ,
       TendstoLocallyUniformly (fun k => oneHomRescale u x (r (φ k))) u₀ atTop :=
   h.toQ.exists_tendsto_rescale hx hux hr hr0
-
-section Blowup
-
-variable [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω) {m : ℝ}
-  (hm : Tendsto (monotonicityM u χ x) (𝓝[>] 0) (𝓝 m))
-  (hd : Tendsto (fun r => (r ^ n)⁻¹ * ∫ y in ball x r, χ y) (𝓝[>] 0) (𝓝 m))
-  {r : ℕ → ℝ} (hr : ∀ k, 0 < r k) (hr0 : Tendsto r atTop (𝓝 0))
-include h hx hm hd hr hr0
-
-/- The statements below keep the hypotheses `NeZero n` and `M_x(r) → m` of the `Q ≡ 1` chain; the
-proofs only use the density limit. -/
-set_option linter.unusedSectionVars false
-
-/-- **Lower semicontinuity of the positivity set** (proof of Lemma 8.1): for a blow-up `u₀`,
-`|{u₀ > 0} ∩ B_1| ≤ lim ∫_{B_1} χ_{x,r_k} = M_x(u; 0+)`, since `χ ≥ χ_{u>0}` and
-`χ_{u₀>0} ≤ liminf χ_{u_{x,r_k}>0}`. -/
-theorem measureReal_pos_inter_ball_le {u₀ : Rn n → ℝ}
-    (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop) :
-    volume.real ({y | 0 < u₀ y} ∩ ball (0 : Rn n) 1) ≤ m :=
-  IsVariationalSolutionQ.measureReal_pos_inter_ball_le (QBounds.one Ω) h.toQ hx hd hr hr0 hconv
-
-/-- **Sperner step** (proof of Lemma 8.1): if a blow-up `u₀` is not identically zero, then
-`M_x(u; 0+) ≥ |B_1|/2`. Uses Sperner's inequality (`Registry.sperner_half_volume`). -/
-theorem half_le_of_tendsto_rescale (hn : 2 ≤ n) {u₀ : Rn n → ℝ}
-    (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop) {y₀ : Rn n}
-    (hy₀ : 0 < u₀ y₀) : unitBallVolume n / 2 ≤ m :=
-  IsVariationalSolutionQ.half_le_of_tendsto_rescale (QBounds.one Ω) h.toQ hx hd hr hr0 hn hconv
-    hy₀
-
-/-- **Zero blow-ups** (last paragraph of the proof of Lemma 8.1, completed; see the module
-docstring). If `u_{x,r_k} → 0` locally uniformly along some `r_k → 0+`, then
-`M_x(u; 0+) ∈ {0, |B_1|}`. Uses Lemma 3.3, BV compactness and the strong `L²_loc` convergence of
-gradients (proof of Proposition 3.5). -/
-theorem eq_zero_or_eq_of_tendsto_rescale_zero
-    (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) (fun _ => 0) atTop) :
-    m = 0 ∨ m = unitBallVolume n :=
-  IsVariationalSolutionQ.eq_zero_or_eq_of_tendsto_rescale_zero (QBounds.one Ω) h.toQ hx hd hr hr0
-    hconv
-
-end Blowup
 
 /-! ### Lemma 8.1 -/
 

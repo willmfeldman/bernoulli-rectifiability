@@ -125,32 +125,6 @@ theorem monotoneOn_weightedMonotonicityM_add [NeZero n] (hQ : QBounds Ω Q L c C
     (h.volume_term_le hQ hR hs.1 hst ht.2) ⟨le_rfl, hst⟩ ⟨hst, le_rfl⟩ hst
   simpa only [radialDataErr_monotonicityM, weissConst, mul_assoc] using this
 
-/-- **Integrated Weiss formula with error**: for `0 < s₁ ≤ s₂ < R`,
-`∫_{s₁}^{s₂} (2 / s^{n+2}) ∫_{∂B_s(x)} (u − ∇u·(y−x))² ≤ M^w_x(s₂) − M^w_x(s₁) + A (s₂ − s₁)`. -/
-theorem integral_sphere_sub_inner_sq_le [NeZero n] (hQ : QBounds Ω Q L c C')
-    (h : IsVariationalSolutionQ Ω C Q u χ) (hR : ball x R ⊆ Ω) {s₁ s₂ : ℝ} (hs₁ : 0 < s₁)
-    (h12 : s₁ ≤ s₂) (hs₂ : s₂ < R) :
-    ∫ s in s₁..s₂, 2 / s ^ (n + 2) *
-        sphereIntegral (fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2) x s ≤
-      weightedMonotonicityM Q u χ x s₂ - weightedMonotonicityM Q u χ x s₁ +
-        weissConst n L c C' * (s₂ - s₁) := by
-  set d := h.radialDataErr hQ hR hs₁ h12 hs₂
-  have key := d.integral_monotonicityM_sq_term_le (h.volume_term_le hQ hR hs₁ h12 hs₂)
-    ⟨le_rfl, h12⟩ ⟨h12, le_rfl⟩ h12
-  have e : ∫ s in s₁..s₂, 2 / s ^ (n + 2) *
-      sphereIntegral (fun y => (u y - ⟪gradient u y, y - x⟫) ^ 2) x s =
-      ∫ s in s₁..s₂, 2 / s ^ (n + 2) * (d.sphRad s - 2 * d.sphMix s + d.sphSq s) := by
-    refine intervalIntegral.integral_congr fun s hs => ?_
-    rw [uIcc_of_le h12] at hs
-    have hs0 : 0 < s := hs₁.trans_le hs.1
-    change _ = 2 / s ^ (n + 2) * (sphereIntegral (fun y => ⟪gradient u y, y - x⟫ ^ 2) x s -
-      2 * sphereIntegral (fun y => u y * ⟪gradient u y, y - x⟫) x s +
-      sphereIntegral (fun y => u y ^ 2) x s)
-    rw [h.sphereIntegral_sub_inner_sq hR hs0.le (hs.2.trans_lt hs₂)]
-  rw [e]
-  rw [show d.monotonicityM = weightedMonotonicityM Q u χ x from rfl] at key
-  simpa only [weissConst, mul_assoc] using key
-
 /-! ### Comparison with the frozen coefficient -/
 
 /-- `|Q(y)² − Q(x)²| ≤ 2 C' L |y − x|` on `Ω`. -/

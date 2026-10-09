@@ -31,10 +31,6 @@ and `volumeV` of a variational solution, up to the annulus estimate.
 
 ## Main results
 
-* `IsVariationalSolution.monotoneOn_sq_mul_heightH`: `s ↦ s² H_x(u; s)` is nondecreasing on
-  `(0, R)` when `B_R(x) ⊆ Ω`. Up to the factor `n |B_1|` this is the spherical mean of `u²`.
-  It follows from `H' = −(2/s) H + (2/s^{n+2}) ∫_{∂B_s} u ∇u·(y−x)` and the energy identity (3.8),
-  so the sub-mean-value property of subharmonic functions is not needed.
 * `IsVariationalSolution.heightH_pos` (beginning of §4): `H_x(u; r) > 0` if
   `x ∈ closure {u > 0}` and `B̄_r(x) ⊆ Ω`.
 * Lemma 4.1: `IsVariationalSolution.monotoneOn_frequencyN`,
@@ -42,9 +38,8 @@ and `volumeV` of a variational solution, up to the annulus estimate.
 * Lemma 4.3: `IsVariationalSolution.heightH_doubling`.
 * Lemma 4.4: `IsVariationalSolution.volumeV_doubling`.
 * Lemma 4.5: `IsVariationalSolution.volumeV_le_sqrt`.
-* The integrated form of (4.13): `IsVariationalSolution.integral_frequency_sq_term_le`, and the
-  annulus estimate `IsVariationalSolution.integral_annulus_sq_inner_gradient_sub_le` (used in
-  the proofs of Theorems 6.1 and 6.3), with its special case
+* The annulus estimate `IsVariationalSolution.integral_annulus_sq_inner_gradient_sub_le` (the
+  integrated form of (4.13), used in the proofs of Theorems 6.1 and 6.3), with its special case
   `IsVariationalSolution.integral_annulus_homogeneity_le` (`λ = N_x(s₁)`).
 
 ## Differences from the paper
@@ -78,22 +73,6 @@ variable {n : ℕ}
 namespace Abstract.RadialData
 
 variable {ω a b : ℝ} (d : RadialData n ω a b)
-
-/-- `(s² H)' = 2 s ∫_{B_s} |∇u|² / sⁿ` for a.e. `s`, from the derivative of `H` and the energy
-identity (3.8). -/
-theorem hasDerivAt_sq_mul_heightH : ∀ᵐ s, s ∈ Ioo a b →
-    HasDerivAt (fun s => s ^ 2 * d.heightH s) (2 * s * d.gradInt s / s ^ n) s :=
-  d.toErr.hasDerivAt_sq_mul_heightH
-
-theorem absolutelyContinuousOnInterval_sq_mul_heightH :
-    AbsolutelyContinuousOnInterval (fun s => s ^ 2 * d.heightH s) a b :=
-  d.toErr.absolutelyContinuousOnInterval_sq_mul_heightH
-
-/-- The spherical mean of `u²` is nondecreasing: `s ↦ s² H(s)` is nondecreasing on `[a, b]` when
-`∫_{B_s} |∇u|² ≥ 0`. -/
-theorem monotoneOn_sq_mul_heightH (hG : ∀ s ∈ Ioo a b, 0 ≤ d.gradInt s) :
-    MonotoneOn (fun s => s ^ 2 * d.heightH s) (Icc a b) :=
-  d.toErr.monotoneOn_sq_mul_heightH hG
 
 /-- A radius with small `V`: if `H > 0` on `[t₁, t₂]`, `M(t₁) ≥ ω`, `0 ≤ v` and
 `N(t₂) − N(t₁) < 2 v² log(t₂ / t₁)`, then `V(σ) < v` for some `σ ∈ (t₁, t₂)`. This is the
@@ -172,24 +151,6 @@ theorem sphereIntegrable_inner_sub_mul_sq (h : IsVariationalSolution Ω C u χ) 
   h.toQ.sphereIntegrable_inner_sub_mul_sq hR hs hsR c
 
 /-! ### Spherical means of `u²` and positivity of `H` -/
-
-/-- **Spherical means of `u²` are nondecreasing**: `s ↦ s² H_x(u; s)` is nondecreasing on
-`(0, R)` when `B_R(x) ⊆ Ω`. Here `s² H_x(s) = s^{1-n} ∫_{∂B_s(x)} u²`. This follows from
-`(s² H)' = 2 s^{1-n} ∫_{B_s(x)} |∇u|² ≥ 0`, a consequence of the energy identity (3.8). -/
-theorem monotoneOn_sq_mul_heightH [NeZero n] (h : IsVariationalSolution Ω C u χ) {R : ℝ}
-    (hR : ball x R ⊆ Ω) : MonotoneOn (fun s => s ^ 2 * heightH u x s) (Ioo 0 R) :=
-  IsVariationalSolutionQ.monotoneOn_sq_mul_heightH (QBounds.one Ω) h.toQ hR
-
-/-- `s ↦ s² H_x(u; s)` is nondecreasing on `(0, R]` when `B̄_R(x) ⊆ Ω`. -/
-theorem monotoneOn_sq_mul_heightH_Ioc [NeZero n] (h : IsVariationalSolution Ω C u χ) {R : ℝ}
-    (hR : closedBall x R ⊆ Ω) : MonotoneOn (fun s => s ^ 2 * heightH u x s) (Ioc 0 R) :=
-  IsVariationalSolutionQ.monotoneOn_sq_mul_heightH_Ioc (QBounds.one Ω) h.toQ hR
-
-/-- `s² H_x(s) ≤ t² H_x(t)` for `0 < s ≤ t` and `B̄_t(x) ⊆ Ω`. -/
-theorem sq_mul_heightH_le [NeZero n] (h : IsVariationalSolution Ω C u χ) {s t : ℝ}
-    (hs : 0 < s) (hst : s ≤ t) (ht : closedBall x t ⊆ Ω) :
-    s ^ 2 * heightH u x s ≤ t ^ 2 * heightH u x t :=
-  IsVariationalSolutionQ.sq_mul_heightH_le (QBounds.one Ω) h.toQ hs hst ht
 
 /-- Positivity of `H` propagates outwards: if `H_x(s) > 0`, `s ≤ t` and `B̄_t(x) ⊆ Ω`, then
 `H_x(t) > 0`. -/
@@ -350,27 +311,6 @@ theorem integrableOn_ball_inner_gradient {R : ℝ} (hΩ : closedBall x R ⊆ Ω)
       IntegrableOn (fun y => ⟪gradient u y, y - x⟫ ^ 2) (ball x R) ∧
       ∀ l : ℝ, IntegrableOn (fun y => (⟪gradient u y, y - x⟫ - l * u y) ^ 2) (ball x R) :=
   h.toQ.integrableOn_ball_inner_gradient hΩ
-
-/-- **Integrated form of (4.13)** (as in the proof of Theorem 6.1): for `0 < t ≤ s₁ ≤ s₂`, if
-`x ∈ closure {u > 0}`, `M_x(u; t) ≥ |B_1|` and `B̄_{s₂}(x) ⊆ Ω`, then
-`∫_{s₁}^{s₂} (2 / (H_x(s) s^{n+2})) ∫_{∂B_s(x)} (∇u·(y−x) − N_x(s) u)² ds ≤ N_x(s₂) − N_x(s₁)`. -/
-theorem integral_frequency_sq_term_le (hx : x ∈ closure {y | 0 < u y}) {t s₁ s₂ : ℝ}
-    (ht : 0 < t) (hts : t ≤ s₁) (hs : s₁ ≤ s₂) (hM : unitBallVolume n ≤ monotonicityM u χ x t)
-    (hΩ : closedBall x s₂ ⊆ Ω) :
-    ∫ s in s₁..s₂, 2 / (heightH u x s * s ^ (n + 2)) *
-        sphereIntegral (fun y => (⟪gradient u y, y - x⟫ - frequencyN u χ x s * u y) ^ 2) x s ≤
-      frequencyN u χ x s₂ - frequencyN u χ x s₁ := by
-  obtain ⟨R', hRR', hR'⟩ := exists_gt_ball_subset h.isOpen (ht.le.trans (hts.trans hs)) hΩ
-  let d := h.radialData hR' ht (hts.trans hs) hRR'
-  have hH : ∀ s ∈ Icc t s₂, 0 < d.heightH s := fun s hs' =>
-    h.heightH_pos hx (ht.trans_le hs'.1) ((closedBall_subset_closedBall hs'.2).trans hΩ)
-  refine Eq.trans_le ?_ (d.integral_frequency_sq_term_le hH hM ⟨hts, hs⟩
-    ⟨hts.trans hs, le_rfl⟩ hs)
-  refine intervalIntegral.integral_congr fun s hs' => ?_
-  rw [uIcc_of_le hs] at hs'
-  rw [h.sphereIntegral_inner_sub_mul_sq hR' (ht.le.trans (hts.trans hs'.1))
-    (hs'.2.trans_lt hRR')]
-  rfl
 
 /-- **The annulus homogeneity estimate** (proofs of Theorems 6.1 and 6.3), the integrated form
 of (4.13) on an annulus, for any `λ`: if `x ∈ closure {u > 0}`, `M_x(u; t) ≥ |B_1|`,

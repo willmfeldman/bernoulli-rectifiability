@@ -41,8 +41,8 @@ solutions, so we state them for the predicate `IsLipHarmonicPos U u`.
   `C¹` vanishing on `(−∞, δ]`, `δ > 0`, and `η` Lipschitz with compact support in `U`.
 * `IsLipHarmonicPos.integral_norm_gradient_sq_mul`: the energy identity with a cutoff,
   `∫ |∇u|² η = −∫ u ∇u·∇η`.
-* `IsLipHarmonicPos.weaklySubharmonic`, `IsLipHarmonicPos.weaklySubharmonic_sq`: `u` and `u²` are
-  weakly subharmonic on `U` (in the sense of `IsWeaklySubharmonicOn`).
+* `IsLipHarmonicPos.weaklySubharmonic`: `u` is weakly subharmonic on `U` (in the sense of
+  `IsWeaklySubharmonicOn`).
 
 ## Proof notes
 
@@ -454,46 +454,6 @@ theorem weaklySubharmonic (h : IsLipHarmonicPos U u) : IsWeaklySubharmonicOn U u
   rw [Kernel.integral_mul_laplacian_eq_neg h.isOpen h.locallyLipschitzOn hφ]
   linarith [h.integral_inner_gradient_nonpos hφ hφ0]
 
-/-- At a zero of `u`, `u²` is differentiable with derivative `0`. -/
-theorem hasFDerivAt_sq_of_eq_zero (h : IsLipHarmonicPos U u) {y : Rn n} (hy : y ∈ U)
-    (h0 : u y = 0) : HasFDerivAt (fun z => u z ^ 2) (0 : Rn n →L[ℝ] ℝ) y := by
-  obtain ⟨C, hC⟩ := h.lipschitzOnWith
-  obtain ⟨r, hr, hrU⟩ := Metric.isOpen_iff.1 h.isOpen y hy
-  rw [hasFDerivAt_iff_isLittleO]
-  simp only [h0, zero_apply, sub_zero, ne_eq, OfNat.ofNat_ne_zero,
-    not_false_eq_true, zero_pow]
-  refine Asymptotics.isLittleO_iff.2 fun c hc => ?_
-  have hδ : 0 < min r (c / ((C : ℝ) ^ 2 + 1)) := lt_min hr (by positivity)
-  filter_upwards [ball_mem_nhds y hδ] with z hz
-  have hzr : z ∈ ball y r := mem_ball.2 ((mem_ball.1 hz).trans_le (min_le_left _ _))
-  have hd : ‖z - y‖ < c / ((C : ℝ) ^ 2 + 1) := by
-    rw [← dist_eq_norm]; exact (mem_ball.1 hz).trans_le (min_le_right _ _)
-  have hL := (hC y r hrU).dist_le_mul z hzr y (mem_ball_self hr)
-  rw [Real.dist_eq, h0, sub_zero, dist_eq_norm] at hL
-  rw [norm_pow, Real.norm_eq_abs]
-  have hC2 : (C : ℝ) ^ 2 * ‖z - y‖ ≤ c := by
-    have h1 : (C : ℝ) ^ 2 * ‖z - y‖ ≤ ((C : ℝ) ^ 2 + 1) * ‖z - y‖ := by
-      nlinarith [norm_nonneg (z - y)]
-    have h2 : ((C : ℝ) ^ 2 + 1) * ‖z - y‖ ≤ c := by
-      rw [lt_div_iff₀ (by positivity)] at hd; linarith
-    linarith
-  have habs : |u z| ≤ C * ‖z - y‖ := hL
-  calc |u z| ^ 2 ≤ (C * ‖z - y‖) ^ 2 := pow_le_pow_left₀ (abs_nonneg _) habs 2
-    _ = (C : ℝ) ^ 2 * ‖z - y‖ * ‖z - y‖ := by ring
-    _ ≤ c * ‖z - y‖ := mul_le_mul_of_nonneg_right hC2 (norm_nonneg _)
-
-/-- `D(u²) = 2u Du` on `U`. -/
-theorem fderiv_sq (h : IsLipHarmonicPos U u) {y : Rn n} (hy : y ∈ U) :
-    fderiv ℝ (fun z => u z ^ 2) y = (2 * u y) • fderiv ℝ u y := by
-  rcases (h.nonneg y hy).lt_or_eq with hpos | hzero
-  · have hu : DifferentiableAt ℝ u y :=
-      (h.contDiffOn.contDiffAt (h.isOpen_pos.mem_nhds ⟨hy, hpos⟩)).differentiableAt
-        (by norm_num)
-    rw [(hu.hasFDerivAt.pow 2).fderiv]
-    simp
-  · rw [(h.hasFDerivAt_sq_of_eq_zero hy hzero.symm).fderiv, ← hzero]
-    simp
-
 theorem locallyLipschitzOn_sq (h : IsLipHarmonicPos U u) :
     LocallyLipschitzOn U fun z => u z ^ 2 := by
   obtain ⟨C, hC⟩ := h.lipschitzOnWith
@@ -517,30 +477,6 @@ theorem locallyLipschitzOn_sq (h : IsLipHarmonicPos U u) :
         mul_le_mul h1 h2 (abs_nonneg _) (by linarith [abs_nonneg (u a + u b)])
     _ = 2 * M * C * dist a b := by ring
     _ ≤ _ := mul_le_mul_of_nonneg_right (Real.le_coe_toNNReal _) dist_nonneg
-
-/-- **Prop 3.2 for `u²`**: `u²` is weakly subharmonic on `U`, since
-`∫ u² Δφ = −2 ∫ u ∇u·∇φ = 2 ∫ |∇u|² φ ≥ 0` by the energy identity. -/
-theorem weaklySubharmonic_sq (h : IsLipHarmonicPos U u) :
-    IsWeaklySubharmonicOn U fun z => u z ^ 2 := by
-  intro φ hφ hφ0
-  rw [Kernel.integral_mul_laplacian_eq_neg h.isOpen h.locallyLipschitzOn_sq hφ]
-  obtain ⟨hφs, hφc, hφU⟩ := hφ
-  have hpt : ∀ y, ⟪gradient (fun z => u z ^ 2) y, gradient φ y⟫ =
-      2 * (u y * ⟪gradient u y, gradient φ y⟫) := by
-    intro y
-    by_cases hy : y ∈ tsupport φ
-    · rw [Kernel.inner_gradient_left, Kernel.inner_gradient_left, h.fderiv_sq (hφU hy)]
-      simp only [smul_apply, smul_eq_mul]
-      ring
-    · rw [Kernel.gradient_eq_zero_of_notMem_tsupport hy]
-      simp
-  simp_rw [hpt]
-  rw [integral_const_mul]
-  have hE := h.integral_norm_gradient_sq_mul
-    (hφs.lipschitzWith_of_hasCompactSupport hφc (by simp)) hφc hφU
-  have : 0 ≤ ∫ y, ‖gradient u y‖ ^ 2 * φ y :=
-    integral_nonneg fun y => mul_nonneg (sq_nonneg _) (hφ0 y)
-  linarith
 
 end IsLipHarmonicPos
 

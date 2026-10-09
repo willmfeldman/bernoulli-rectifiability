@@ -47,7 +47,6 @@ rests on (4.11). We include the factor. The proofs are unaffected up to constant
 
 * `RadialData.hasDerivAt_monotonicityM`, `RadialData.monotoneOn_monotonicityM`: the derivative
   of `M` (Proposition 3.4 and its proof) and its monotonicity.
-* `RadialData.frequencyN_add_volumeV`: identity (4.11).
 * `RadialData.hasDerivAt_frequencyN` and `RadialData.hasDerivAt_frequencyN'`: the derivative of
   the frequency, in the forms (4.12) and (4.13) (Lemma 4.1 and Remark 4.2).
 * `RadialData.one_le_frequencyN`, `RadialData.monotoneOn_frequencyN`: Lemma 4.1.
@@ -55,8 +54,6 @@ rests on (4.11). We include the factor. The proofs are unaffected up to constant
 * `RadialData.volumeV_doubling`: Lemma 4.4, with constant `2^n C` (the factor `2^n` comes from
   the `s^{-n}` in `V`).
 * `RadialData.volumeV_le_sqrt`: Lemma 4.5.
-* `RadialData.integral_frequency_sq_term_le`, `RadialData.integral_volumeV_sq_le`: the integrated
-  forms of Lemma 4.1 used in the proofs of Theorems 6.1 and 6.3.
 
 Every lemma is stated for a general subinterval of the data interval, since radial data cannot
 be rescaled cheaply.
@@ -84,50 +81,11 @@ variable {n : ℕ} {ω a b : ℝ} (d : RadialData n ω a b)
 
 /-! ### Basic properties -/
 
-theorem absolutelyContinuousOnInterval_energyD : AbsolutelyContinuousOnInterval d.energyD a b :=
-  d.toErr.absolutelyContinuousOnInterval_energyD
-
 theorem absolutelyContinuousOnInterval_heightH : AbsolutelyContinuousOnInterval d.heightH a b :=
   d.toErr.absolutelyContinuousOnInterval_heightH
 
-theorem continuousOn_heightH : ContinuousOn d.heightH (Icc a b) :=
-  d.toErr.continuousOn_heightH
-
-/-- `∫_{∂B_s} u² = s^{n+1} H(s)`. -/
-theorem sphSq_eq {s : ℝ} (hs : s ∈ Icc a b) : d.sphSq s = s ^ (n + 1) * d.heightH s :=
-  d.toErr.sphSq_eq hs
-
-/-- `V = s^{-n} ∫_{B_s}(1-χ) / H`. -/
-theorem volumeV_eq {s : ℝ} (hs : s ∈ Icc a b) :
-    d.volumeV s = (ω * s ^ n - d.chiInt s) / (s ^ n * d.heightH s) :=
-  d.toErr.volumeV_eq hs
-
 theorem volumeV_nonneg {s : ℝ} (hs : s ∈ Icc a b) (hH : 0 < d.heightH s) : 0 ≤ d.volumeV s :=
   d.toErr.volumeV_nonneg hs hH
-
-/-- **Identity (4.11)**: `N + V = s^{-n} ∫_{B_s}|∇u|² / H`. -/
-theorem frequencyN_add_volumeV {s : ℝ} (hs : s ∈ Icc a b) :
-    d.frequencyN s + d.volumeV s = d.gradInt s / s ^ n / d.heightH s :=
-  d.toErr.frequencyN_add_volumeV hs
-
-/-- Consequence of (3.8) and (4.11): `∫_{∂B_s} u ∇u·y = s^{n+1} H (N + V)` for a.e. `s`. -/
-theorem ae_sphMix_eq : ∀ᵐ s, s ∈ Ioo a b → d.heightH s ≠ 0 →
-    d.sphMix s = s ^ (n + 1) * d.heightH s * (d.frequencyN s + d.volumeV s) :=
-  d.toErr.ae_sphMix_eq
-
-/-- `N ≥ 1` if and only if `M ≥ ω` (when `H > 0`). -/
-theorem one_le_frequencyN_iff {s : ℝ} (hH : 0 < d.heightH s) :
-    1 ≤ d.frequencyN s ↔ ω ≤ d.monotonicityM s :=
-  d.toErr.one_le_frequencyN_iff hH
-
-/-- A key observation: `N > 1` if and only if `M > ω` (when `H > 0`). -/
-theorem one_lt_frequencyN_iff {s : ℝ} (hH : 0 < d.heightH s) :
-    1 < d.frequencyN s ↔ ω < d.monotonicityM s :=
-  d.toErr.one_lt_frequencyN_iff hH
-
-theorem lt_monotonicityM_of_one_lt_frequencyN {s : ℝ} (hH : 0 < d.heightH s)
-    (hN : 1 < d.frequencyN s) : ω < d.monotonicityM s :=
-  d.toErr.lt_monotonicityM_of_one_lt_frequencyN hH hN
 
 /-! ### Result 1: the monotonicity formula -/
 
@@ -162,9 +120,6 @@ section Frequency
 variable (hH : ∀ s ∈ Icc a b, 0 < d.heightH s)
 include hH
 
-theorem exists_pos_le_heightH : ∃ c, 0 < c ∧ ∀ s ∈ Icc a b, c ≤ d.heightH s :=
-  d.toErr.exists_pos_le_heightH hH
-
 /-- `N` is Lipschitz on `[a, b]` when `H > 0` there. -/
 theorem exists_lipschitzOnWith_frequencyN : ∃ K, LipschitzOnWith K d.frequencyN (Icc a b) :=
   d.toErr.exists_lipschitzOnWith_frequencyN hH
@@ -172,11 +127,6 @@ theorem exists_lipschitzOnWith_frequencyN : ∃ K, LipschitzOnWith K d.frequency
 theorem absolutelyContinuousOnInterval_frequencyN :
     AbsolutelyContinuousOnInterval d.frequencyN a b :=
   d.toErr.absolutelyContinuousOnInterval_frequencyN hH
-
-/-- `log H` is Lipschitz on `[a, b]` when `H > 0` there. -/
-theorem exists_lipschitzOnWith_log_heightH :
-    ∃ K, LipschitzOnWith K (fun s => Real.log (d.heightH s)) (Icc a b) :=
-  d.toErr.exists_lipschitzOnWith_log_heightH hH
 
 /-- **Remark 4.2, formula (4.13)**: for a.e. `s`,
 `N' = (2 / (H s^{n+2})) ∫_{∂B_s}(∇u·y - N u)² + (2/s) V (N - 1)`. -/
@@ -204,33 +154,12 @@ theorem hasDerivAt_heightH' : ∀ᵐ s, s ∈ Ioo a b →
     HasDerivAt d.heightH (2 / s * d.heightH s * (d.frequencyN s + d.volumeV s - 1)) s :=
   d.toErr.hasDerivAt_heightH' hH
 
-/-- `(log H)' = (2/s)(N + V - 1)` for a.e. `s` (proof of Lemma 4.3). -/
-theorem hasDerivAt_log_heightH : ∀ᵐ s, s ∈ Ioo a b →
-    HasDerivAt (fun s => Real.log (d.heightH s))
-      (2 / s * (d.frequencyN s + d.volumeV s - 1)) s :=
-  d.toErr.hasDerivAt_log_heightH hH
-
 variable (hM : ω ≤ d.monotonicityM a)
 include hM
 
 /-- **Lemma 4.1**: `N ≥ 1` on `[a, b]` if `M(a) ≥ ω`. -/
 theorem one_le_frequencyN {s : ℝ} (hs : s ∈ Icc a b) : 1 ≤ d.frequencyN s :=
   d.one_le_frequencyN_of_toErr hH hM hs
-
-theorem ae_frequencyN_deriv_nonneg : ∀ᵐ s, s ∈ Ioo a b →
-    0 ≤ 2 / (d.heightH s * s ^ (n + 2)) *
-          (d.sphRad s - 2 * d.frequencyN s * d.sphMix s + d.frequencyN s ^ 2 * d.sphSq s) +
-        2 / s * (d.volumeV s * (d.frequencyN s - 1)) := by
-  filter_upwards [d.sphSq_nonneg, d.sphRad_nonneg, d.sq_sphMix_le] with s h1 h2 h3 hs
-  have hs' := Ioo_subset_Icc_self hs
-  have hs0 := d.pos_of_mem hs'
-  have hh := hH s hs'
-  have hq := sub_two_mul_add_sq_mul_nonneg (h1 hs) (h2 hs) (h3 hs) (d.frequencyN s)
-  have hN1 := d.one_le_frequencyN hH hM hs'
-  have hV := d.volumeV_nonneg hs' hh
-  have hc1 : 0 ≤ 2 / (d.heightH s * s ^ (n + 2)) := by positivity
-  have hc2 : 0 ≤ 2 / s := by positivity
-  exact add_nonneg (mul_nonneg hc1 hq) (mul_nonneg hc2 (mul_nonneg hV (by linarith)))
 
 /-- **Lemma 4.1**: `N` is nondecreasing on `[a, b]` if `M(a) ≥ ω`. -/
 theorem monotoneOn_frequencyN : MonotoneOn d.frequencyN (Icc a b) :=
@@ -291,71 +220,7 @@ end Frequency
 
 /-! ### Result 7: integrated forms of Lemma 4.1 -/
 
-section Integrated
-
-variable (hH : ∀ s ∈ Icc a b, 0 < d.heightH s) (hM : ω ≤ d.monotonicityM a)
-include hH hM
-
-/-- Integrated form of (4.13):
-`∫_{s₁}^{s₂} (2 / (H s^{n+2})) ∫_{∂B_s}(∇u·y - N u)² ≤ N s₂ - N s₁`. -/
-theorem integral_frequency_sq_term_le {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (hs₂ : s₂ ∈ Icc a b)
-    (h12 : s₁ ≤ s₂) :
-    ∫ s in s₁..s₂, 2 / (d.heightH s * s ^ (n + 2)) *
-        (d.sphRad s - 2 * d.frequencyN s * d.sphMix s + d.frequencyN s ^ 2 * d.sphSq s) ≤
-      d.frequencyN s₂ - d.frequencyN s₁ := by
-  have hsub₁ : a ≤ s₁ := hs₁.1
-  have hsub₂ : s₂ ≤ b := hs₂.2
-  refine ((d.absolutelyContinuousOnInterval_frequencyN hH).mono_Icc d.le hs₁ hs₂
-    ).integral_le_sub_of_ae_le h12 (ae_mem_Ioo_imp_mono hsub₁ hsub₂
-      (d.hasDerivAt_frequencyN' hH)) ?_ (ae_mem_Ioo_imp_mono hsub₁ hsub₂
-      (d.ae_frequency_sq_term_le hH hM))
-  refine ae_mem_Ioo_imp_mono hsub₁ hsub₂ ?_
-  filter_upwards [d.sphSq_nonneg, d.sphRad_nonneg, d.sq_sphMix_le] with s h1 h2 h3 hs
-  have hs0 := d.pos_of_mem (Ioo_subset_Icc_self hs)
-  have hh := hH s (Ioo_subset_Icc_self hs)
-  exact mul_nonneg (by positivity)
-    (sub_two_mul_add_sq_mul_nonneg (h1 hs) (h2 hs) (h3 hs) (d.frequencyN s))
-
-/-- Integrated form of (4.12): `∫_{s₁}^{s₂} (2/s) V² ≤ N s₂ - N s₁`. -/
-theorem integral_volumeV_sq_le {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (hs₂ : s₂ ∈ Icc a b)
-    (h12 : s₁ ≤ s₂) :
-    ∫ s in s₁..s₂, 2 / s * d.volumeV s ^ 2 ≤ d.frequencyN s₂ - d.frequencyN s₁ := by
-  have hsub₁ : a ≤ s₁ := hs₁.1
-  have hsub₂ : s₂ ≤ b := hs₂.2
-  refine ((d.absolutelyContinuousOnInterval_frequencyN hH).mono_Icc d.le hs₁ hs₂
-    ).integral_le_sub_of_ae_le h12 (ae_mem_Ioo_imp_mono hsub₁ hsub₂
-      (d.hasDerivAt_frequencyN hH)) ?_ (ae_mem_Ioo_imp_mono hsub₁ hsub₂
-      (d.ae_volumeV_sq_le hH hM))
-  refine Eventually.of_forall fun s hs => ?_
-  have hs0 : 0 < s := d.pos.trans_le (hsub₁.trans hs.1.le)
-  positivity
-
-end Integrated
-
 /-! ### Results 4–6: doubling of `H` and `V`, vanishing of `V` -/
-
-section Doubling
-
-variable (hH : ∀ s ∈ Icc a b, 0 < d.heightH s) (hM : ω ≤ d.monotonicityM a)
-include hH hM
-
-/-- Upper bound of Lemma 4.3 on the whole data interval, assuming `b ≤ 2a`. -/
-theorem heightH_le_doublingConst_mul (hb : b ≤ 2 * a) {Np : ℝ} (hNp : 1 < Np)
-    (hN : d.frequencyN b ≤ Np) {s : ℝ} (hs : s ∈ Icc a b) :
-    d.heightH b ≤ doublingConst Np * d.heightH s :=
-  d.toErr.heightH_le_doublingConst_mul hH
-    (by rw [toErr_modM]; linarith) (by rw [zero_mul]; norm_num) hb hNp
-    (by rwa [toErr_modN]) hs
-
-/-- `V` doubling on the whole data interval, assuming `b ≤ 2a`. -/
-theorem volumeV_le_doublingConst_mul (hb : b ≤ 2 * a) {Np : ℝ} (hNp : 1 < Np)
-    (hN : d.frequencyN b ≤ Np) {s : ℝ} (hs : s ∈ Icc a b) :
-    d.volumeV s ≤ 2 ^ n * doublingConst Np * d.volumeV b :=
-  d.toErr.volumeV_le_doublingConst_mul hH
-    (by rw [toErr_modM]; linarith) (by rw [zero_mul]; norm_num) hb hNp
-    (by rwa [toErr_modN]) hs
-
-end Doubling
 
 /-- **Lemma 4.3 (H-doubling)**, for `t ≤ s ≤ r ≤ 2t` inside the data interval
 (the paper's case is `t = r/2`): if `H > 0` on `[t, r]`, `M(t) ≥ ω` and `N(r) ≤ N₊` with
@@ -381,18 +246,6 @@ theorem volumeV_doubling {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ 
   d.toErr.volumeV_doubling ht htr hr hr2 hH
     (by rw [toErr_modM]; linarith) (by rw [zero_mul]; norm_num) hNp
     (by rwa [toErr_modN]) hs
-
-/-- **Lemma 4.1 on a subinterval**: if `H > 0` on `[t, r]` and `M(t) ≥ ω`, then `N ≥ 1` and `N`
-is nondecreasing on `[t, r]`. -/
-theorem one_le_frequencyN_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hM : ω ≤ d.monotonicityM t) {s : ℝ}
-    (hs : s ∈ Icc t r) : 1 ≤ d.frequencyN s :=
-  (d.restrict ht htr hr).one_le_frequencyN hH hM hs
-
-theorem monotoneOn_frequencyN_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hM : ω ≤ d.monotonicityM t) :
-    MonotoneOn d.frequencyN (Icc t r) :=
-  (d.restrict ht htr hr).monotoneOn_frequencyN hH hM
 
 /-- **Lemma 4.5 (V-vanishing)**: if `2t ≤ r` inside the data interval, `H > 0` on
 `[t, r]`, `M(t) ≥ ω`, `N(r) - N(t) < δ` and `N(r) < N₊`, then `V(t) ≤ 2^n C √δ`.

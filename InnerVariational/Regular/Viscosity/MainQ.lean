@@ -31,8 +31,7 @@ no. 3, DOI 10.1002/cpa.22226; arXiv:2306.10131 (numbering of arXiv v2), for a va
 * If `u ≤ φ₊` near `x`, then `|∇φ(x)| ≥ Q(x)`
   (`IsVariationalSolutionQ.le_norm_gradient_of_le_max`).
 
-These are the two conclusions of `IsViscositySolutionQ`
-(`isViscositySolutionQ_diff_sigmaHQ_of_local` gives the local form); the case `Q ≡ 1` is
+These are the two conclusions of `IsViscositySolutionQ`; the case `Q ≡ 1` is
 `Regular/Viscosity/Main.lean`. The file also contains the steps of the proof that do not depend
 on the coefficient: the classification of blow-ups touched by a plane
 (`Regular.norm_le_one_of_le`, `Regular.one_le_norm_of_le_max`), and the blow-up pair data
@@ -331,43 +330,5 @@ theorem le_norm_gradient_of_le_max (hn : 2 ≤ n) (hQ : QBounds Ω Q L c C')
     mul_one] at this
 
 end IsVariationalSolutionQ
-
-/-- **Lemma 8.3 on `U \ Σ^H`, local form**: if `(u, χ)` is a variational solution with a bounded
-Lipschitz coefficient near each point of `U` and `2 ≤ n`, then `u` is a viscosity solution of
-`|∇u| = Q` on `U \ Σ^H`. -/
-theorem isViscositySolutionQ_diff_sigmaHQ_of_local (hn : 2 ≤ n) {U : Set (Rn n)}
-    {Q u χ : Rn n → ℝ}
-    (h : ∀ x ∈ U, ∃ V, IsOpen V ∧ x ∈ V ∧ V ⊆ U ∧ ∃ (C L : ℝ≥0) (c C' : ℝ),
-      QBounds V Q L c C' ∧ IsVariationalSolutionQ V C Q u χ) :
-    IsViscositySolutionQ (U \ sigmaHQ U Q u χ) Q u := by
-  -- the local data at a point of `U \ Σ^H`, with `x ∉ Σ^H(V)`
-  have hloc : ∀ x ∈ U \ sigmaHQ U Q u χ, ∃ V, IsOpen V ∧ x ∈ V ∧ ∃ (C L : ℝ≥0) (c C' : ℝ),
-      QBounds V Q L c C' ∧ IsVariationalSolutionQ V C Q u χ ∧ x ∉ sigmaHQ V Q u χ := by
-    rintro x ⟨hxU, hxS⟩
-    obtain ⟨V, hVo, hxV, hVU, C, L, c, C', hQ, hV⟩ := h x hxU
-    refine ⟨V, hVo, hxV, C, L, c, C', hQ, hV, fun hxS' => hxS ?_⟩
-    rw [← sigmaHQ_inter_of_subset hVU] at hxS'
-    exact hxS'.1
-  have hsmall : ∀ x ∈ U \ sigmaHQ U Q u χ, ∀ r, 0 < r → ∀ V, IsOpen V → x ∈ V →
-      ∃ ρ, 0 < ρ ∧ ball x ρ ⊆ V ∧ ball x ρ ⊆ ball x r := by
-    intro x _ r hr V hVo hxV
-    obtain ⟨ε, hε, hεV⟩ := Metric.isOpen_iff.1 hVo x hxV
-    exact ⟨min ε r, lt_min hε hr, (ball_subset_ball (min_le_left _ _)).trans hεV,
-      ball_subset_ball (min_le_right _ _)⟩
-  refine ⟨?_, fun x hx => ?_, fun x hx hpos => ?_, fun x hx r hr _ φ hφ hφx hle => ?_,
-    fun x hx r hr _ φ hφ hφx hle => ?_⟩
-  · refine continuousOn_of_forall_continuousAt fun x hx => ?_
-    obtain ⟨V, hVo, hxV, _, _, _, _, -, hV, -⟩ := hloc x hx
-    exact hV.continuousOn.continuousAt (hVo.mem_nhds hxV)
-  · obtain ⟨V, -, hxV, _, _, _, _, -, hV, -⟩ := hloc x hx
-    exact hV.nonneg x hxV
-  · obtain ⟨V, -, hxV, _, _, _, _, hQ, hV, -⟩ := hloc x hx
-    exact hV.harmonicOn_pos hQ hxV hpos
-  · obtain ⟨V, hVo, hxV, _, _, _, _, hQ, hV, hxS⟩ := hloc x hx.1
-    obtain ⟨ρ, hρ, hρV, hρr⟩ := hsmall x hx.1 r hr V hVo hxV
-    exact hV.norm_gradient_le_of_le hn hQ hxV hx.2 hxS hρ hφ hφx fun y hy => hle y (hρr hy)
-  · obtain ⟨V, hVo, hxV, _, _, _, _, hQ, hV, hxS⟩ := hloc x hx.1
-    obtain ⟨ρ, hρ, hρV, hρr⟩ := hsmall x hx.1 r hr V hVo hxV
-    exact hV.le_norm_gradient_of_le_max hn hQ hxV hx.2 hxS hρ hφ hφx fun y hy => hle y (hρr hy)
 
 end InnerVariational

@@ -11,7 +11,8 @@ public import InnerVariational.Singular.FedererCriterion
 import Mathlib.Geometry.Euclidean.Volume.Measure
 public import Mathlib.Order.CompletePartialOrder
 import InnerVariational.Regular.Perimeter
-import InnerVariational.Regular.ChiInterior
+import InnerVariational.Kernel.BV
+import InnerVariational.Regular.ZeroGradient
 import InnerVariational.Regular.PerimeterQ
 import InnerVariational.Regular.ChiInteriorQ
 import InnerVariational.Monotonicity.HighestDensityQ
@@ -73,7 +74,7 @@ inference "locally finite `ℋ^{n-1}` measure ⇒ locally finite perimeter" is i
 
 ## Gluing
 
-`chi_eq_indicator_of_localQ'` (and `chi_eq_indicator_of_local` for `Q ≡ 1`): the same conclusion
+`chi_eq_indicator_of_localQ'`: the same conclusion
 on a connected open `U` when `(u, χ)` is only a
 variational solution near each point of `U` (with constants that may vary from point to point).
 The two alternatives are glued along `U` by connectedness.
@@ -496,61 +497,6 @@ theorem chi_eq_indicator_of_localQ' (hn : 2 ≤ n) {U : Set (Rn n)} {Q u χ : Rn
 
 /-! ### The coefficient `Q ≡ 1` -/
 
-/-- `M_x(u; 0+) = |B_1|` on the pathological set. -/
-theorem Mzero_eq_of_mem_pathologicalSet [NeZero n] (h : IsVariationalSolution Ω C u χ) {x : Rn n}
-    (hx : x ∈ pathologicalSet Ω u χ) : Mzero u χ x = unitBallVolume n := by
-  have := MzeroQ_eq_of_mem_pathologicalSet (QBounds.one Ω) h.toQ hx
-  rwa [MzeroQ_one, one_pow, one_mul] at this
-
-/-- **`∂U ∩ Ω ⊆ Σ^H`** (proof of Theorem 8.6). A point of `Ω` in the closure of the pathological
-set lies in it or in `Σ^H`. By upper semicontinuity (Proposition 3.5), `M_x(u; 0+) ≥ |B_1|`. If
-`x ∈ closure {u > 0}`, then `x ∈ Σ^H`. Otherwise `u = 0` on a ball around `x`, where `χ` is a.e.
-constant, and that constant is `1` because the ball meets the pathological set. -/
-theorem mem_pathologicalSet_or_mem_sigmaH [NeZero n] (h : IsVariationalSolution Ω C u χ)
-    {x : Rn n} (hx : x ∈ Ω) (hcl : x ∈ closure (pathologicalSet Ω u χ)) :
-    x ∈ pathologicalSet Ω u χ ∨ x ∈ sigmaH Ω u χ := by
-  rw [← h.sigmaHQ_one]
-  exact mem_pathologicalSet_or_mem_sigmaHQ (QBounds.one Ω) h.toQ hx hcl
-
-/-- The essential boundary of the pathological set inside `Ω` consists of points of `Σ^H` at
-which `{u > 0}` does not have density `1`. -/
-theorem essentialBoundary_pathologicalSet_inter_subset [NeZero n]
-    (h : IsVariationalSolution Ω C u χ) :
-    essentialBoundary (pathologicalSet Ω u χ) ∩ Ω ⊆
-      {x | x ∈ sigmaH Ω u χ ∧ ¬ HasDensity {y | 0 < u y} x 1} := by
-  rw [← h.sigmaHQ_one]
-  exact essentialBoundary_pathologicalSet_inter_subsetQ (QBounds.one Ω) h.toQ
-
-/-- **Federer's criterion applied to the pathological set.** In every ball `B ⊆ Ω` the
-pathological set is null or of full measure (Lemma 8.5 (2) and Federer's criterion,
-`Singular.FedererCriterion.ae_trivial_of_hausdorffN_essentialBoundary_inter_ball`). -/
-theorem pathologicalSet_ae_trivial [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ)
-    {c : Rn n} {r : ℝ} (hball : ball c r ⊆ Ω) :
-    volume (pathologicalSet Ω u χ ∩ ball c r) = 0 ∨
-      volume (ball c r \ pathologicalSet Ω u χ) = 0 :=
-  pathologicalSet_ae_trivialQ hn (QBounds.one Ω) h.toQ hball
-
-/-- **`|Σ^H| = 0`.** By Lemma 8.5 (2), outside an `ℋ^{n-1}`-null (hence Lebesgue-null) set, the
-points of `Σ^H` are zeros of `u` at which `{u > 0}` has density `1`. The Lebesgue density theorem
-makes those a null set. -/
-theorem volume_sigmaH_eq_zero [NeZero n] (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ) :
-    volume (sigmaH Ω u χ) = 0 := by
-  rw [← h.sigmaHQ_one]
-  exact volume_sigmaHQ_eq_zero hn (QBounds.one Ω) h.toQ
-
-/-- **`|Ω ∩ ∂{u > 0}| = 0`** (first step of the proof of Theorem 8.6). Off `Σ^H` this is the
-density argument of the proof of Lemma 8.2 on the open set `Ω \ Σ^H`, where `Σ^H` is empty.
-`Σ^H` is null by `volume_sigmaH_eq_zero`. -/
-theorem volume_inter_frontier_pos_eq_zero [NeZero n] (hn : 2 ≤ n)
-    (h : IsVariationalSolution Ω C u χ) : volume (Ω ∩ frontier {y | 0 < u y}) = 0 :=
-  volume_inter_frontier_pos_eq_zeroQ hn (QBounds.one Ω) h.toQ
-
-/-- If the pathological set is empty, then `χ = χ_{u>0}` a.e. on `Ω`. -/
-theorem ae_chi_eq_posIndicator_of_pathologicalSet_eq_empty [NeZero n] (hn : 2 ≤ n)
-    (h : IsVariationalSolution Ω C u χ) (hA : pathologicalSet Ω u χ = ∅) :
-    ∀ᵐ y ∂(volume.restrict Ω), χ y = posIndicator u y :=
-  ae_chi_eq_posIndicator_of_pathologicalSet_eq_emptyQ hn (QBounds.one Ω) h.toQ hA
-
 /-- **Theorem 8.6**. Let `(u, χ)` be a variational solution on an
 open connected `Ω`. Then either `u ≡ 0` on `Ω` or `χ = χ_{u>0}` a.e. on `Ω`.
 
@@ -561,22 +507,6 @@ theorem chi_eq_indicator (hn : 2 ≤ n) {Ω : Set (Rn n)} {C_V : ℝ≥0} {u χ 
     (hΩ : IsConnected Ω) (h : IsVariationalSolution Ω C_V u χ) :
     (∀ x ∈ Ω, u x = 0) ∨ χ =ᵐ[volume.restrict Ω] posIndicator u :=
   chi_eq_indicatorQ hn hΩ (QBounds.one Ω) h.toQ
-
-/-- **Theorem 8.6, glued form**. Let `U` be connected and let `(u, χ)` be a variational solution
-near every point of `U`: each `x ∈ U` has an open neighbourhood `V ⊆ U` on which `(u, χ)` is a
-variational solution with some constant `C_V(x)`. Then either `u ≡ 0` on `U` and `χ = 1` a.e. on
-`U`, or `χ = χ_{u>0}` a.e. on `U`.
-
-This is the form that a locally Lipschitz `u` provides: the Lipschitz constant only needs to be
-uniform near each point. The proof is `chi_eq_indicator_of_localQ'` for the coefficient `1`. -/
-theorem chi_eq_indicator_of_local (hn : 2 ≤ n) {U : Set (Rn n)} {u χ : Rn n → ℝ}
-    (hU : IsConnected U)
-    (h : ∀ x ∈ U, ∃ V, IsOpen V ∧ x ∈ V ∧ V ⊆ U ∧ ∃ C : ℝ≥0, IsVariationalSolution V C u χ) :
-    ((∀ x ∈ U, u x = 0) ∧ ∀ᵐ y ∂(volume.restrict U), χ y = 1) ∨
-      χ =ᵐ[volume.restrict U] posIndicator u :=
-  chi_eq_indicator_of_localQ' (Q := fun _ => 1) hn hU fun x hx => by
-    obtain ⟨V, hVo, hxV, hVU, C, hC⟩ := h x hx
-    exact ⟨V, hVo, hxV, hVU, C, 0, 1, 1, QBounds.one V, hC.toQ⟩
 
 end Singular
 

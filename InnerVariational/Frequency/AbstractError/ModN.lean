@@ -28,8 +28,6 @@ of (4.12) and (4.13). In particular `Ñ` is nondecreasing and `Ñ ≥ 1`.
 * `RadialDataErr.one_le_modN`: `Ñ ≥ 1`.
 * `RadialDataErr.ae_modN_deriv_ge`, `RadialDataErr.monotoneOn_modN`: `Ñ` is nondecreasing.
 * `RadialDataErr.heightH_le_exp_mul`: `H(s) ≤ e^{κ² (r² - s²) / 8} H(r)` for `s ≤ r`.
-* `RadialDataErr.integral_frequency_sq_term_le`, `RadialDataErr.integral_volumeV_sq_le`: the
-  integrated forms.
 * `RadialData.monotoneOn_frequencyN_of_toErr`, `RadialData.one_le_frequencyN_of_toErr`: for
   `κ = 0` these recover Lemma 4.1.
 -/
@@ -49,7 +47,6 @@ section ModN
 
 variable (hH : ∀ s ∈ Icc a b, 0 < d.heightH s) (hZ : 0 ≤ d.modM a) (hκ : κ * b ≤ 1 / 2)
 include hH hZ hκ
-
 
 variable (hZ : 0 ≤ d.modM a) (hκ : κ * b ≤ 1 / 2)
 include hZ hκ
@@ -256,95 +253,9 @@ theorem heightH_le_exp_mul {s r : ℝ} (hs : s ∈ Icc a b) (hr : r ∈ Icc a b)
     _ = Real.exp (κ ^ 2 * (r ^ 2 - s ^ 2) / 8) * d.heightH r := by
         rw [Real.exp_add, Real.exp_log hHr]
 
-
 end ModN
 
 /-! ### Integrated forms of the almost-monotonicity of `Ñ` -/
-
-section Integrated
-
-variable (hH : ∀ s ∈ Icc a b, 0 < d.heightH s) (hZ : 0 ≤ d.modM a) (hκ : κ * b ≤ 1 / 2)
-include hH hZ hκ
-
-/-- Integrated form of (4.13) for `Ñ`:
-`∫_{s₁}^{s₂} ½ (2 / (H s^{n+2})) ∫_{∂B_s}(∇u·y - N u)² ≤ Ñ(s₂) - Ñ(s₁)`. -/
-theorem integral_frequency_sq_term_le {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (hs₂ : s₂ ∈ Icc a b)
-    (h12 : s₁ ≤ s₂) :
-    ∫ s in s₁..s₂, 1 / 2 * (2 / (d.heightH s * s ^ (n + 2)) *
-        (d.sphRad s - 2 * d.frequencyN s * d.sphMix s + d.frequencyN s ^ 2 * d.sphSq s)) ≤
-      d.modN s₂ - d.modN s₁ := by
-  have hsub₁ : a ≤ s₁ := hs₁.1
-  have hsub₂ : s₂ ≤ b := hs₂.2
-  refine ((d.absolutelyContinuousOnInterval_modN hH).mono_Icc d.le hs₁ hs₂
-    ).integral_le_sub_of_ae_le h12 (ae_mem_Ioo_imp_mono hsub₁ hsub₂ (d.hasDerivAt_modN hH))
-    (ae_mem_Ioo_imp_mono hsub₁ hsub₂ ?_) (ae_mem_Ioo_imp_mono hsub₁ hsub₂ ?_)
-  · filter_upwards [d.sphSq_nonneg, d.sphRad_nonneg, d.sq_sphMix_le] with s h1 h2 h3 hs
-    have hs0 := d.pos_of_mem (Ioo_subset_Icc_self hs)
-    have hh := hH s (Ioo_subset_Icc_self hs)
-    exact mul_nonneg (by norm_num) (mul_nonneg (by positivity)
-      (Abstract.sub_two_mul_add_sq_mul_nonneg (h1 hs) (h2 hs) (h3 hs) (d.frequencyN s)))
-  · filter_upwards [d.ae_modN_deriv_ge hH hZ hκ, d.sphSq_nonneg, d.sphRad_nonneg,
-      d.sq_sphMix_le] with s hle h1 h2 h3 hs
-    have hs0 := d.pos_of_mem (Ioo_subset_Icc_self hs)
-    have hh := hH s (Ioo_subset_Icc_self hs)
-    have q1 := mul_nonneg (by positivity : (0 : ℝ) ≤ 2 / (d.heightH s * s ^ (n + 2)))
-      (Abstract.sub_two_mul_add_sq_mul_nonneg (h1 hs) (h2 hs) (h3 hs)
-        (d.frequencyN s + d.volumeV s))
-    have q3 : 0 ≤ d.volumeV s ^ 2 / (2 * s) := by positivity
-    have := hle hs
-    linarith
-
-/-- Integrated form of (4.12) for `Ñ`: `∫_{s₁}^{s₂} V² / (2s) ≤ Ñ(s₂) - Ñ(s₁)`. -/
-theorem integral_volumeV_sq_le {s₁ s₂ : ℝ} (hs₁ : s₁ ∈ Icc a b) (hs₂ : s₂ ∈ Icc a b)
-    (h12 : s₁ ≤ s₂) :
-    ∫ s in s₁..s₂, d.volumeV s ^ 2 / (2 * s) ≤ d.modN s₂ - d.modN s₁ := by
-  have hsub₁ : a ≤ s₁ := hs₁.1
-  have hsub₂ : s₂ ≤ b := hs₂.2
-  refine ((d.absolutelyContinuousOnInterval_modN hH).mono_Icc d.le hs₁ hs₂
-    ).integral_le_sub_of_ae_le h12 (ae_mem_Ioo_imp_mono hsub₁ hsub₂ (d.hasDerivAt_modN hH))
-    (ae_mem_Ioo_imp_mono hsub₁ hsub₂ ?_) (ae_mem_Ioo_imp_mono hsub₁ hsub₂ ?_)
-  · refine Eventually.of_forall fun s hs => ?_
-    have hs0 := d.pos_of_mem (Ioo_subset_Icc_self hs)
-    positivity
-  · filter_upwards [d.ae_modN_deriv_ge hH hZ hκ, d.sphSq_nonneg, d.sphRad_nonneg,
-      d.sq_sphMix_le] with s hle h1 h2 h3 hs
-    have hs0 := d.pos_of_mem (Ioo_subset_Icc_self hs)
-    have hh := hH s (Ioo_subset_Icc_self hs)
-    have hc : 0 ≤ 2 / (d.heightH s * s ^ (n + 2)) := by positivity
-    have q1 := mul_nonneg hc (Abstract.sub_two_mul_add_sq_mul_nonneg (h1 hs) (h2 hs) (h3 hs)
-      (d.frequencyN s + d.volumeV s))
-    have q2 := mul_nonneg hc (Abstract.sub_two_mul_add_sq_mul_nonneg (h1 hs) (h2 hs) (h3 hs)
-      (d.frequencyN s))
-    have := hle hs
-    linarith
-
-end Integrated
-
-/-! ### Subinterval versions -/
-
-/-- `Z ≥ 0` on a subinterval `[t, r]`, if `H > 0` on `[t, r]`, `κ r ≤ 1/2` and `Z(t) ≥ 0`. -/
-theorem modM_nonneg_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hκ : κ * r ≤ 1 / 2) (hZ : 0 ≤ d.modM t) {s : ℝ}
-    (hs : s ∈ Icc t r) : 0 ≤ d.modM s :=
-  (d.restrict ht htr hr).modM_nonneg hH hκ hZ hs
-
-/-- `N ≥ 1 - κ² s² / 8` on a subinterval `[t, r]`. -/
-theorem one_sub_le_frequencyN_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hZ : 0 ≤ d.modM t) (hκ : κ * r ≤ 1 / 2) {s : ℝ}
-    (hs : s ∈ Icc t r) : 1 - κ ^ 2 * s ^ 2 / 8 ≤ d.frequencyN s :=
-  (d.restrict ht htr hr).one_sub_le_frequencyN hH hZ hκ hs
-
-/-- `Ñ ≥ 1` on a subinterval `[t, r]`. -/
-theorem one_le_modN_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hZ : 0 ≤ d.modM t) (hκ : κ * r ≤ 1 / 2) {s : ℝ}
-    (hs : s ∈ Icc t r) : 1 ≤ d.modN s :=
-  (d.restrict ht htr hr).one_le_modN hH hZ hκ hs
-
-/-- `Ñ` is nondecreasing on a subinterval `[t, r]`. -/
-theorem monotoneOn_modN_of_le {t r : ℝ} (ht : a ≤ t) (htr : t ≤ r) (hr : r ≤ b)
-    (hH : ∀ s ∈ Icc t r, 0 < d.heightH s) (hZ : 0 ≤ d.modM t) (hκ : κ * r ≤ 1 / 2) :
-    MonotoneOn d.modN (Icc t r) :=
-  (d.restrict ht htr hr).monotoneOn_modN hH hZ hκ
 
 end RadialDataErr
 
@@ -365,7 +276,6 @@ theorem one_le_frequencyN_of_toErr (hH : ∀ s ∈ Icc a b, 0 < d.heightH s)
   have h := d.toErr.one_sub_le_frequencyN hH (by rw [toErr_modM]; linarith)
     (by rw [zero_mul]; norm_num) hs
   simpa using h
-
 
 end RadialData
 

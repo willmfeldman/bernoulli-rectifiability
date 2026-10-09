@@ -65,10 +65,6 @@ variable {n : ℕ} {ι : Type*}
 def discreteMeasure (J : Finset ι) (c : ι → ℝ≥0∞) (x : ι → Rn n) : Measure (Rn n) :=
   ∑ j ∈ J, c j • Measure.dirac (x j)
 
-theorem discreteMeasure_def (J : Finset ι) (c : ι → ℝ≥0∞) (x : ι → Rn n) :
-    discreteMeasure J c x = ∑ j ∈ J, c j • Measure.dirac (x j) :=
-  rfl
-
 theorem discreteMeasure_apply (J : Finset ι) (c : ι → ℝ≥0∞) (x : ι → Rn n) (s : Set (Rn n)) :
     discreteMeasure J c x s = ∑ j ∈ J, c j * s.indicator 1 (x j) := by
   simp [discreteMeasure, Measure.coe_finsetSum, Measure.dirac_apply]

@@ -57,12 +57,6 @@ theorem volume_ball_eq (x : Rn n) {r : ℝ} (hr : 0 < r) :
     ENNReal.ofReal_mul' (by positivity), ENNReal.ofReal_toReal volume_ball_zero_one_lt_top.ne,
     mul_comm]
 
-theorem volume_closedBall_eq (x : Rn n) {r : ℝ} (hr : 0 ≤ r) :
-    volume (closedBall x r) = ENNReal.ofReal (unitBallVolume n * r ^ n) := by
-  rw [Measure.addHaar_closedBall volume x hr, finrank_euclideanSpace_fin, unitBallVolume,
-    ENNReal.ofReal_mul' (by positivity), ENNReal.ofReal_toReal volume_ball_zero_one_lt_top.ne,
-    mul_comm]
-
 /-! ### Packing -/
 
 /-- Pairwise disjoint balls of radius `a > 0` contained in `U`: `#F · ω_n aⁿ ≤ |U|`. -/

@@ -19,7 +19,8 @@ import InnerVariational.Regular.DensityQ
 public import InnerVariational.Regular.Viscosity.MainQ
 import InnerVariational.Monotonicity.SigmaHQ
 import InnerVariational.Registry.BV
-import InnerVariational.Regular.ChiInterior
+import InnerVariational.Monotonicity.Limits
+import InnerVariational.Regular.ChiInteriorQ
 import InnerVariational.Regular.ZeroGradient
 import InnerVariational.Monotonicity.HighestDensity
 public import InnerVariational.Defs.HighestDensity
@@ -66,7 +67,8 @@ Let `φ` touch `u` from below (resp. `φ₊` from above) at `x ∈ Ω ∩ ∂{u 
 2. `χ_{x,r_k} → χ₀` in `L¹_loc` along a subsequence (Lemma 3.3 and BV compactness, L. C. Evans
    and R. F. Gariepy, *Measure Theory and Fine Properties of Functions*, rev. ed., CRC Press,
    2015, Theorem 5.5), and the
-   inner variation passes to the limit (`exists_chi_blowup`): `∫ Q_ξ(∇u₀) + ∫ χ₀ div ξ = 0`,
+   inner variation passes to the limit (`IsVariationalSolution.blowup_chi_data`):
+   `∫ Q_ξ(∇u₀) + ∫ χ₀ div ξ = 0`,
    `χ₀ ∈ {0, 1}`, `χ₀ ≥ χ_{u₀ > 0}`, `∫_{B_1} χ₀ = m`.
 3. `φ(x + r y)/r → ⟪p, y⟫`, so `⟪p, y⟫ ≤ u₀(y)` (resp. `u₀(y) ≤ ⟪p, y⟫₊`).
 4. Classification (the proof of Lemma 8.3, classification of `u₀`): `u₀ = a ⟪y, e⟫₊`, `a > 0`
@@ -101,60 +103,7 @@ namespace IsVariationalSolution
 
 variable {Ω : Set (Rn n)} {C : ℝ≥0} {u χ : Rn n → ℝ} {x : Rn n}
 
-set_option linter.unusedVariables false in
-/-- **Blow-up pairs** (proof of Lemma 8.3). Along a blow-up sequence `u_{x,r_k} → u₀` with
-`M_x(r) → m`, a subsequence of `χ_{x,r_k}` converges a.e. and in `L¹_loc` to some `χ₀` with
-
-* `χ₀ ∈ {0, 1}` a.e. on `B_1`, and `χ₀ = 1` a.e. on `B_1 ∩ {u₀ > 0}`;
-* `∫_{B_1} χ₀ = m`;
-* the limit domain variation identity `∫ (|∇u₀|² div ξ − 2 ∇u₀·Dξ ∇u₀) + ∫ χ₀ div ξ = 0` for all
-  `ξ ∈ C^∞_c(B_1; ℝⁿ)`.
-
-Uses Lemma 3.3, BV compactness and the strong `L²_loc` convergence of gradients (proof of
-Proposition 3.5), through the blow-up limit `IsVariationalSolutionQ.exists_blowup_limit_density`.
--/
-theorem exists_chi_blowup [NeZero n] (h : IsVariationalSolution Ω C u χ) (hx : x ∈ Ω) {m : ℝ}
-    (hm : Tendsto (monotonicityM u χ x) (𝓝[>] 0) (𝓝 m))
-    (hd : Tendsto (fun r => (r ^ n)⁻¹ * ∫ y in ball x r, χ y) (𝓝[>] 0) (𝓝 m))
-    {r : ℕ → ℝ} (hr : ∀ k, 0 < r k) (hr0 : Tendsto r atTop (𝓝 0)) {u₀ : Rn n → ℝ}
-    (hconv : TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop) :
-    ∃ f₀ : Rn n → ℝ, Measurable f₀ ∧
-      (∀ᵐ y ∂(volume.restrict (ball (0 : Rn n) 1)), f₀ y = 0 ∨ f₀ y = 1) ∧
-      (∀ᵐ y ∂(volume.restrict (ball (0 : Rn n) 1)), 0 < u₀ y → f₀ y = 1) ∧
-      ∫ y in ball (0 : Rn n) 1, f₀ y = m ∧
-      ∀ ξ, IsSmoothTestField (ball (0 : Rn n) 1) ξ →
-        (∫ y, Kernel.gradVariation u₀ ξ y) + ∫ y, f₀ y * divergence ξ y = 0 := by
-  obtain ⟨χ₀, hsol, hint⟩ := IsVariationalSolutionQ.exists_blowup_limit_density (QBounds.one Ω)
-    h.toQ hx hd hr hr0 hconv
-  obtain ⟨hχ₀m, h01, hpos, hid⟩ := (isVariationalSolutionQ_one_iff.1 hsol).blowup_chi_data
-  exact ⟨χ₀, hχ₀m, h01, hpos, hint, hid⟩
-
 /-! ### Lemma 8.3 -/
-
-/-- The blow-up data at a free boundary point `x ∉ Σ^H` (proof of Lemma 8.3): a blow-up
-`u_{x,r_k} → u₀` that is Lipschitz, nonnegative, one-homogeneous, harmonic on `{u₀ > 0}`, not
-identically zero (Lemma 8.1, last claim), with `|{u₀ > 0} ∩ B_1| ≤ M_x(0+) < |B_1|`, and a limit
-`χ₀` of `χ_{x,r_k}` satisfying the limit domain variation identity (`exists_chi_blowup`). -/
-theorem exists_blowup_of_notMem_sigmaH (hn : 2 ≤ n) (h : IsVariationalSolution Ω C u χ)
-    (hx : x ∈ Ω) (hfr : x ∈ frontier {y | 0 < u y}) (hS : x ∉ sigmaH Ω u χ) :
-    ∃ r : ℕ → ℝ, (∀ k, 0 < r k) ∧ Tendsto r atTop (𝓝 0) ∧ ∃ u₀ : Rn n → ℝ,
-      TendstoLocallyUniformly (fun k => oneHomRescale u x (r k)) u₀ atTop ∧
-      LipschitzWith C u₀ ∧ (∀ y, 0 ≤ u₀ y) ∧ (∀ t, 0 < t → ∀ y, u₀ (t • y) = t * u₀ y) ∧
-      (∀ y, 0 < u₀ y → HarmonicAt u₀ y) ∧ (∃ y, 0 < u₀ y) ∧
-      volume.real ({y | 0 < u₀ y} ∩ ball (0 : Rn n) 1) < unitBallVolume n ∧
-      ∃ f₀ : Rn n → ℝ, Measurable f₀ ∧
-        (∀ᵐ y ∂(volume.restrict (ball (0 : Rn n) 1)), f₀ y = 0 ∨ f₀ y = 1) ∧
-        (∀ᵐ y ∂(volume.restrict (ball (0 : Rn n) 1)), 0 < u₀ y → f₀ y = 1) ∧
-        ∀ ξ, IsSmoothTestField (ball (0 : Rn n) 1) ξ →
-          (∫ y, Kernel.gradVariation u₀ ξ y) + ∫ y, f₀ y * divergence ξ y = 0 := by
-  have : NeZero n := ⟨by omega⟩
-  obtain ⟨r, hr, hr0, u₀, hconv, hhom, hy₀, hvol, χ₀, hsol⟩ :=
-    IsVariationalSolutionQ.exists_blowup_of_notMem_sigmaHQ hn (QBounds.one Ω) h.toQ hx hfr
-      (by rwa [h.sigmaHQ_one])
-  have h₀ := isVariationalSolutionQ_one_iff.1 hsol
-  obtain ⟨hχ₀m, h01, hpos, hid⟩ := h₀.blowup_chi_data
-  exact ⟨r, hr, hr0, u₀, hconv, hsol.lipschitzWith_of_univ, fun y => h₀.nonneg y trivial, hhom,
-    fun y hy => h₀.harmonicOn_pos trivial hy, hy₀, hvol, χ₀, hχ₀m, h01, hpos, hid⟩
 
 /-- **Lemma 8.3**, touching from below. If `x ∈ Ω ∩ ∂{u > 0}`, `x ∉ Σ^H`,
 `φ` is smooth, `φ(x) = 0` and `φ ≤ u` on `B_ρ(x)`, then `|∇φ(x)| ≤ 1`. -/

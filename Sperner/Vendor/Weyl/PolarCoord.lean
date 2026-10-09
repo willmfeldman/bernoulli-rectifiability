@@ -25,8 +25,7 @@ integral formula for an arbitrary integrable function, in both orders of integra
 
 * `integral_volumeIoiPow`: integration against `Measure.volumeIoiPow k` is integration on
   `(0, ∞)` against the weight `r ^ k`.
-* `integral_eq_integral_toSphere_integral_Ioi`, `integral_eq_integral_Ioi_integral_toSphere`:
-  integration in polar coordinates.
+* `integral_eq_integral_Ioi_integral_toSphere`: integration in polar coordinates.
 * `continuousOn_integral_toSphere_smul`: the sphere integrals `r ↦ ∫ u ∈ S, f (r • u)` depend
   continuously on `r ∈ [0, R]` when `f` is continuous on the closed ball of radius `R`.
 
@@ -41,6 +40,7 @@ integral formula for an arbitrary integrable function, in both orders of integra
 * Extent: `integral_volumeIoiPow`, `integrable_and_integral_eq_integral_prod_toSphere`,
   `integral_eq_integral_toSphere_integral_Ioi`, `integral_eq_integral_Ioi_integral_toSphere`,
   `ContinuousOn.integral_toSphere_smul` (verbatim up to naming).
+* Removed after vendoring: `integral_eq_integral_toSphere_integral_Ioi` (unused here).
 * Changes: ported from Lean v4.34.0-rc2 to Lean/Mathlib v4.30.0; `module`/`public import`
   removed; namespace `TauCeti` → `ViscositySolns.Analysis`; `ContinuousOn.integral_toSphere_smul`
   renamed `continuousOn_integral_toSphere_smul`; the radial fundamental theorem of calculus
@@ -109,17 +109,6 @@ private lemma integrable_and_integral_eq_integral_prod_toSphere (f : E → F)
     _ = ∫ p, g p ∂(μ.toSphere.prod (Measure.volumeIoiPow k)) := by
         rw [← hmp.integral_comp hemb g]
         exact integral_congr_ae (ae_of_all _ fun x ↦ (congrFun hg x).symm)
-
-/-- **Integration in polar coordinates.** An integrable function on a finite-dimensional real
-normed space is integrated by first integrating along each ray `r ↦ r • u`, against the radial
-Jacobian `r ^ (d - 1)`, and then over the unit sphere against `μ.toSphere`. -/
-theorem integral_eq_integral_toSphere_integral_Ioi (f : E → F) (hf : Integrable f μ) :
-    ∫ x, f x ∂μ = ∫ u : sphere (0 : E) 1, (∫ r in Ioi (0 : ℝ),
-      r ^ (Module.finrank ℝ E - 1) • f (r • (u : E))) ∂μ.toSphere := by
-  obtain ⟨hint, heq⟩ := integrable_and_integral_eq_integral_prod_toSphere f hf
-  rw [heq, integral_prod _ hint]
-  exact integral_congr_ae (ae_of_all _ fun u ↦
-    integral_volumeIoiPow (Module.finrank ℝ E - 1) fun r ↦ f (r • (u : E)))
 
 /-- **Integration in polar coordinates, radial variable outermost.** An integrable function on a
 finite-dimensional real normed space is integrated by first integrating over the sphere of radius
