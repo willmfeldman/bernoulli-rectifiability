@@ -1,5 +1,5 @@
 name = "inner_variational"
-version = "0.4.1"
+version = "0.4.2"
 description = "Lean 4 formalization of D. Kriventsov and G. S. Weiss, Rectifiability, finite Hausdorff measure, and compactness for non-minimizing Bernoulli free boundaries (Comm. Pure Appl. Math. 2025, arXiv:2306.10131)"
 keywords = ["math", "free-boundary", "bernoulli-problem", "rectifiability", "geometric-measure-theory", "calculus-of-variations"]
 defaultTargets = ["InnerVariational", "Sperner"]
@@ -24,7 +24,7 @@ name = "InnerVariational"
 [[require]]
 name = "elliptic_bernoulli_foundations"
 git = "https://github.com/willmfeldman/elliptic-bernoulli-foundations"
-rev = "v0.3.0"
+rev = "v0.4.0"
 
 # Sperner's inequality as a self-contained, Mathlib-only library. It can be reused by copying
 # `Sperner/`, `Sperner.lean` and this stanza. Build alone: `lake build Sperner`.

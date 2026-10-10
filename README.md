@@ -122,7 +122,7 @@ The project uses Lean `v4.35.0-rc3` and Mathlib `v4.35.0-rc3`, as pinned in `lea
   perimeter, the Reifenberg theorems, Rellich compactness with traces, Hausdorff measure on
   spheres), and
 - [elliptic-bernoulli-foundations](https://github.com/willmfeldman/elliptic-bernoulli-foundations)
-  `v0.3.0` (Lipschitz regularity of classical solutions and their domain-variation identity),
+  `v0.4.0` (Lipschitz regularity of classical solutions and their domain-variation identity),
 
 together with their own pinned dependencies. All libraries use the Lean module system.
 

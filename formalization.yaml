@@ -25,8 +25,8 @@ project:
       commit: "45847e7fce2ff1c78a19a048befc3c418dd8b1fb"
     - name: "elliptic-bernoulli-foundations"
       repository: "https://github.com/willmfeldman/elliptic-bernoulli-foundations"
-      version: "v0.3.0"
-      commit: "2b64e837a591b32c8ab3c7608304057e556ec0aa"
+      version: "v0.4.0"
+      commit: "07a60a6f1849d6af6aff34561bcad2fbc1801190"
 
 source:
   reference: >-
